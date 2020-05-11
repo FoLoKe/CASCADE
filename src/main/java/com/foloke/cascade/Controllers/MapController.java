@@ -3,49 +3,56 @@ package com.foloke.cascade.Controllers;
 import com.foloke.cascade.Camera;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Entity;
-import java.awt.Rectangle;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class MapController {
-    private List<Entity> entityList = new ArrayList<>();
-    private Camera camera;
-    private Device selected;
+    private final List<Entity> entityList = new ArrayList<>();
+    private final Camera camera;
+    private final TouchPoint touchPoint = new TouchPoint();
 
     public MapController() {
         Image image = new Image("/images/spritesheet.png", 16.0D, 16.0D, false, false);
         this.entityList.add(new Device(image));
-        this.camera = new Camera();
-        this.camera.scale = 4.0F;
+        this.camera = new Camera(0, 0, 4);
     }
 
     public void render(GraphicsContext gc) {
-        gc.scale((double)this.camera.scale, (double)this.camera.scale);
-        Iterator var2 = this.entityList.iterator();
+        gc.scale(this.camera.scale, this.camera.scale);
+        gc.translate(camera.x, camera.y);
+        gc.setLineWidth(5.0D);
+        gc.setStroke(Color.RED);
+        gc.strokeRect(-1, -1, 1 ,1);
 
-        while(var2.hasNext()) {
-            Entity entity = (Entity)var2.next();
+        for (Entity entity : this.entityList) {
             entity.render(gc);
         }
 
-        if (this.selected != null) {
-            Rectangle rectangle = this.selected.getHitBox();
+        if (touchPoint.object != null) {
+            Rectangle rectangle = touchPoint.object.getHitBox();
             gc.setLineWidth(5.0D);
             gc.setStroke(Color.YELLOW);
-            gc.strokeRect((double)rectangle.x, (double)rectangle.y, (double)rectangle.width, (double)rectangle.height);
+            gc.strokeRect(rectangle.getX(), rectangle.getY(), rectangle.getHeight(), rectangle.getHeight());
         }
 
     }
 
     public void tick() {
-        Iterator var1 = this.entityList.iterator();
+        Iterator<Entity> iterator = this.entityList.iterator();
 
-        while(var1.hasNext()) {
-            Entity entity = (Entity)var1.next();
+        while(iterator.hasNext()) {
+            Entity entity = iterator.next();
+            if(entity.destroyed) {
+                iterator.remove();
+                continue;
+            }
             entity.tick();
         }
 
@@ -55,19 +62,50 @@ public class MapController {
         this.entityList.add(entity);
     }
 
-    public void pick(double x, double y) {
-        Iterator var5 = this.entityList.iterator();
+    public void pick(float x, float y) {
+        Point2D point2D = camera.translate(x, y);
 
-        Entity entity;
-        do {
-            if (!var5.hasNext()) {
-                this.selected = null;
-                return;
+        touchPoint.object = null;
+
+        for (Entity entity : entityList) {
+            if((entity).getHitBox().contains(point2D)) {
+                touchPoint.object = entity;
             }
+        }
 
-            entity = (Entity)var5.next();
-        } while(!(entity instanceof Device) || !((Device)entity).getHitBox().contains(x, y));
+        if(touchPoint.object == null) {
+            touchPoint.prevX = x / camera.scale - camera.x;
+            touchPoint.prevY = y / camera.scale - camera.y;
+        } else {
+            touchPoint.prevX = (float) point2D.getX() - touchPoint.object.getX();
+            touchPoint.prevY = (float) point2D.getY() - touchPoint.object.getY();
+        }
+    }
 
-        this.selected = (Device)entity;
+    public void drag(float x, float y) {
+        Point2D point2D = camera.translate(x, y);
+
+        if (touchPoint.object != null) {
+            touchPoint.object.setLocation((float) point2D.getX() - touchPoint.prevX, (float) point2D.getY() - touchPoint.prevY);
+        } else {
+            camera.setLocation((x) / camera.scale  - touchPoint.prevX, (y) / camera.scale - touchPoint.prevY);
+        }
+    }
+
+    public void zoom(boolean direction) {
+        if(direction) {
+            camera.zoomIn();
+        } else {
+            camera.zoomOut();
+        }
+    }
+
+    private static class TouchPoint {
+        public TouchPoint() { }
+
+        public float prevX;
+        public float prevY;
+
+        public Entity object;
     }
 }
