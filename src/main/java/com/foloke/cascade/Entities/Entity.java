@@ -10,7 +10,7 @@ public abstract class Entity {
     protected float y;
     public boolean destroyed;
 
-    private Rectangle rectangle;
+    protected Rectangle rectangle;
 
     public Entity() {
         this.rectangle = new Rectangle(16, 16);

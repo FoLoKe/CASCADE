@@ -5,7 +5,6 @@ import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Entity;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
@@ -19,8 +18,6 @@ public class MapController {
     private final TouchPoint touchPoint = new TouchPoint();
 
     public MapController() {
-        Image image = new Image("/images/spritesheet.png", 16.0D, 16.0D, false, false);
-        this.entityList.add(new Device(image));
         this.camera = new Camera(0, 0, 4);
     }
 
@@ -64,6 +61,19 @@ public class MapController {
 
     public void pick(float x, float y) {
         Point2D point2D = camera.translate(x, y);
+
+        if(touchPoint.object != null ) {
+            if(touchPoint.object.getHitBox().contains(point2D)) {
+                return;
+            }
+            if (touchPoint.object instanceof Device) {
+                touchPoint.object = ((Device) touchPoint.object).pickPort(point2D);
+                if (touchPoint.object != null) {
+                    return;
+                }
+            }
+
+        }
 
         touchPoint.object = null;
 
