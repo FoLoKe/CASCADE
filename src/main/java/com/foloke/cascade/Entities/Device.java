@@ -42,6 +42,10 @@ public class Device extends Entity {
         }
     }
 
+    public void addPort(String address) {
+        ports.add(new Port(this, address, ports.size()));
+    }
+
     @Override
     protected void updatePosition() {
         super.updatePosition();
@@ -59,10 +63,15 @@ public class Device extends Entity {
         return null;
     }
 
+    public ArrayList<Port> getPorts() {
+        return ports;
+    }
+
     public static class Port extends Entity {
         Device parent;
         int position;
         String mac;
+        public String address;
         public Port(Device parent, NetworkInterface networkInterface, int position) {
             this.parent = parent;
             this.position = position;
@@ -78,6 +87,16 @@ public class Device extends Entity {
             } catch (SocketException e) {
                 System.out.println(e);
             }
+            address = networkInterface.getInetAddresses().nextElement().getHostAddress();
+            updatePosition();
+        }
+
+        public Port(Device parent, String address, int position) {
+            this.parent = parent;
+            this.position = position;
+            rectangle = new Rectangle(8, 8);
+            mac = "";
+            this.address = address;
 
             updatePosition();
         }
@@ -99,6 +118,8 @@ public class Device extends Entity {
                     rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
             graphicsContext.strokeText(mac, rectangle.getX(),
                     rectangle.getY() + rectangle.getHeight());
+            graphicsContext.strokeText(address, rectangle.getX(),
+                    rectangle.getY() + rectangle.getHeight() + 4);
         }
     }
 }

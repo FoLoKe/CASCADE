@@ -19,5 +19,6 @@
     <orderEntry type="library" name="Maven: org.snmp4j:snmp4j:3.3.3" level="project" />
     <orderEntry type="library" name="Maven: org.openjfx:javafx-fxml:13.0.1" level="project" />
     <orderEntry type="library" name="Maven: org.openjfx:javafx-fxml:win:13.0.1" level="project" />
+    <orderEntry type="library" name="Maven: commons-net:commons-net:3.6" level="project" />
   </component>
 </module>

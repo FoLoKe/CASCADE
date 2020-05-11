@@ -3,6 +3,7 @@ package com.foloke.cascade;
 import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.Controllers.UIController;
 import com.foloke.cascade.Entities.Device;
+import com.foloke.cascade.utils.ScanUtils;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
@@ -78,5 +79,6 @@ public class Application extends javafx.application.Application {
         }
 
         mapController.addEntity(entity);
+        ScanUtils.scanByPing(mapController, "192.168.88.0", "24");
     }
 }

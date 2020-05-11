@@ -1,5 +1,6 @@
 package com.foloke.cascade.Controllers;
 
+import com.foloke.cascade.Application;
 import com.foloke.cascade.Camera;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Entity;
@@ -9,11 +10,13 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 public class MapController {
     private final List<Entity> entityList = new ArrayList<>();
+    private final List<Entity> toAdd = Collections.synchronizedList(new ArrayList<>());
     private final Camera camera;
     private final TouchPoint touchPoint = new TouchPoint();
 
@@ -28,8 +31,9 @@ public class MapController {
         gc.setStroke(Color.RED);
         gc.strokeRect(-1, -1, 1 ,1);
 
-        for (Entity entity : this.entityList) {
-            entity.render(gc);
+        Iterator<Entity> iterator = entityList.iterator();
+        while (iterator.hasNext()) {
+            iterator.next().render(gc);
         }
 
         if (touchPoint.object != null) {
@@ -42,6 +46,8 @@ public class MapController {
     }
 
     public void tick() {
+        entityList.addAll(toAdd);
+        toAdd.clear();
         Iterator<Entity> iterator = this.entityList.iterator();
 
         while(iterator.hasNext()) {
@@ -56,7 +62,23 @@ public class MapController {
     }
 
     public void addEntity(Entity entity) {
-        this.entityList.add(entity);
+        toAdd.add(entity);
+    }
+
+    public void addOrUpdate(String address) {
+        for (Entity entity : entityList) {
+            if (entity instanceof Device) {
+                for (Device.Port port : ((Device) entity).getPorts()) {
+                    if (port.address.equals(address)) {
+                        return;
+                    }
+                }
+            }
+        }
+
+        Device device = new Device(Application.image);
+        toAdd.add(device);
+        device.addPort(address);
     }
 
     public void pick(float x, float y) {
