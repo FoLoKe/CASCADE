@@ -43,22 +43,21 @@ public class Application extends javafx.application.Application {
         loader.setController(this.uiController);
         URL url = this.getClass().getResource("/static/main.fxml");
         loader.setLocation(url);
-        SplitPane rootPane = null;
+        SplitPane rootPane;
 
         try {
             rootPane = loader.load();
+            Scene scene = new Scene(rootPane, 1024, 640.0D, false, SceneAntialiasing.DISABLED);
+            stage.setTitle("SNMP-Map");
+            stage.setScene(scene);
+            this.renderer = new Renderer(this);
+            stage.show();
+
+            initLocal();
+            this.renderer.start();
         } catch (Exception exception) {
             System.out.println(exception);
         }
-
-        Scene scene = new Scene(rootPane, 1024, 640.0D, false, SceneAntialiasing.DISABLED);
-        stage.setTitle("SNMP-Map");
-        stage.setScene(scene);
-        this.renderer = new Renderer(this);
-        stage.show();
-
-        initLocal();
-        this.renderer.start();
     }
 
     public void initLocal() {
@@ -71,7 +70,7 @@ public class Application extends javafx.application.Application {
                     entity.addPort(networkInterface);
 
                 } else {
-                    System.out.println(networkInterface + "is loopback");
+                    System.out.println(networkInterface + " is loopback or virtual");
                 }
             }
         } catch (SocketException socketException) {
@@ -80,5 +79,6 @@ public class Application extends javafx.application.Application {
 
         mapController.addEntity(entity);
         ScanUtils.scanByPing(mapController, "192.168.88.0", "24");
+        ScanUtils.traceRoute(mapController, "31.42.45.42");
     }
 }
