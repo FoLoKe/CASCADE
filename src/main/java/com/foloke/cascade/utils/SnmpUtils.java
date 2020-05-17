@@ -52,7 +52,7 @@ public class SnmpUtils {
                 TreeUtils treeUtils = new TreeUtils(snmp, new DefaultPDUFactory());
                 List<TreeEvent> events = treeUtils.getSubtree(target, oid);
                 if (events == null || events.size() == 0) {
-                    System.out.println("Error: Unable to read table...");
+                    LogUtils.log("Error: Unable to read table...");
                     return;
                 }
 
@@ -61,7 +61,7 @@ public class SnmpUtils {
                         continue;
                     }
                     if (event.isError()) {
-                        System.out.println("Error: table OID [" + oid + "] " + event.getErrorMessage());
+                        LogUtils.log("Error: table OID [" + oid + "] " + event.getErrorMessage());
                         continue;
                     }
 
@@ -74,14 +74,14 @@ public class SnmpUtils {
                             continue;
                         }
 
-                        System.out.println("." + varBinding.getOid().toString() + " = " + varBinding.getVariable().toString());
+                        LogUtils.log("." + varBinding.getOid().toString() + " = " + varBinding.getVariable().toString());
                         result.put("." + varBinding.getOid().toString(), varBinding.getVariable().toString());
                     }
 
                 }
                 snmp.close();
             } catch (Exception e) {
-                System.out.println(e);
+                LogUtils.log(e.toString());
             }
 
         }
@@ -106,19 +106,19 @@ public class SnmpUtils {
                 ResponseEvent<UdpAddress> responseEvent = snmp.get(pdu, target);
                 PDU response = responseEvent.getResponse();
                 if(response == null) {
-                    System.out.println("Time out: " + responseEvent.getError());
+                    LogUtils.log("Time out: " + responseEvent.getError());
                 }else if(response.getErrorStatus() == PDU.noError) {
                     List<? extends VariableBinding> vbs = response.getVariableBindings();
                     for (VariableBinding vb : vbs) {
-                        System.out.println(vb.getVariable().toString());
+                        LogUtils.log(vb.getVariable().toString());
                     }
                 } else {
-                    System.out.println(response.getErrorStatus());
+                    LogUtils.log(response.getErrorStatusText());
                 }
                 snmp.close();
                 transport.close();
             } catch (Exception e) {
-                System.out.println(e);
+                LogUtils.log(e.toString());
             }
         }
     }

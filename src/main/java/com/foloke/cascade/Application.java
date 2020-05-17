@@ -3,6 +3,7 @@ package com.foloke.cascade;
 import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.Controllers.UIController;
 import com.foloke.cascade.Entities.Device;
+import com.foloke.cascade.utils.LogUtils;
 import com.foloke.cascade.utils.ScanUtils;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -55,8 +56,8 @@ public class Application extends javafx.application.Application {
 
             initLocal();
             this.renderer.start();
-        } catch (Exception exception) {
-            System.out.println(exception);
+        } catch (Exception e) {
+            LogUtils.log(e.toString());
         }
     }
 
@@ -66,15 +67,15 @@ public class Application extends javafx.application.Application {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
             for (NetworkInterface networkInterface : Collections.list(interfaces)) {
                 if (!networkInterface.isLoopback() && !networkInterface.isVirtual()) {
-                    System.out.println(networkInterface);
+                    LogUtils.log(networkInterface.toString());
                     entity.addPort(networkInterface);
 
                 } else {
-                    System.out.println(networkInterface + " is loopback or virtual");
+                    LogUtils.log(networkInterface + " is loopback or virtual");
                 }
             }
-        } catch (SocketException socketException) {
-            System.out.println(socketException);
+        } catch (SocketException e) {
+            LogUtils.log(e.toString());
         }
 
         mapController.addEntity(entity);

@@ -1,8 +1,11 @@
 package com.foloke.cascade.Controllers;
 
+import com.foloke.cascade.utils.LogUtils;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.AnchorPane;
 
 import java.net.URL;
@@ -13,7 +16,20 @@ public class UIController implements Initializable {
     private Canvas canvas;
     @FXML
     private AnchorPane anchorPane;
-    private MapController mapController;
+
+    @FXML
+    private AnchorPane logAnchor;
+
+    @FXML
+    private ScrollPane logScroll;
+
+    @FXML
+    private TextArea logTextArea;
+
+    @FXML
+    private AnchorPane outerLogAnchor;
+
+    private final MapController mapController;
 
     public UIController(MapController mapController) {
         this.mapController = mapController;
@@ -39,5 +55,15 @@ public class UIController implements Initializable {
         this.canvas.setOnMouseDragged(mouseEvent -> UIController.this.mapController.drag((float) mouseEvent.getX(), (float) mouseEvent.getY()));
 
         this.canvas.setOnScroll(scrollEvent -> this.mapController.zoom( scrollEvent.getDeltaY() > 0));
+
+        outerLogAnchor.widthProperty().addListener(((ov, oldValue, newValue) -> {
+            logAnchor.setPrefWidth(newValue.doubleValue());
+        }));
+
+        logTextArea.heightProperty().addListener(((ov, oldValue, newValue) -> {
+            logAnchor.setPrefHeight(newValue.doubleValue());
+        }));
+
+        LogUtils.init(logTextArea);
     }
 }

@@ -28,8 +28,8 @@ public class ScanUtils {
                 thread.start();
             }
 
-        } catch (Exception exception) {
-            System.out.println(exception);
+        } catch (Exception e) {
+            LogUtils.log(e.toString());
         }
     }
 
@@ -53,16 +53,16 @@ public class ScanUtils {
             try {
                 List<String> hops = trace(address, 1000, 10);
                 if(hops.get(hops.size() - 1).equals(address)) {
-                    System.out.println("tracing succeed");
+                    LogUtils.log("tracing succeed");
                 } else {
-                    System.out.println("tracing fail");
+                    LogUtils.log("tracing fail");
                 }
 
                 for (String hop : hops) {
                     mapController.addOrUpdate(hop);
                 }
             } catch (Exception e) {
-                System.out.println(e);
+                LogUtils.log(e.toString());
             }
         }
     }
@@ -76,7 +76,7 @@ public class ScanUtils {
             try {
                 this.inetAddress = InetAddress.getByName(address);
             } catch (Exception e) {
-                System.out.println(e);
+                LogUtils.log(e.toString());
             }
         }
 
@@ -89,7 +89,7 @@ public class ScanUtils {
                     mapController.addOrUpdate(inetAddress.getHostAddress());
                 }
             } catch (Exception e) {
-                System.out.println(e);
+                LogUtils.log(e.toString());
             }
         }
     }
@@ -122,7 +122,7 @@ public class ScanUtils {
                     cmdResult.add(address);
                 }
 
-                System.out.println(line);
+                LogUtils.log(line);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -151,7 +151,7 @@ public class ScanUtils {
             while ((str = stdInput.readLine()) != null) {
                 String[] splited = str.split(" ");
                 cmdResult.add(splited[0]);
-                System.out.println(splited[0]);
+                LogUtils.log(splited[0]);
             }
         } catch (Exception e) {
             e.printStackTrace();

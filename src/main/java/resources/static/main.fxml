@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.Cursor?>
 <?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.SplitPane?>
-<?import javafx.scene.layout.AnchorPane?>
-
-<SplitPane dividerPositions="0.8260869565217391" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.layout.*?>
+<SplitPane dividerPositions="0.8260869565217391" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1">
   <items>
     <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
          <children>
@@ -19,7 +20,18 @@
                            </cursor></Canvas>
                      </children>
                   </AnchorPane>
-                <AnchorPane />
+                <AnchorPane fx:id="outerLogAnchor" minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="160.0">
+                     <children>
+                        <ScrollPane fx:id="logScroll" maxHeight="1.7976931348623157E308" prefHeight="51.0" prefWidth="489.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                          <content>
+                            <AnchorPane fx:id="logAnchor" maxWidth="1.7976931348623157E308" minWidth="0.0" prefHeight="160.0" prefWidth="160.0">
+                                 <children>
+                                    <TextArea fx:id="logTextArea" editable="false" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                 </children>
+                              </AnchorPane>
+                          </content>
+                        </ScrollPane>
+                     </children></AnchorPane>
               </items>
             </SplitPane>
          </children></AnchorPane>

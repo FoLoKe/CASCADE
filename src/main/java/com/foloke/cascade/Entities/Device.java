@@ -1,5 +1,6 @@
 package com.foloke.cascade.Entities;
 
+import com.foloke.cascade.utils.LogUtils;
 import com.foloke.cascade.utils.SnmpUtils;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
@@ -20,6 +21,8 @@ public class Device extends Entity {
     Image image;
     ArrayList<Port> ports;
     CommunityTarget<UdpAddress> communityTarget;
+
+    String name = "name";
 
     String snmpAddress = "0.0.0.0";
     String snmpPort = "161";
@@ -55,7 +58,7 @@ public class Device extends Entity {
                 }
             }
         } catch (SocketException e) {
-            System.out.println(e);
+            LogUtils.log(e.toString());
         }
     }
 
@@ -64,6 +67,8 @@ public class Device extends Entity {
         if(ports.size() == 1) {
             setCommunityDefaults(address);
         }
+
+        LogUtils.logToFile(name, "port added");
     }
 
     public void setCommunityDefaults(String snmpAddress) {
@@ -119,9 +124,9 @@ public class Device extends Entity {
                     sb.append(String.format("%02X%s", bytes[i], (i < bytes.length - 1) ? "-" : ""));
                 }
                 mac = sb.toString();
-                System.out.println(mac);
+                LogUtils.log(mac);
             } catch (SocketException e) {
-                System.out.println(e);
+                LogUtils.log(e.toString());
             }
             address = networkInterface.getInetAddresses().nextElement().getHostAddress();
             updatePosition();
