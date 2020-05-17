@@ -1,10 +1,16 @@
 package com.foloke.cascade.Entities;
 
+import com.foloke.cascade.utils.SnmpUtils;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
+import org.snmp4j.CommunityTarget;
+import org.snmp4j.mp.SnmpConstants;
+import org.snmp4j.smi.OID;
+import org.snmp4j.smi.OctetString;
+import org.snmp4j.smi.UdpAddress;
 
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -13,10 +19,18 @@ import java.util.ArrayList;
 public class Device extends Entity {
     Image image;
     ArrayList<Port> ports;
+    CommunityTarget<UdpAddress> communityTarget;
+
+    String snmpAddress = "0.0.0.0";
+    String snmpPort = "161";
+    int snmpVersion = SnmpConstants.version2c;
+    int snmpTimeout = 3000;
+    String snmpCommunity = "public";
 
     public Device(Image image) {
         this.image = image;
         ports = new ArrayList<>();
+        communityTarget = new CommunityTarget<>();
     }
 
     @Override
@@ -36,6 +50,9 @@ public class Device extends Entity {
         try {
             if(networkInterface.getHardwareAddress() != null) {
                 ports.add(new Port(this, networkInterface, ports.size()));
+                if(ports.size() == 1) {
+                    setCommunityDefaults(networkInterface.getInetAddresses().nextElement().getHostAddress());
+                }
             }
         } catch (SocketException e) {
             System.out.println(e);
@@ -44,6 +61,17 @@ public class Device extends Entity {
 
     public void addPort(String address) {
         ports.add(new Port(this, address, ports.size()));
+        if(ports.size() == 1) {
+            setCommunityDefaults(address);
+        }
+    }
+
+    public void setCommunityDefaults(String snmpAddress) {
+        this.snmpAddress = snmpAddress;
+        communityTarget.setCommunity(new OctetString(snmpCommunity));
+        communityTarget.setVersion(snmpVersion);
+        communityTarget.setAddress(new UdpAddress(snmpAddress + "/" + snmpPort));
+        communityTarget.setTimeout(snmpTimeout);
     }
 
     @Override
@@ -65,6 +93,14 @@ public class Device extends Entity {
 
     public ArrayList<Port> getPorts() {
         return ports;
+    }
+
+    public void snmpGet(OID oid) {
+        SnmpUtils.getRequest(communityTarget, oid);
+    }
+
+    public void snmpWalk(OID oid) {
+        SnmpUtils.walkRequest(communityTarget, oid);
     }
 
     public static class Port extends Entity {

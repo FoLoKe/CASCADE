@@ -20,7 +20,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="SNMP_MAP" target="8" />
+      <module name="SNMP_MAP" target="11" />
     </bytecodeTargetLevel>
   </component>
 </project>

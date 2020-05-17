@@ -8,6 +8,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import org.snmp4j.smi.OID;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -79,6 +80,7 @@ public class MapController {
         Device device = new Device(Application.image);
         toAdd.add(device);
         device.addPort(address);
+        device.snmpGet(new OID("1.3.6.1.2.1.1.1.0"));
     }
 
     public void pick(float x, float y) {

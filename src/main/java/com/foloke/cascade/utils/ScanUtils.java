@@ -84,7 +84,6 @@ public class ScanUtils {
         public void run() {
             try {
                 boolean reachable = inetAddress.isReachable(1000);
-                System.out.println(inetAddress.toString() + " " + reachable);
 
                 if(reachable) {
                     mapController.addOrUpdate(inetAddress.getHostAddress());
