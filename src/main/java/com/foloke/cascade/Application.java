@@ -84,5 +84,7 @@ public class Application extends javafx.application.Application {
         ScanUtils.scanByPing(mapController, "192.168.88.0", "24");
         ScanUtils.traceRoute(mapController, "31.42.45.42");
         mapController.addEntity(new Cable(mapController));
+
+        uiController.getProps(entity);
     }
 }

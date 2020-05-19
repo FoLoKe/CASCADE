@@ -41,8 +41,8 @@
                      <children>
                         <TableView fx:id="propTable" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="400.0" prefWidth="101.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                           <columns>
-                            <TableColumn prefWidth="50.0" text="Prop" />
-                            <TableColumn prefWidth="57.0" text="Value" />
+                            <TableColumn fx:id="propertyColumn" prefWidth="50.0" text="Prop" />
+                            <TableColumn fx:id="valueColumn" prefWidth="57.0" text="Value" />
                           </columns>
                         </TableView>
                      </children>

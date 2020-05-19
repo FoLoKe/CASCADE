@@ -1,14 +1,18 @@
 package com.foloke.cascade.Controllers;
 
+import com.foloke.cascade.Entities.Entity;
 import com.foloke.cascade.utils.LogUtils;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 import java.net.URL;
@@ -36,13 +40,19 @@ public class UIController implements Initializable {
     private VBox propsVBox;
 
     @FXML
-    private TableView propTable;
+    private TableView<Property> propTable;
 
     @FXML
     private AnchorPane propAnchor;
 
     @FXML
     private AnchorPane outerPropAnchor;
+
+    @FXML
+    private TableColumn<Property, String> propertyColumn;
+
+    @FXML
+    private TableColumn<Property, String> valueColumn;
 
     private final MapController mapController;
 
@@ -89,11 +99,50 @@ public class UIController implements Initializable {
             propAnchor.setPrefHeight(newValue.doubleValue());
         }));
 
+        propertyColumn.setCellValueFactory(new PropertyValueFactory<>("property"));
+        valueColumn.setCellValueFactory(new PropertyValueFactory<>("value"));
+
+
+
         LogUtils.init(logTextArea);
 
     }
 
-    public void addProp(HBox hBox) {
-        propsVBox.getChildren().add(hBox);
+    public void getProps(Entity entity) {
+
+        ObservableList<Property> properties = FXCollections.observableArrayList(
+                new Property("destroyed", Boolean.toString(entity.destroyed))
+        );
+
+        propTable.setItems(properties);
+
+        System.out.println(propTable.getColumns().size());
+
+    }
+
+    public static class Property {
+        private String property;
+        private String value;
+
+        Property(String property, String value) {
+            this.property = property;
+            this.value = value;
+        }
+
+        public String getProperty() {
+            return property;
+        }
+
+        public void setProperty(String property) {
+            this.property = property;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
+        }
     }
 }
