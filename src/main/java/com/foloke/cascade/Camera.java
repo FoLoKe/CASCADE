@@ -3,8 +3,8 @@ package com.foloke.cascade;
 import javafx.geometry.Point2D;
 
 public class Camera {
-    public float x;
-    public float y;
+    public double x;
+    public double y;
     public float scale;
 
     public Camera(float x, float y, float scale) {
@@ -13,17 +13,17 @@ public class Camera {
         this.y = y;
     }
 
-    public void setLocation(float x, float y) {
+    public void setLocation(double x, double y) {
         this.x = x;
         this.y = y;
     }
 
     public void setLocation(Point2D point2D) {
-        this.x = (float) point2D.getX();
-        this.y = (float) point2D.getY();
+        this.x = point2D.getX();
+        this.y = point2D.getY();
     }
 
-    public Point2D translate(float tx, float ty) {
+    public Point2D translate(double tx, double ty) {
         return new Point2D(tx / scale - x, ty / scale - y);
     }
 

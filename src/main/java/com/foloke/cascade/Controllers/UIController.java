@@ -7,6 +7,8 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -28,6 +30,9 @@ public class UIController implements Initializable {
 
     @FXML
     private AnchorPane outerLogAnchor;
+
+    @FXML
+    private VBox propsVBox;
 
     private final MapController mapController;
 
@@ -54,6 +59,8 @@ public class UIController implements Initializable {
 
         this.canvas.setOnMouseDragged(mouseEvent -> UIController.this.mapController.drag((float) mouseEvent.getX(), (float) mouseEvent.getY()));
 
+        this.canvas.setOnMouseReleased(mouseEvent -> UIController.this.mapController.drop(mouseEvent.getX(), mouseEvent.getY()));
+
         this.canvas.setOnScroll(scrollEvent -> this.mapController.zoom( scrollEvent.getDeltaY() > 0));
 
         outerLogAnchor.widthProperty().addListener(((ov, oldValue, newValue) -> {
@@ -65,5 +72,10 @@ public class UIController implements Initializable {
         }));
 
         LogUtils.init(logTextArea);
+
+    }
+
+    public void addProp(HBox hBox) {
+        propsVBox.getChildren().add(hBox);
     }
 }

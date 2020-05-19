@@ -1,18 +1,19 @@
 package com.foloke.cascade.Entities;
 
+import com.foloke.cascade.Controllers.MapController;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.shape.Rectangle;
 
 
 public abstract class Entity {
-    protected float x;
-    protected float y;
     public boolean destroyed;
 
     protected Rectangle rectangle;
+    MapController mapController;
 
-    public Entity() {
+    public Entity(MapController mapController) {
+        this.mapController = mapController;
         this.rectangle = new Rectangle(16, 16);
     }
 
@@ -20,32 +21,26 @@ public abstract class Entity {
 
     public abstract void tick();
 
-    public void setLocation(float x, float y) {
-        this.x = x;
-        this.y = y;
-        updatePosition();
+    public void setLocation(double x, double y) {
+        rectangle.setX(x);
+        rectangle.setY(y);
     }
 
-    public void setLocation(Point2D point2D) {
-        this.x = (float) point2D.getX();
-        this.y = (float) point2D.getY();
-        updatePosition();
+    public double getX() {
+        return rectangle.getX();
     }
+
+    public double getY() {
+        return rectangle.getY();
+    }
+
+    public abstract Entity hit(Point2D point2D);
 
     public Rectangle getHitBox() {
         return rectangle;
     }
 
-    protected void updatePosition() {
-        rectangle.setX(x);
-        rectangle.setY(y);
-    }
+    public void drop(double x, double y) {
 
-    public float getX() {
-        return x;
-    }
-
-    public float getY() {
-        return y;
     }
 }

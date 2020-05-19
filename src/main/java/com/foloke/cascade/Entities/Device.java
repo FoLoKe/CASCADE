@@ -1,5 +1,6 @@
 package com.foloke.cascade.Entities;
 
+import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.utils.LogUtils;
 import com.foloke.cascade.utils.SnmpUtils;
 import javafx.geometry.Point2D;
@@ -30,7 +31,8 @@ public class Device extends Entity {
     int snmpTimeout = 3000;
     String snmpCommunity = "public";
 
-    public Device(Image image) {
+    public Device(Image image, MapController mapController) {
+        super(mapController);
         this.image = image;
         ports = new ArrayList<>();
         communityTarget = new CommunityTarget<>();
@@ -38,7 +40,7 @@ public class Device extends Entity {
 
     @Override
     public void render(GraphicsContext context) {
-        context.drawImage(image, x, y);
+        context.drawImage(image, rectangle.getX(), rectangle.getY());
         for(Port port : ports) {
             port.render(context);
         }
@@ -79,9 +81,11 @@ public class Device extends Entity {
         communityTarget.setTimeout(snmpTimeout);
     }
 
+
+
     @Override
-    protected void updatePosition() {
-        super.updatePosition();
+    public void setLocation(double x, double y) {
+        super.setLocation(x, y);
         for (Port port : ports) {
             port.updatePosition();
         }
@@ -93,6 +97,15 @@ public class Device extends Entity {
                 return port;
             }
         }
+        return null;
+    }
+
+    @Override
+    public Entity hit(Point2D point2D) {
+        if (rectangle.contains(point2D)) {
+            return this;
+        }
+
         return null;
     }
 
@@ -113,7 +126,10 @@ public class Device extends Entity {
         int position;
         String mac;
         public String address;
+        Cable.Connector connector;
+
         public Port(Device parent, NetworkInterface networkInterface, int position) {
+            super(parent.mapController);
             this.parent = parent;
             this.position = position;
             rectangle = new Rectangle(8, 8);
@@ -133,6 +149,7 @@ public class Device extends Entity {
         }
 
         public Port(Device parent, String address, int position) {
+            super(parent.mapController);
             this.parent = parent;
             this.position = position;
             rectangle = new Rectangle(8, 8);
@@ -161,6 +178,23 @@ public class Device extends Entity {
                     rectangle.getY() + rectangle.getHeight());
             graphicsContext.strokeText(address, rectangle.getX(),
                     rectangle.getY() + rectangle.getHeight() + 4);
+        }
+
+        @Override
+        public Entity hit(Point2D point2D) {
+            if (rectangle.contains(point2D)) {
+                return this;
+            }
+
+            return null;
+        }
+
+        public Entity getObject() {
+            if(connector == null) {
+                return this;
+            } else {
+                return connector;
+            }
         }
     }
 }

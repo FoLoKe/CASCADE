@@ -2,6 +2,7 @@ package com.foloke.cascade.Controllers;
 
 import com.foloke.cascade.Application;
 import com.foloke.cascade.Camera;
+import com.foloke.cascade.Entities.Cable;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Entity;
 import javafx.geometry.Point2D;
@@ -26,6 +27,8 @@ public class MapController {
     }
 
     public void render(GraphicsContext gc) {
+        tick();
+
         gc.scale(this.camera.scale, this.camera.scale);
         gc.translate(camera.x, camera.y);
         gc.setLineWidth(5.0D);
@@ -77,17 +80,19 @@ public class MapController {
             }
         }
 
-        Device device = new Device(Application.image);
+        Device device = new Device(Application.image, this);
         toAdd.add(device);
         device.addPort(address);
         device.snmpGet(new OID("1.3.6.1.2.1.1.1.0"));
     }
 
-    public void pick(float x, float y) {
+    public void pick(double x, double y) {
         Point2D point2D = camera.translate(x, y);
 
         if(touchPoint.object != null ) {
             if(touchPoint.object.getHitBox().contains(point2D)) {
+                touchPoint.prevX = (float) point2D.getX() - touchPoint.object.getX();
+                touchPoint.prevY = (float) point2D.getY() - touchPoint.object.getY();
                 return;
             }
             if (touchPoint.object instanceof Device) {
@@ -102,8 +107,9 @@ public class MapController {
         touchPoint.object = null;
 
         for (Entity entity : entityList) {
-            if((entity).getHitBox().contains(point2D)) {
-                touchPoint.object = entity;
+            touchPoint.object = entity.hit(point2D);
+            if(touchPoint.object != null) {
+                break;
             }
         }
 
@@ -116,11 +122,35 @@ public class MapController {
         }
     }
 
+    public void drop(double x, double y) {
+        Point2D point2D = camera.translate(x, y);
+        if(touchPoint.object != null && touchPoint.object instanceof Cable.Connector) {
+            for (Entity entity : entityList) {
+                if (entity instanceof Device) {
+                    for (Device.Port port : ((Device) entity).getPorts()) {
+                        if (port.getHitBox().contains(point2D.getX(), point2D.getY())) {
+                            ((Cable.Connector)touchPoint.object).connect(port);
+                            System.out.println("connected");
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public void drag(float x, float y) {
         Point2D point2D = camera.translate(x, y);
 
         if (touchPoint.object != null) {
-            touchPoint.object.setLocation((float) point2D.getX() - touchPoint.prevX, (float) point2D.getY() - touchPoint.prevY);
+            if(!(touchPoint.object instanceof Device.Port)) {
+               if (touchPoint.object instanceof Cable.Connector) {
+                    ((Cable.Connector)touchPoint.object).disconnect();
+               }
+               touchPoint.object.setLocation((float) point2D.getX() - touchPoint.prevX, (float) point2D.getY() - touchPoint.prevY);
+            } else {
+                touchPoint.object = ((Device.Port)touchPoint.object).getObject();
+            }
         } else {
             camera.setLocation((x) / camera.scale  - touchPoint.prevX, (y) / camera.scale - touchPoint.prevY);
         }
@@ -137,8 +167,8 @@ public class MapController {
     private static class TouchPoint {
         public TouchPoint() { }
 
-        public float prevX;
-        public float prevY;
+        public double prevX;
+        public double prevY;
 
         public Entity object;
     }

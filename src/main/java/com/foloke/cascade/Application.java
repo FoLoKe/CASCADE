@@ -2,6 +2,7 @@ package com.foloke.cascade;
 
 import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.Controllers.UIController;
+import com.foloke.cascade.Entities.Cable;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.utils.LogUtils;
 import com.foloke.cascade.utils.ScanUtils;
@@ -41,13 +42,14 @@ public class Application extends javafx.application.Application {
         image = new Image("/images/spritesheet.png", 16.0D, 16.0D, false, false);
         FXMLLoader loader = new FXMLLoader();
         this.uiController = new UIController(this.mapController);
-        loader.setController(this.uiController);
+
         URL url = this.getClass().getResource("/static/main.fxml");
-        loader.setLocation(url);
-        SplitPane rootPane;
 
         try {
-            rootPane = loader.load();
+            loader.setController(this.uiController);
+            loader.setLocation(url);
+            SplitPane rootPane = loader.load();
+
             Scene scene = new Scene(rootPane, 1024, 640.0D, false, SceneAntialiasing.DISABLED);
             stage.setTitle("SNMP-Map");
             stage.setScene(scene);
@@ -62,7 +64,7 @@ public class Application extends javafx.application.Application {
     }
 
     public void initLocal() {
-        Device entity = new Device(image);
+        Device entity = new Device(image, mapController);
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
             for (NetworkInterface networkInterface : Collections.list(interfaces)) {
@@ -81,5 +83,6 @@ public class Application extends javafx.application.Application {
         mapController.addEntity(entity);
         ScanUtils.scanByPing(mapController, "192.168.88.0", "24");
         ScanUtils.traceRoute(mapController, "31.42.45.42");
+        mapController.addEntity(new Cable(mapController));
     }
 }
