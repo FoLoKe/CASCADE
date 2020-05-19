@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
@@ -33,6 +34,15 @@ public class UIController implements Initializable {
 
     @FXML
     private VBox propsVBox;
+
+    @FXML
+    private TableView propTable;
+
+    @FXML
+    private AnchorPane propAnchor;
+
+    @FXML
+    private AnchorPane outerPropAnchor;
 
     private final MapController mapController;
 
@@ -67,8 +77,16 @@ public class UIController implements Initializable {
             logAnchor.setPrefWidth(newValue.doubleValue());
         }));
 
-        logTextArea.heightProperty().addListener(((ov, oldValue, newValue) -> {
+        outerLogAnchor.heightProperty().addListener(((ov, oldValue, newValue) -> {
             logAnchor.setPrefHeight(newValue.doubleValue());
+        }));
+
+        outerPropAnchor.widthProperty().addListener(((ov, oldValue, newValue) -> {
+            propAnchor.setPrefWidth(newValue.doubleValue());
+        }));
+
+        outerPropAnchor.heightProperty().addListener(((ov, oldValue, newValue) -> {
+            propAnchor.setPrefHeight(newValue.doubleValue());
         }));
 
         LogUtils.init(logTextArea);
