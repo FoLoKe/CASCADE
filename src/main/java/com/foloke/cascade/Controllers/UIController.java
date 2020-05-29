@@ -1,7 +1,10 @@
 package com.foloke.cascade.Controllers;
 
+import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Entity;
 import com.foloke.cascade.utils.LogUtils;
+import com.foloke.cascade.utils.SnmpUtils;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -14,6 +17,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
+import org.snmp4j.smi.OID;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -114,9 +118,17 @@ public class UIController implements Initializable {
                 new Property("destroyed", Boolean.toString(entity.destroyed))
         );
 
-        propTable.setItems(properties);
+        if(entity instanceof Device) {
+            SnmpUtils.walkRequest(((Device)entity).communityTarget, new OID(".1.3.6"), properties);
+            SnmpUtils.initDevice(((Device)entity));
+        }
 
-        System.out.println(propTable.getColumns().size());
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                propTable.setItems(properties);
+            }
+        });
 
     }
 
@@ -124,7 +136,7 @@ public class UIController implements Initializable {
         private String property;
         private String value;
 
-        Property(String property, String value) {
+        public Property(String property, String value) {
             this.property = property;
             this.value = value;
         }

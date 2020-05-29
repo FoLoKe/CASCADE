@@ -9,7 +9,6 @@ import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import org.snmp4j.smi.OID;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,9 +20,11 @@ public class MapController {
     private final List<Entity> toAdd = Collections.synchronizedList(new ArrayList<>());
     private final Camera camera;
     private final TouchPoint touchPoint = new TouchPoint();
+    private final Application context;
 
-    public MapController() {
+    public MapController(Application context) {
         this.camera = new Camera(0, 0, 4);
+        this.context = context;
     }
 
     public void render(GraphicsContext gc) {
@@ -42,7 +43,7 @@ public class MapController {
 
         if (touchPoint.object != null) {
             Rectangle rectangle = touchPoint.object.getHitBox();
-            gc.setLineWidth(5.0D);
+            gc.setLineWidth(1.0D);
             gc.setStroke(Color.YELLOW);
             gc.strokeRect(rectangle.getX(), rectangle.getY(), rectangle.getHeight(), rectangle.getHeight());
         }
@@ -83,25 +84,31 @@ public class MapController {
         Device device = new Device(Application.image, this);
         toAdd.add(device);
         device.addPort(address);
-        device.snmpGet(new OID("1.3.6.1.2.1.1.1.0"));
     }
 
     public void pick(double x, double y) {
         Point2D point2D = camera.translate(x, y);
 
         if(touchPoint.object != null ) {
+            touchPoint.object.selected = false;
             if(touchPoint.object.getHitBox().contains(point2D)) {
                 touchPoint.prevX = (float) point2D.getX() - touchPoint.object.getX();
                 touchPoint.prevY = (float) point2D.getY() - touchPoint.object.getY();
+                touchPoint.object.selected = true;
                 return;
-            }
-            if (touchPoint.object instanceof Device) {
+            } else if (touchPoint.object instanceof Device) {
                 touchPoint.object = ((Device) touchPoint.object).pickPort(point2D);
                 if (touchPoint.object != null) {
+                    touchPoint.object.selected = true;
+                    return;
+                }
+            } else if (touchPoint.object instanceof Device.Port) {
+                touchPoint.object = (((Device.Port) touchPoint.object).parent).pickPort(point2D);
+                if (touchPoint.object != null) {
+                    touchPoint.object.selected = true;
                     return;
                 }
             }
-
         }
 
         touchPoint.object = null;
@@ -109,6 +116,7 @@ public class MapController {
         for (Entity entity : entityList) {
             touchPoint.object = entity.hit(point2D);
             if(touchPoint.object != null) {
+                context.getProps(touchPoint.object);
                 break;
             }
         }

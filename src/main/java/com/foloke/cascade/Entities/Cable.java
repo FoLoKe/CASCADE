@@ -86,9 +86,5 @@ public class Cable extends Entity {
             }
         }
 
-        @Override
-        public void drop(double x, double y) {
-
-        }
     }
 }

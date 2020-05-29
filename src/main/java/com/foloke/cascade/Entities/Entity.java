@@ -8,6 +8,7 @@ import javafx.scene.shape.Rectangle;
 
 public abstract class Entity {
     public boolean destroyed;
+    public boolean selected;
 
     protected Rectangle rectangle;
     MapController mapController;
@@ -38,9 +39,5 @@ public abstract class Entity {
 
     public Rectangle getHitBox() {
         return rectangle;
-    }
-
-    public void drop(double x, double y) {
-
     }
 }
