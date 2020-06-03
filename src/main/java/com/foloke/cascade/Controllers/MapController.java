@@ -148,10 +148,13 @@ public class MapController {
         Point2D point = camera.translate(x, y);
         for (Entity entity : entityList) {
             Entity hitted = entity.hit(point);
-            if(entity instanceof Device) {
-                hitted = ((Device) entity).pickPort(point);
+            if(hitted == null) {
+                if (entity instanceof Device) {
+                    hitted = ((Device) entity).pickPort(point);
+                }
             }
-            if(hitted != null) {
+
+            if (hitted != null) {
                 return hitted;
             }
         }

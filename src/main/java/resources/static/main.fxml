@@ -20,15 +20,7 @@
                   </AnchorPane>
                 <AnchorPane fx:id="outerLogAnchor" minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="160.0">
                      <children>
-                        <ScrollPane fx:id="logScroll" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                          <content>
-                            <AnchorPane fx:id="logAnchor" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
-                                 <children>
-                                    <TextArea fx:id="logTextArea" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                                 </children>
-                              </AnchorPane>
-                          </content>
-                        </ScrollPane>
+                        <TextArea fx:id="logTextArea" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                      </children></AnchorPane>
               </items>
             </SplitPane>

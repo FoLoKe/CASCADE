@@ -12,6 +12,9 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import org.snmp4j.CommunityTarget;
 import org.snmp4j.mp.SnmpConstants;
+import org.snmp4j.security.AuthMD5;
+import org.snmp4j.security.PrivDES;
+import org.snmp4j.smi.OID;
 import org.snmp4j.smi.OctetString;
 import org.snmp4j.smi.UdpAddress;
 
@@ -31,6 +34,14 @@ public class Device extends Entity {
     int snmpVersion = SnmpConstants.version2c;
     int snmpTimeout = 20000;
     String snmpCommunity = "public";
+
+
+    //SNMPv3
+    String snmpPassword = "";
+    OID authProtocol = AuthMD5.ID;
+    OID encryptionProtocol = PrivDES.ID;
+    String snmpEncryptionPass = "";
+    String snmpSecurityName = "";
 
     public Device(Image image, MapController mapController) {
         super(mapController);
@@ -148,6 +159,72 @@ public class Device extends Entity {
         existingPort.name = port.name;
         existingPort.address = port.address;
         existingPort.mac = port.mac;
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        for (Port port : ports) {
+            port.destroy();
+        }
+    }
+
+    public String getSnmpPassword() {
+        return snmpPassword;
+    }
+
+    public void setSnmpPassword(String snmpPassword) {
+        this.snmpPassword = snmpPassword;
+    }
+
+    public String getSnmpAddress() {
+        return snmpAddress;
+    }
+
+    public void setSnmpAddress(String snmpAddress) {
+        this.snmpAddress = snmpAddress;
+    }
+
+    public String getSnmpPort() {
+        return snmpPort;
+    }
+
+    public void setSnmpPort(String snmpPort) {
+        this.snmpPort = snmpPort;
+    }
+
+    public int getSnmpVersion() {
+        return snmpVersion;
+    }
+
+    public void setSnmpVersion(int snmpVersion) {
+        this.snmpVersion = snmpVersion;
+    }
+
+    public int getSnmpTimeout() {
+        return snmpTimeout;
+    }
+
+    public void setSnmpTimeout(int snmpTimeout) {
+        this.snmpTimeout = snmpTimeout;
+    }
+
+    public String getSnmpCommunity() {
+        return snmpCommunity;
+    }
+
+    public void setSnmpCommunity(String snmpCommunity) {
+        this.snmpCommunity = snmpCommunity;
+    }
+
+    public Port findPort(String address) {
+        for (Port port : ports) {
+            if(port.address.equals(address)) {
+                return port;
+            }
+        }
+
+        return ports.get(0);
     }
 
     public static class Port extends Entity {
@@ -286,6 +363,20 @@ public class Device extends Entity {
 
         public void disconnect(Cable.Connector connector) {
             connectors.removeIf(myConnector -> myConnector == connector);
+        }
+
+        @Override
+        public void destroy() {
+            super.destroy();
+            for (Cable.Connector connector : connectors) {
+                connector.disconnect();
+            }
+            connectors.clear();
+        }
+
+        @Override
+        public String toString() {
+            return name + " " + this.address;
         }
     }
 }

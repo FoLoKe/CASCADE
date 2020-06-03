@@ -8,7 +8,6 @@ import com.foloke.cascade.utils.SnmpUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -17,7 +16,6 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -30,14 +28,9 @@ import java.util.ResourceBundle;
 public class UIController implements Initializable {
     @FXML
     private Canvas canvas;
+
     @FXML
     private AnchorPane anchorPane;
-
-    @FXML
-    private AnchorPane logAnchor;
-
-    @FXML
-    private ScrollPane logScroll;
 
     @FXML
     private TextArea logTextArea;
@@ -98,14 +91,6 @@ public class UIController implements Initializable {
 
         this.canvas.setOnScroll(scrollEvent -> this.mapController.zoom( scrollEvent.getDeltaY() > 0));
 
-        outerLogAnchor.widthProperty().addListener(((ov, oldValue, newValue) -> {
-            logAnchor.setPrefWidth(newValue.doubleValue());
-        }));
-
-        outerLogAnchor.heightProperty().addListener(((ov, oldValue, newValue) -> {
-            logAnchor.setPrefHeight(newValue.doubleValue());
-        }));
-
         propertyColumn.setCellValueFactory(new PropertyValueFactory<>("property"));
         valueColumn.setCellValueFactory(new PropertyValueFactory<>("value"));
 
@@ -114,23 +99,18 @@ public class UIController implements Initializable {
         objectContextMenu = new ObjectContextMenu();
         noneObjectContextMenu = new NoneObjectContextMenu(mapController);
 
-        canvas.setOnContextMenuRequested(new EventHandler<ContextMenuEvent>() {
-            @Override
-            public void handle(ContextMenuEvent event) {
-                Entity entity = mapController.hit(event.getX(), event.getY());
-                if(entity != null) {
-                    objectContextMenu.update(entity);
-                    objectContextMenu.show(canvas, event.getScreenX(), event.getScreenY());
-                } else {
-                    noneObjectContextMenu.show(canvas, event.getScreenX(), event.getScreenY());
-                }
+        canvas.setOnContextMenuRequested(event -> {
+            Entity entity = mapController.hit(event.getX(), event.getY());
+            if (entity != null) {
+                objectContextMenu.update(entity);
+                objectContextMenu.show(canvas, event.getScreenX(), event.getScreenY());
+            } else {
+                noneObjectContextMenu.show(canvas, event.getScreenX(), event.getScreenY());
             }
         });
-
     }
 
-
-    private class ObjectContextMenu extends ContextMenu {
+    private static class ObjectContextMenu extends ContextMenu {
         Entity entity;
 
         public ObjectContextMenu() {
@@ -146,8 +126,19 @@ public class UIController implements Initializable {
                 CheckMenuItem checkMenuItem = new CheckMenuItem("Check status");
                 checkMenuItem.setSelected(((Device.Port) entity).pinging);
                 checkMenuItem.setOnAction(event -> {((Device.Port) entity).pinging = checkMenuItem.isSelected();});
-                getItems().addAll(checkMenuItem);
+                getItems().add(checkMenuItem);
+            } else if (entity instanceof Device) {
+                MenuItem snmpMenuItem = new MenuItem("SNMP settings");
+                snmpMenuItem.setOnAction(event -> {
+                    UIController.openDialog(new SNMPSettingsDialogController((Device)entity), Application.snmpDialogURL);
+                });
+                getItems().add(snmpMenuItem);
             }
+
+            MenuItem deleteItem = new MenuItem("Delete");
+            deleteItem.setOnAction(event -> entity.destroy());
+
+            getItems().addAll(deleteItem);
         }
     }
 
@@ -157,25 +148,26 @@ public class UIController implements Initializable {
         public NoneObjectContextMenu(MapController mapController) {
             this.mapController = mapController;
             setAutoHide(true);
-            MenuItem item1 = new MenuItem("Ping Scan");
-            item1.setOnAction(event -> UIController.openPingScanDialog(mapController));
 
+            MenuItem pingItem = new MenuItem("Ping scan");
+            pingItem.setOnAction(event -> UIController.openDialog(new PingDialogController(mapController), Application.pingDialogURL));
 
-            MenuItem item2 = new MenuItem("Menu Item 2");
-            item2.setOnAction(event -> System.out.println("B"));
+            MenuItem pingOneItem = new MenuItem("Ping one");
+            pingOneItem.setOnAction(event -> UIController.openDialog(new PingOneDialogController(mapController), Application.pingOneDialogURL));
 
-            getItems().addAll(item1, item2);
+            MenuItem traceItem = new MenuItem("Trace to");
+            traceItem.setOnAction(event -> UIController.openDialog(new TraceDialogController(mapController), Application.traceDialogURL));
+
+            getItems().addAll(pingItem, pingOneItem, traceItem);
         }
     }
 
-    public static void openPingScanDialog(MapController mapController)  {
+    public static void openDialog(Initializable controller, URL url)  {
         try {
-            FXMLLoader fxmlLoader = new FXMLLoader(Application.pingDialogURL);
-            PingDialogController dialogController = new PingDialogController(mapController);
+            FXMLLoader fxmlLoader = new FXMLLoader(url);
 
-            fxmlLoader.setController(dialogController);
+            fxmlLoader.setController(controller);
             Parent parent = fxmlLoader.load();
-
 
             Scene scene = new Scene(parent);
             Stage stage = new Stage();
@@ -183,6 +175,7 @@ public class UIController implements Initializable {
             stage.setScene(scene);
             stage.showAndWait();
         } catch (Exception e) {
+            e.printStackTrace();
             LogUtils.log(e.toString());
         }
     }
@@ -198,12 +191,7 @@ public class UIController implements Initializable {
             SnmpUtils.initDevice(((Device)entity));
         }
 
-        Platform.runLater(new Runnable() {
-            @Override
-            public void run() {
-                propTable.setItems(properties);
-            }
-        });
+        Platform.runLater(() -> propTable.setItems(properties));
 
     }
 

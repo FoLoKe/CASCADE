@@ -54,4 +54,8 @@ public abstract class Entity {
     public Rectangle getHitBox() {
         return rectangle;
     }
+
+    public void destroy() {
+        destroyed = true;
+    }
 }

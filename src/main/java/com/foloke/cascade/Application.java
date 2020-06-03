@@ -12,6 +12,11 @@ import javafx.scene.SceneAntialiasing;
 import javafx.scene.control.SplitPane;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import org.snmp4j.mp.MPv3;
+import org.snmp4j.security.SecurityModels;
+import org.snmp4j.security.SecurityProtocols;
+import org.snmp4j.security.USM;
+import org.snmp4j.smi.OctetString;
 
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -25,6 +30,9 @@ public class Application extends javafx.application.Application {
     public UIController uiController;
     public static Image image;
     public static URL pingDialogURL;
+    public static URL pingOneDialogURL;
+    public static URL traceDialogURL;
+    public static URL snmpDialogURL;
 
     public Application() {
     }
@@ -46,6 +54,9 @@ public class Application extends javafx.application.Application {
 
         URL url = this.getClass().getResource("/static/main.fxml");
         pingDialogURL = this.getClass().getResource("/static/pingDialog.fxml");
+        pingOneDialogURL = this.getClass().getResource("/static/pingOneDialog.fxml");
+        traceDialogURL = this.getClass().getResource("/static/traceDialog.fxml");
+        snmpDialogURL = this.getClass().getResource("/static/SNMPSettingsDialog.fxml");
 
         try {
             loader.setController(this.uiController);
@@ -67,6 +78,10 @@ public class Application extends javafx.application.Application {
     }
 
     public void initLocal() {
+        OctetString localEngineId = new OctetString(MPv3.createLocalEngineID());
+        USM usm = new USM(SecurityProtocols.getInstance(), localEngineId, 0);
+        SecurityModels.getInstance().addSecurityModel(usm);
+
         Device entity = new Device(image, mapController);
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
