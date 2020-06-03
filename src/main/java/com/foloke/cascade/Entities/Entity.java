@@ -11,7 +11,7 @@ public abstract class Entity {
     public boolean selected;
 
     protected Rectangle rectangle;
-    MapController mapController;
+    public MapController mapController;
 
     public Entity(MapController mapController) {
         this.mapController = mapController;

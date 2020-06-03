@@ -2,7 +2,6 @@ package com.foloke.cascade;
 
 import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.Controllers.UIController;
-import com.foloke.cascade.Entities.Cable;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Entity;
 import com.foloke.cascade.utils.LogUtils;
@@ -96,7 +95,6 @@ public class Application extends javafx.application.Application {
 
         ScanUtils.scanByPing(mapController, "192.168.88.0", "24");
         ScanUtils.traceRoute(mapController, "31.42.45.42");
-        mapController.addEntity(new Cable(mapController));
     }
 
     public void getProps(Entity entity) {

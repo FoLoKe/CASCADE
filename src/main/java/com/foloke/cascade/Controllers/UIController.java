@@ -7,14 +7,13 @@ import com.foloke.cascade.utils.SnmpUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import org.snmp4j.smi.OID;
@@ -59,6 +58,7 @@ public class UIController implements Initializable {
     private TableColumn<Property, String> valueColumn;
 
     private final MapController mapController;
+    private ObjectContextMenu objectContextMenu;
 
     public UIController(MapController mapController) {
         this.mapController = mapController;
@@ -95,21 +95,45 @@ public class UIController implements Initializable {
             logAnchor.setPrefHeight(newValue.doubleValue());
         }));
 
-        outerPropAnchor.widthProperty().addListener(((ov, oldValue, newValue) -> {
-            propAnchor.setPrefWidth(newValue.doubleValue());
-        }));
-
-        outerPropAnchor.heightProperty().addListener(((ov, oldValue, newValue) -> {
-            propAnchor.setPrefHeight(newValue.doubleValue());
-        }));
-
         propertyColumn.setCellValueFactory(new PropertyValueFactory<>("property"));
         valueColumn.setCellValueFactory(new PropertyValueFactory<>("value"));
 
-
-
         LogUtils.init(logTextArea);
 
+        objectContextMenu = new ObjectContextMenu();
+
+        canvas.setOnContextMenuRequested(new EventHandler<ContextMenuEvent>() {
+            @Override
+            public void handle(ContextMenuEvent event) {
+                Entity entity = mapController.hit(event.getX(), event.getY());
+                if(entity != null) {
+                    objectContextMenu.update(entity);
+                    objectContextMenu.show(canvas, event.getScreenX(), event.getScreenY());
+                }
+            }
+        });
+
+    }
+
+
+    private class ObjectContextMenu extends ContextMenu {
+        Entity entity;
+
+        public ObjectContextMenu() {
+
+            setAutoHide(true);
+            MenuItem item1 = new MenuItem("Menu Item 1");
+            item1.setOnAction(event -> System.out.println("A"));
+
+            MenuItem item2 = new MenuItem("Menu Item 2");
+            item2.setOnAction(event -> System.out.println("B"));
+
+            getItems().addAll(item1, item2);
+        }
+
+        public void update(Entity entity) {
+
+        }
     }
 
     public void getProps(Entity entity) {

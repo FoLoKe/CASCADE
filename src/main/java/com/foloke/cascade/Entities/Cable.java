@@ -1,14 +1,15 @@
 package com.foloke.cascade.Entities;
 
 import com.foloke.cascade.Controllers.MapController;
+import com.foloke.cascade.utils.LogUtils;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.shape.Rectangle;
 
 public class Cable extends Entity {
 
-    private final Connector connectorA;
-    private final Connector connectorB;
+    public final Connector connectorA;
+    public final Connector connectorB;
 
     public Cable(MapController mapController) {
         super(mapController);
@@ -46,10 +47,13 @@ public class Cable extends Entity {
     }
 
     public static class Connector extends Entity {
-        private Device.Port connection;
+        public Device.Port connection;
+        private final Cable parent;
 
         public Connector(Cable parent) {
             super(parent.mapController);
+            this.parent = parent;
+
             rectangle = new Rectangle(5, 5);
         }
 
@@ -76,15 +80,20 @@ public class Cable extends Entity {
 
         public void connect(Device.Port connection) {
             this.connection = connection;
-            connection.connector = this;
+            connection.connect(this);
+            LogUtils.log(connection.address + " connected with cable " + this);
         }
 
         public void disconnect() {
             if(connection != null) {
-                connection.connector = null;
+                connection.disconnect(this);
+                LogUtils.log(connection.address + " disconnected with cable " + this);
                 this.connection = null;
             }
         }
 
+        public Cable getParent() {
+            return parent;
+        }
     }
 }

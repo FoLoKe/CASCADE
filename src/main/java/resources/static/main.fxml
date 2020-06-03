@@ -35,20 +35,12 @@
          </children></AnchorPane>
     <AnchorPane fx:id="outerPropAnchor" minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
          <children>
-            <ScrollPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-              <content>
-                <AnchorPane fx:id="propAnchor" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="400.0" prefWidth="99.0">
-                     <children>
-                        <TableView fx:id="propTable" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="400.0" prefWidth="101.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                          <columns>
-                            <TableColumn fx:id="propertyColumn" prefWidth="50.0" text="Prop" />
-                            <TableColumn fx:id="valueColumn" prefWidth="57.0" text="Value" />
-                          </columns>
-                        </TableView>
-                     </children>
-                  </AnchorPane>
-              </content>
-            </ScrollPane>
+            <TableView fx:id="propTable" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="400.0" prefWidth="101.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+              <columns>
+                <TableColumn fx:id="propertyColumn" prefWidth="50.0" text="Prop" />
+                <TableColumn fx:id="valueColumn" prefWidth="57.0" text="Value" />
+              </columns>
+            </TableView>
          </children></AnchorPane>
   </items>
 </SplitPane>

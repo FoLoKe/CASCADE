@@ -121,7 +121,7 @@ public class Device extends Entity {
         return ports;
     }
 
-    public void addOrUpdatePort(Port port) {
+    public Port addOrUpdatePort(Port port) {
         for (Port existingPort : ports) {
             if (port.id == existingPort.id ||
                     existingPort.addType == Port.AddType.SNMP ||
@@ -129,13 +129,15 @@ public class Device extends Entity {
                 if(existingPort.mac.length() > 0 && existingPort.mac.equals(port.mac) ||
                         existingPort.address.length() > 0 &&existingPort.address.equals(port.address)) {
                     updatePort(existingPort, port);
-                    return;
+                    return existingPort;
                 }
             }
         }
 
         port.position = ports.size();
         ports.add(port);
+
+        return port;
     }
 
     private void updatePort(Port existingPort, Port port) {
@@ -160,7 +162,7 @@ public class Device extends Entity {
         public String name;
         public String address;
 
-        Cable.Connector connector;
+        public ArrayList<Cable.Connector> connectors = new ArrayList<>();
         public AddType addType;
 
         public Port(Device parent, NetworkInterface networkInterface, int position) {
@@ -208,17 +210,20 @@ public class Device extends Entity {
         }
 
         public void render(GraphicsContext graphicsContext) {
+            if(active) {
+                graphicsContext.setStroke(Color.GREEN);
+            } else {
+                graphicsContext.setStroke(Color.RED);
+            }
+
             graphicsContext.setLineWidth(0.2f);
             graphicsContext.strokeRect(rectangle.getX(),
                     rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
 
+
             if (selected) {
+                graphicsContext.setStroke(Color.BLACK);
                 graphicsContext.setFont(new Font("sans", 2));
-                if(active) {
-                    graphicsContext.setStroke(Color.GREEN);
-                } else {
-                    graphicsContext.setStroke(Color.RED);
-                }
                 graphicsContext.strokeText(name, rectangle.getX(),
                         rectangle.getY() + rectangle.getHeight());
                 graphicsContext.strokeText(address, rectangle.getX(),
@@ -243,11 +248,30 @@ public class Device extends Entity {
         }
 
         public Entity getObject() {
-            if(connector == null) {
-                return this;
-            } else {
-                return connector;
+            if(connectors.size() > 0) {
+                return connectors.get(0);
             }
+
+            return null;
+        }
+
+        public boolean isConnectedTo(Port port) {
+            for (Cable.Connector connector : connectors) {
+                if(connector.getParent().connectorA.connection == port ||
+                        connector.getParent().connectorB.connection == port) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public void connect(Cable.Connector connector) {
+            connectors.add(connector);
+        }
+
+        public void disconnect(Cable.Connector connector) {
+            connectors.removeIf(myConnector -> myConnector == connector);
         }
     }
 }

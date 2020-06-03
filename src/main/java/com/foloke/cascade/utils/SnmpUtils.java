@@ -13,6 +13,7 @@ import org.snmp4j.util.DefaultPDUFactory;
 import org.snmp4j.util.TreeEvent;
 import org.snmp4j.util.TreeUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -24,6 +25,7 @@ public class SnmpUtils {
     public static OID interfacesDescription = new OID(".1.3.6.1.2.1.2.2.1.2");
     public static OID addressesAddress = new OID(".1.3.6.1.2.1.4.20.1.1");
     public static OID addressesIDS = new OID(".1.3.6.1.2.1.4.20.1.2");
+    public static OID routingIDS = new OID(".1.3.6.1.2.1.4.22.1.1");
 
     public static void getRequest(CommunityTarget<UdpAddress> communityTarget, OID oid) {
         SnmpGet snmpGet = new SnmpGet(communityTarget, oid);
@@ -106,7 +108,7 @@ public class SnmpUtils {
                 }
 
                 for (Map.Entry<OID, String> entry : interfacesInfo.entrySet()) {
-                    Device.Port port = new Device.Port(device, entry.getValue(),0);
+                    Device.Port port = new Device.Port(device, entry.getValue(), 0);
                     port.id = Integer.parseInt(entry.getValue());
                     port.addType = Device.Port.AddType.SNMP;
 
@@ -141,10 +143,39 @@ public class SnmpUtils {
                     }
 
                     port.address = addressesMap.get(Integer.toString(port.id));
-                    if(port.address == null) {
+                    if (port.address == null) {
                         port.address = "";
                     }
-                    device.addOrUpdatePort(port);
+
+                    port = device.addOrUpdatePort(port);
+
+                    if (port.address.length() > 0) {
+                        List<TreeEvent> routingEvents = walk(new OID(routingIDS + "." + entry.getValue()), device.communityTarget);
+
+                        if (routingEvents != null) {
+                            List<OID> routingInfo = new ArrayList<>();
+                            for (TreeEvent event : routingEvents) {
+                                if (valid(event)) {
+                                    VariableBinding[] varBindings = event.getVariableBindings();
+                                    for (VariableBinding varBinding : varBindings) {
+                                        if (varBinding == null) {
+                                            continue;
+                                        }
+                                        routingInfo.add(varBinding.getOid());
+                                    }
+                                }
+                            }
+
+                            for (OID routeOID : routingInfo) {
+                                String address = routeOID.getSuffix(new OID(routingIDS + "." + entry.getValue())).toString();
+                                Device.Port leadingPort = device.mapController.findPort(address);
+
+                                if (leadingPort != null) {
+                                    device.mapController.establishConnection(port, leadingPort);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

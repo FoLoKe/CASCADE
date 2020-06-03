@@ -144,6 +144,18 @@ public class MapController {
         }
     }
 
+    public Entity hit(double x, double y) {
+        Point2D point = camera.translate(x, y);
+        for (Entity entity : entityList) {
+            Entity hitted = entity.hit(point);
+            if(hitted != null) {
+                return hitted;
+            }
+        }
+
+        return null;
+    }
+
     public void drag(float x, float y) {
         Point2D point2D = camera.translate(x, y);
 
@@ -167,6 +179,30 @@ public class MapController {
         } else {
             camera.zoomOut();
         }
+    }
+
+    public Device.Port findPort(String address) {
+        for (Entity entity : entityList) {
+            if(entity instanceof Device) {
+                for(Device.Port port : ((Device)entity).getPorts()) {
+                    if(port.address.equals(address)) {
+                        return port;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public void establishConnection(Device.Port port1, Device.Port port2) {
+        if(port1.isConnectedTo(port2)) {
+            return;
+        }
+        Cable cable = new Cable(this);
+        cable.connectorA.connect(port2);
+        cable.connectorB.connect(port1);
+        addEntity(cable);
     }
 
     private static class TouchPoint {
