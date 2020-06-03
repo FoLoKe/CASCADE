@@ -35,9 +35,11 @@ public class ScanUtils {
     }
 
     public static void ping(Device.Port port) {
-        Ping ping = new Ping(port);
-        Thread thread = new Thread(ping);
-        thread.start();
+        if(port.address.length() > 0) {
+            Ping ping = new Ping(port);
+            Thread thread = new Thread(ping);
+            thread.start();
+        }
     }
 
     public static void traceRoute(MapController mapController, String destination) {

@@ -148,6 +148,9 @@ public class MapController {
         Point2D point = camera.translate(x, y);
         for (Entity entity : entityList) {
             Entity hitted = entity.hit(point);
+            if(entity instanceof Device) {
+                hitted = ((Device) entity).pickPort(point);
+            }
             if(hitted != null) {
                 return hitted;
             }
@@ -166,7 +169,10 @@ public class MapController {
                }
                touchPoint.object.setLocation((float) point2D.getX() - touchPoint.prevX, (float) point2D.getY() - touchPoint.prevY);
             } else {
-                touchPoint.object = ((Device.Port)touchPoint.object).getObject();
+                Entity entity = ((Device.Port)touchPoint.object).getObject();
+                if (entity != null) {
+                    touchPoint.object = entity;
+                }
             }
         } else {
             camera.setLocation((x) / camera.scale  - touchPoint.prevX, (y) / camera.scale - touchPoint.prevY);

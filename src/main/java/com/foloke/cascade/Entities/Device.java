@@ -2,6 +2,7 @@ package com.foloke.cascade.Entities;
 
 import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.utils.LogUtils;
+import com.foloke.cascade.utils.ScanUtils;
 import com.foloke.cascade.utils.Timer;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
@@ -31,14 +32,11 @@ public class Device extends Entity {
     int snmpTimeout = 20000;
     String snmpCommunity = "public";
 
-    private final ArrayList<Timer> timers;
-
     public Device(Image image, MapController mapController) {
         super(mapController);
         this.image = image;
         ports = new ArrayList<>();
         communityTarget = new CommunityTarget<>();
-        timers = new ArrayList<>();
     }
 
     @Override
@@ -51,8 +49,9 @@ public class Device extends Entity {
 
     @Override
     public void tick(long timestamp) {
-        for(Timer timer : timers) {
-            timer.tick(timestamp);
+        super.tick(timestamp);
+        for (Port port : ports) {
+            port.tick(timestamp);
         }
     }
 
@@ -147,14 +146,11 @@ public class Device extends Entity {
         existingPort.mac = port.mac;
     }
 
-    public void addTask(Timer timer) {
-        timers.add(timer);
-    }
-
     public static class Port extends Entity {
         public enum AddType {AUTO, MANUAL, SNMP}
         public Device parent;
         public boolean active;
+        public boolean pinging;
         int position;
 
         public int id;
@@ -187,6 +183,16 @@ public class Device extends Entity {
             this.address = networkInterface.getInetAddresses().nextElement().getHostAddress();
             this.addType = AddType.AUTO;
             this.name = "auto added";
+
+            addTask(new Timer(1000000000) {
+                @Override
+                public void execute() {
+                    if(pinging) {
+                        ScanUtils.ping(Port.this);
+                    }
+                }
+            });
+
             updatePosition();
         }
 
@@ -200,6 +206,15 @@ public class Device extends Entity {
             this.name = "auto added";
             this.address = address;
             this.addType = AddType.AUTO;
+
+            addTask(new Timer(1000000000) {
+                @Override
+                public void execute() {
+                    if(pinging) {
+                        ScanUtils.ping(Port.this);
+                    }
+                }
+            });
 
             updatePosition();
         }
@@ -231,11 +246,6 @@ public class Device extends Entity {
                 graphicsContext.strokeText(mac, rectangle.getX(),
                         rectangle.getY() + rectangle.getHeight() + 8);
             }
-        }
-
-        @Override
-        public void tick(long timestamp) {
-
         }
 
         @Override

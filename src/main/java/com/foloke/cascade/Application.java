@@ -6,7 +6,6 @@ import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Entity;
 import com.foloke.cascade.utils.LogUtils;
 import com.foloke.cascade.utils.ScanUtils;
-import com.foloke.cascade.utils.Timer;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
@@ -73,16 +72,6 @@ public class Application extends javafx.application.Application {
                 if (!networkInterface.isLoopback() && !networkInterface.isVirtual()) {
                     LogUtils.log(networkInterface.toString());
                     Device.Port port = entity.addPort(networkInterface);
-
-                    if(port != null) {
-                        entity.addTask(new Timer(1000000000) {
-                            @Override
-                            public void execute() {
-                                ScanUtils.ping(port);
-                            }
-                        });
-                    }
-
                 } else {
                     LogUtils.log(networkInterface + " is loopback or virtual");
                 }

@@ -79,7 +79,10 @@ public class UIController implements Initializable {
             this.canvas.setHeight(newValue.doubleValue());
         });
 
-        this.canvas.setOnMousePressed(mouseEvent -> UIController.this.mapController.pick((float) mouseEvent.getX(), (float) mouseEvent.getY()));
+        this.canvas.setOnMousePressed(mouseEvent -> {
+            objectContextMenu.hide();
+            UIController.this.mapController.pick((float) mouseEvent.getX(), (float) mouseEvent.getY());
+        });
 
         this.canvas.setOnMouseDragged(mouseEvent -> UIController.this.mapController.drag((float) mouseEvent.getX(), (float) mouseEvent.getY()));
 
@@ -132,7 +135,13 @@ public class UIController implements Initializable {
         }
 
         public void update(Entity entity) {
-
+            getItems().clear();
+            if(entity instanceof Device.Port) {
+                CheckMenuItem checkMenuItem = new CheckMenuItem("Check status");
+                checkMenuItem.setSelected(((Device.Port) entity).pinging);
+                checkMenuItem.setOnAction(event -> {((Device.Port) entity).pinging = checkMenuItem.isSelected();});
+                getItems().addAll(checkMenuItem);
+            }
         }
     }
 
