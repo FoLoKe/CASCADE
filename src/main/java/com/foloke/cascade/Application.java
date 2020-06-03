@@ -7,6 +7,7 @@ import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Entity;
 import com.foloke.cascade.utils.LogUtils;
 import com.foloke.cascade.utils.ScanUtils;
+import com.foloke.cascade.utils.Timer;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
@@ -72,7 +73,16 @@ public class Application extends javafx.application.Application {
             for (NetworkInterface networkInterface : Collections.list(interfaces)) {
                 if (!networkInterface.isLoopback() && !networkInterface.isVirtual()) {
                     LogUtils.log(networkInterface.toString());
-                    entity.addPort(networkInterface);
+                    Device.Port port = entity.addPort(networkInterface);
+
+                    if(port != null) {
+                        entity.addTask(new Timer(1000000000) {
+                            @Override
+                            public void execute() {
+                                ScanUtils.ping(port);
+                            }
+                        });
+                    }
 
                 } else {
                     LogUtils.log(networkInterface + " is loopback or virtual");
@@ -83,6 +93,7 @@ public class Application extends javafx.application.Application {
         }
 
         mapController.addEntity(entity);
+
         ScanUtils.scanByPing(mapController, "192.168.88.0", "24");
         ScanUtils.traceRoute(mapController, "31.42.45.42");
         mapController.addEntity(new Cable(mapController));

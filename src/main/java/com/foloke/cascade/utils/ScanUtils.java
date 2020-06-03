@@ -1,6 +1,7 @@
 package com.foloke.cascade.utils;
 
 import com.foloke.cascade.Controllers.MapController;
+import com.foloke.cascade.Entities.Device;
 import org.apache.commons.net.util.SubnetUtils;
 
 import java.io.BufferedReader;
@@ -31,6 +32,12 @@ public class ScanUtils {
         } catch (Exception e) {
             LogUtils.log(e.toString());
         }
+    }
+
+    public static void ping(Device.Port port) {
+        Ping ping = new Ping(port);
+        Thread thread = new Thread(ping);
+        thread.start();
     }
 
     public static void traceRoute(MapController mapController, String destination) {
@@ -70,11 +77,21 @@ public class ScanUtils {
     static class Ping implements Runnable {
         MapController mapController;
         InetAddress inetAddress;
+        Device.Port port;
 
         public Ping(MapController mapController, String address) {
             this.mapController = mapController;
             try {
                 this.inetAddress = InetAddress.getByName(address);
+            } catch (Exception e) {
+                LogUtils.log(e.toString());
+            }
+        }
+
+        public Ping(Device.Port port) {
+            this.port = port;
+            try {
+                this.inetAddress = InetAddress.getByName(port.address);
             } catch (Exception e) {
                 LogUtils.log(e.toString());
             }
@@ -86,8 +103,13 @@ public class ScanUtils {
                 boolean reachable = inetAddress.isReachable(1000);
 
                 if(reachable) {
-                    mapController.addOrUpdate(inetAddress.getHostAddress());
+                    if(port == null) {
+                        mapController.addOrUpdate(inetAddress.getHostAddress());
+                    } else {
+                        port.active = true;
+                    }
                 }
+                LogUtils.log(inetAddress.getHostAddress() + " reachable: " + reachable);
             } catch (Exception e) {
                 LogUtils.log(e.toString());
             }

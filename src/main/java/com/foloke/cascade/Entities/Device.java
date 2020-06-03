@@ -2,9 +2,11 @@ package com.foloke.cascade.Entities;
 
 import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.utils.LogUtils;
+import com.foloke.cascade.utils.Timer;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import org.snmp4j.CommunityTarget;
@@ -29,11 +31,14 @@ public class Device extends Entity {
     int snmpTimeout = 20000;
     String snmpCommunity = "public";
 
+    private final ArrayList<Timer> timers;
+
     public Device(Image image, MapController mapController) {
         super(mapController);
         this.image = image;
         ports = new ArrayList<>();
         communityTarget = new CommunityTarget<>();
+        timers = new ArrayList<>();
     }
 
     @Override
@@ -45,21 +50,28 @@ public class Device extends Entity {
     }
 
     @Override
-    public void tick() {
-
+    public void tick(long timestamp) {
+        for(Timer timer : timers) {
+            timer.tick(timestamp);
+        }
     }
 
-    public void addPort(NetworkInterface networkInterface) {
+    public Port addPort(NetworkInterface networkInterface) {
         try {
             if(networkInterface.getHardwareAddress() != null) {
-                ports.add(new Port(this, networkInterface, ports.size()));
+                Port port = new Port(this, networkInterface, ports.size());
+                ports.add(port);
                 if(ports.size() == 1) {
                     setCommunityDefaults(networkInterface.getInetAddresses().nextElement().getHostAddress());
                 }
+
+                return port;
             }
         } catch (SocketException e) {
             LogUtils.log(e.toString());
         }
+
+        return null;
     }
 
     public void addPort(String address) {
@@ -133,9 +145,14 @@ public class Device extends Entity {
         existingPort.mac = port.mac;
     }
 
+    public void addTask(Timer timer) {
+        timers.add(timer);
+    }
+
     public static class Port extends Entity {
         public enum AddType {AUTO, MANUAL, SNMP}
         public Device parent;
+        public boolean active;
         int position;
 
         public int id;
@@ -160,7 +177,7 @@ public class Device extends Entity {
                 }
 
                 this.mac = sb.toString();
-                LogUtils.log(mac);
+
             } catch (SocketException e) {
                 LogUtils.log(e.toString());
             }
@@ -185,11 +202,6 @@ public class Device extends Entity {
             updatePosition();
         }
 
-        @Override
-        public void tick() {
-
-        }
-
         public void updatePosition() {
             rectangle.setX(parent.getX() + position * rectangle.getWidth());
             rectangle.setY(parent.getY() + parent.getHitBox().getHeight());
@@ -197,11 +209,16 @@ public class Device extends Entity {
 
         public void render(GraphicsContext graphicsContext) {
             graphicsContext.setLineWidth(0.2f);
-            graphicsContext.setFont(new Font("sans", 2));
             graphicsContext.strokeRect(rectangle.getX(),
                     rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
 
             if (selected) {
+                graphicsContext.setFont(new Font("sans", 2));
+                if(active) {
+                    graphicsContext.setStroke(Color.GREEN);
+                } else {
+                    graphicsContext.setStroke(Color.RED);
+                }
                 graphicsContext.strokeText(name, rectangle.getX(),
                         rectangle.getY() + rectangle.getHeight());
                 graphicsContext.strokeText(address, rectangle.getX(),
@@ -209,6 +226,11 @@ public class Device extends Entity {
                 graphicsContext.strokeText(mac, rectangle.getX(),
                         rectangle.getY() + rectangle.getHeight() + 8);
             }
+        }
+
+        @Override
+        public void tick(long timestamp) {
+
         }
 
         @Override

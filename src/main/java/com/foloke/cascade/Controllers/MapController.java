@@ -28,17 +28,14 @@ public class MapController {
     }
 
     public void render(GraphicsContext gc) {
-        tick();
-
         gc.scale(this.camera.scale, this.camera.scale);
         gc.translate(camera.x, camera.y);
         gc.setLineWidth(5.0D);
         gc.setStroke(Color.RED);
         gc.strokeRect(-1, -1, 1 ,1);
 
-        Iterator<Entity> iterator = entityList.iterator();
-        while (iterator.hasNext()) {
-            iterator.next().render(gc);
+        for (Entity entity : entityList) {
+            entity.render(gc);
         }
 
         if (touchPoint.object != null) {
@@ -50,7 +47,7 @@ public class MapController {
 
     }
 
-    public void tick() {
+    public void tick(long timestamp) {
         entityList.addAll(toAdd);
         toAdd.clear();
         Iterator<Entity> iterator = this.entityList.iterator();
@@ -61,7 +58,7 @@ public class MapController {
                 iterator.remove();
                 continue;
             }
-            entity.tick();
+            entity.tick(timestamp);
         }
 
     }

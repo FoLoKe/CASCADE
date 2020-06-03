@@ -20,7 +20,7 @@ public abstract class Entity {
 
     public abstract void render(GraphicsContext var1);
 
-    public abstract void tick();
+    public abstract void tick(long timestamp);
 
     public void setLocation(double x, double y) {
         rectangle.setX(x);

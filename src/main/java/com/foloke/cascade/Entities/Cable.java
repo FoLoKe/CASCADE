@@ -27,9 +27,9 @@ public class Cable extends Entity {
     }
 
     @Override
-    public void tick() {
-        connectorA.tick();
-        connectorB.tick();
+    public void tick(long timestamp) {
+        connectorA.tick(timestamp);
+        connectorB.tick(timestamp);
     }
 
     @Override
@@ -59,7 +59,7 @@ public class Cable extends Entity {
         }
 
         @Override
-        public void tick() {
+        public void tick(long timestamp) {
             if(connection != null) {
                 rectangle.setX(connection.getX());
                 rectangle.setY(connection.getY());
