@@ -1,5 +1,6 @@
 package com.foloke.cascade.Controllers;
 
+import com.foloke.cascade.Application;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Entity;
 import com.foloke.cascade.utils.LogUtils;
@@ -9,13 +10,18 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import org.snmp4j.smi.OID;
 
 import java.net.URL;
@@ -59,6 +65,7 @@ public class UIController implements Initializable {
 
     private final MapController mapController;
     private ObjectContextMenu objectContextMenu;
+    private NoneObjectContextMenu noneObjectContextMenu;
 
     public UIController(MapController mapController) {
         this.mapController = mapController;
@@ -81,6 +88,7 @@ public class UIController implements Initializable {
 
         this.canvas.setOnMousePressed(mouseEvent -> {
             objectContextMenu.hide();
+            noneObjectContextMenu.hide();
             UIController.this.mapController.pick((float) mouseEvent.getX(), (float) mouseEvent.getY());
         });
 
@@ -104,6 +112,7 @@ public class UIController implements Initializable {
         LogUtils.init(logTextArea);
 
         objectContextMenu = new ObjectContextMenu();
+        noneObjectContextMenu = new NoneObjectContextMenu(mapController);
 
         canvas.setOnContextMenuRequested(new EventHandler<ContextMenuEvent>() {
             @Override
@@ -112,6 +121,8 @@ public class UIController implements Initializable {
                 if(entity != null) {
                     objectContextMenu.update(entity);
                     objectContextMenu.show(canvas, event.getScreenX(), event.getScreenY());
+                } else {
+                    noneObjectContextMenu.show(canvas, event.getScreenX(), event.getScreenY());
                 }
             }
         });
@@ -125,16 +136,11 @@ public class UIController implements Initializable {
         public ObjectContextMenu() {
 
             setAutoHide(true);
-            MenuItem item1 = new MenuItem("Menu Item 1");
-            item1.setOnAction(event -> System.out.println("A"));
 
-            MenuItem item2 = new MenuItem("Menu Item 2");
-            item2.setOnAction(event -> System.out.println("B"));
-
-            getItems().addAll(item1, item2);
         }
 
         public void update(Entity entity) {
+            this.entity = entity;
             getItems().clear();
             if(entity instanceof Device.Port) {
                 CheckMenuItem checkMenuItem = new CheckMenuItem("Check status");
@@ -142,6 +148,42 @@ public class UIController implements Initializable {
                 checkMenuItem.setOnAction(event -> {((Device.Port) entity).pinging = checkMenuItem.isSelected();});
                 getItems().addAll(checkMenuItem);
             }
+        }
+    }
+
+    private static class NoneObjectContextMenu extends ContextMenu {
+        MapController mapController;
+
+        public NoneObjectContextMenu(MapController mapController) {
+            this.mapController = mapController;
+            setAutoHide(true);
+            MenuItem item1 = new MenuItem("Ping Scan");
+            item1.setOnAction(event -> UIController.openPingScanDialog(mapController));
+
+
+            MenuItem item2 = new MenuItem("Menu Item 2");
+            item2.setOnAction(event -> System.out.println("B"));
+
+            getItems().addAll(item1, item2);
+        }
+    }
+
+    public static void openPingScanDialog(MapController mapController)  {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(Application.pingDialogURL);
+            PingDialogController dialogController = new PingDialogController(mapController);
+
+            fxmlLoader.setController(dialogController);
+            Parent parent = fxmlLoader.load();
+
+
+            Scene scene = new Scene(parent);
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setScene(scene);
+            stage.showAndWait();
+        } catch (Exception e) {
+            LogUtils.log(e.toString());
         }
     }
 

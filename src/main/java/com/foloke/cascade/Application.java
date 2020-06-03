@@ -24,6 +24,7 @@ public class Application extends javafx.application.Application {
     public MapController mapController;
     public UIController uiController;
     public static Image image;
+    public static URL pingDialogURL;
 
     public Application() {
     }
@@ -44,6 +45,7 @@ public class Application extends javafx.application.Application {
         this.uiController = new UIController(this.mapController);
 
         URL url = this.getClass().getResource("/static/main.fxml");
+        pingDialogURL = this.getClass().getResource("/static/pingDialog.fxml");
 
         try {
             loader.setController(this.uiController);

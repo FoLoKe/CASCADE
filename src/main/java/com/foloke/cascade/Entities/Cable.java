@@ -4,6 +4,7 @@ import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.utils.LogUtils;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 public class Cable extends Entity {
@@ -19,6 +20,7 @@ public class Cable extends Entity {
 
     @Override
     public void render(GraphicsContext gc) {
+        gc.setStroke(Color.BLACK);
         gc.strokeLine(connectorA.getX() + connectorA.rectangle.getWidth() / 2,
                 connectorA.getY() + connectorA.rectangle.getHeight() / 2,
                 connectorB.getX() + connectorB.rectangle.getWidth() / 2,
@@ -59,6 +61,7 @@ public class Cable extends Entity {
 
         @Override
         public void render(GraphicsContext gc) {
+            gc.setStroke(Color.BLACK);
             gc.strokeRect(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
         }
 

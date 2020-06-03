@@ -73,13 +73,17 @@ public class Device extends Entity {
         return null;
     }
 
-    public void addPort(String address) {
-        ports.add(new Port(this, address, ports.size()));
+    public Port addPort(String address) {
+        Port port = new Port(this, address, ports.size());
+
+        ports.add(port);
         if(ports.size() == 1) {
             setCommunityDefaults(address);
         }
 
         LogUtils.logToFile(name, "port added");
+
+        return port;
     }
 
     public void setCommunityDefaults(String snmpAddress) {

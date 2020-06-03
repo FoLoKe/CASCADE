@@ -1,5 +1,6 @@
 package com.foloke.cascade.utils;
 
+import com.foloke.cascade.Application;
 import com.foloke.cascade.Controllers.UIController;
 import com.foloke.cascade.Entities.Device;
 import org.snmp4j.*;
@@ -26,6 +27,7 @@ public class SnmpUtils {
     public static OID addressesAddress = new OID(".1.3.6.1.2.1.4.20.1.1");
     public static OID addressesIDS = new OID(".1.3.6.1.2.1.4.20.1.2");
     public static OID routingIDS = new OID(".1.3.6.1.2.1.4.22.1.1");
+    public static OID routingMAC = new OID(".1.3.6.1.2.1.4.22.1.2");
 
     public static void getRequest(CommunityTarget<UdpAddress> communityTarget, OID oid) {
         SnmpGet snmpGet = new SnmpGet(communityTarget, oid);
@@ -172,7 +174,32 @@ public class SnmpUtils {
 
                                 if (leadingPort != null) {
                                     device.mapController.establishConnection(port, leadingPort);
+                                } else {
+                                    pdu = new PDU();
+                                    pdu.add(new VariableBinding(new OID(routingMAC + "." + entry.getValue() + "." + address + ".0")));
+                                    pdu.setType(PDU.GET);
+                                    String mac = null;
+                                    
+                                    info = get(pdu, device.communityTarget);
+                                    if (info != null) {
+                                        for (VariableBinding varBinding : info) {
+                                            if (varBinding == null) {
+                                                continue;
+                                            }
+                                            mac = varBinding.getVariable().toString();
+                                            LogUtils.log("." + varBinding.getOid().toString() + " = " + varBinding.getVariable().toString());
+                                        }
+                                    }
+                                    
+                                    if(mac != null) {
+                                        Device leadingDevice = new Device(Application.image, device.mapController);
+                                        leadingPort = leadingDevice.addPort(address);
+                                        leadingPort.mac = mac;
+                                        device.mapController.addEntity(leadingDevice);
+                                    }
                                 }
+
+                                device.mapController.establishConnection(port, leadingPort);
                             }
                         }
                     }
