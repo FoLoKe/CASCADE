@@ -52,7 +52,8 @@ public class Application extends javafx.application.Application {
             SplitPane rootPane = loader.load();
 
             Scene scene = new Scene(rootPane, 1024, 640.0D, false, SceneAntialiasing.DISABLED);
-            stage.setTitle("SNMP-Map");
+            stage.setTitle("CASCADE");
+            stage.getIcons().add(image);
             stage.setScene(scene);
             this.renderer = new Renderer(this);
             stage.show();
