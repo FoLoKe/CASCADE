@@ -10,6 +10,7 @@ import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
+import org.apache.commons.net.util.SubnetUtils;
 import org.snmp4j.CommunityTarget;
 import org.snmp4j.Target;
 import org.snmp4j.UserTarget;
@@ -25,6 +26,7 @@ import org.snmp4j.smi.UdpAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class Device extends Entity {
     Image image;
@@ -291,6 +293,7 @@ public class Device extends Entity {
         public String mac;
         public String name;
         public String address;
+        public int mask = 24;
 
         public ArrayList<Cable.Connector> connectors = new ArrayList<>();
         public AddType addType;
@@ -421,15 +424,26 @@ public class Device extends Entity {
         @Override
         public void destroy() {
             super.destroy();
-            for (Cable.Connector connector : connectors) {
-                connector.disconnect();
+            Iterator<Cable.Connector> iterator = connectors.iterator();
+            while (iterator.hasNext()) {
+                Cable.Connector connector = iterator.next();
+                connector.connection = null;
+                iterator.remove();
             }
-            connectors.clear();
         }
 
         @Override
         public String toString() {
             return name + " " + this.address;
+        }
+
+        public boolean isInRange(String address) {
+            if(this.address.length() > 0) {
+                SubnetUtils subnetUtils = new SubnetUtils(this.address + "/" + mask);
+                return subnetUtils.getInfo().isInRange(address);
+            }
+
+            return false;
         }
     }
 }

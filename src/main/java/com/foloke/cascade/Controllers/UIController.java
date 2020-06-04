@@ -1,6 +1,7 @@
 package com.foloke.cascade.Controllers;
 
 import com.foloke.cascade.Application;
+import com.foloke.cascade.Entities.Cable;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Entity;
 import com.foloke.cascade.utils.LogUtils;
@@ -136,7 +137,10 @@ public class UIController implements Initializable {
             }
 
             MenuItem deleteItem = new MenuItem("Delete");
-            deleteItem.setOnAction(event -> entity.destroy());
+            deleteItem.setOnAction(event -> {
+                entity.destroy();
+                entity.mapController.pick(-1, -1);
+            });
 
             getItems().addAll(deleteItem);
         }
@@ -152,13 +156,23 @@ public class UIController implements Initializable {
             MenuItem pingItem = new MenuItem("Ping scan");
             pingItem.setOnAction(event -> UIController.openDialog(new PingDialogController(mapController), Application.pingDialogURL));
 
-            MenuItem pingOneItem = new MenuItem("Ping one");
+            MenuItem pingOneItem = new MenuItem("Ping and add one");
             pingOneItem.setOnAction(event -> UIController.openDialog(new PingOneDialogController(mapController), Application.pingOneDialogURL));
 
             MenuItem traceItem = new MenuItem("Trace to");
             traceItem.setOnAction(event -> UIController.openDialog(new TraceDialogController(mapController), Application.traceDialogURL));
 
-            getItems().addAll(pingItem, pingOneItem, traceItem);
+            MenuItem addCableItem = new MenuItem("Add Cable");
+            addCableItem.setOnAction(event -> {
+                Cable cable = new Cable(mapController);
+                cable.connectorA.setLocation(mapController.getTouchPointX(), mapController.getTouchPointY());
+                cable.connectorB.setLocation(mapController.getTouchPointX() + 32, mapController.getTouchPointY());
+                mapController.addEntity(cable);
+            });
+
+            getItems().addAll(pingItem, pingOneItem, traceItem, addCableItem);
+
+
         }
     }
 

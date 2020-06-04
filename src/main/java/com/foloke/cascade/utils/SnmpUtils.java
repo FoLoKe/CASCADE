@@ -72,8 +72,6 @@ public class SnmpUtils {
                             if (varBinding == null) {
                                 continue;
                             }
-
-                            LogUtils.log("." + varBinding.getOid().toString() + " = " + varBinding.getVariable().toString());
                             interfacesInfo.put(varBinding.getOid(), varBinding.getVariable().toString());
                         }
                     }
@@ -87,8 +85,6 @@ public class SnmpUtils {
                             if (varBinding == null) {
                                 continue;
                             }
-
-                            LogUtils.log("." + varBinding.getOid().toString() + " = " + varBinding.getVariable().toString());
                             addressesInfo.put(varBinding.getOid(), varBinding.getVariable().toString());
                         }
                     }
@@ -107,7 +103,6 @@ public class SnmpUtils {
                                 continue;
                             }
                             addressesMap.put(varBinding.getVariable().toString(), entry.getValue());
-                            LogUtils.log("." + varBinding.getOid().toString() + " = " + varBinding.getVariable().toString());
                         }
                     }
 
@@ -129,7 +124,6 @@ public class SnmpUtils {
                                 continue;
                             }
                             port.mac = varBinding.getVariable().toString();
-                            LogUtils.log("." + varBinding.getOid().toString() + " = " + varBinding.getVariable().toString());
                         }
                     }
 
@@ -144,7 +138,6 @@ public class SnmpUtils {
                                 continue;
                             }
                             port.name = varBinding.getVariable().toString();
-                            LogUtils.log("." + varBinding.getOid().toString() + " = " + varBinding.getVariable().toString());
                         }
                     }
 
@@ -191,7 +184,6 @@ public class SnmpUtils {
                                                 continue;
                                             }
                                             mac = varBinding.getVariable().toString();
-                                            LogUtils.log("." + varBinding.getOid().toString() + " = " + varBinding.getVariable().toString());
                                         }
                                     }
                                     
@@ -282,16 +274,13 @@ public class SnmpUtils {
     }
 
     private static List<TreeEvent> walk(OID oid, Target<UdpAddress> target, UsmUser user) {
-
         try {
             TransportMapping<? extends Address> transport = new DefaultUdpTransportMapping();
             Snmp snmp = new Snmp(transport);
-            Target<UdpAddress> actualTarget = target;
 
             if(target.getVersion() == SnmpConstants.version3) {
                 snmp.getUSM().addUser(user.getSecurityName(), user);
                 SecurityModels.getInstance().addSecurityModel(new TSM(Application.localEngineId, false));
-
             }
 
             transport.listen();
@@ -345,8 +334,6 @@ public class SnmpUtils {
             transport.close();
         } catch (Exception e) {
             LogUtils.log(e.toString());
-        } finally {
-
         }
         return vbs;
     }

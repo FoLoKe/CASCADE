@@ -48,6 +48,19 @@ public class Cable extends Entity {
         return null;
     }
 
+    @Override
+    public void destroy() {
+        super.destroy();
+
+        if(!connectorA.destroyed) {
+            connectorA.destroy();
+        }
+
+        if (!connectorB.destroyed) {
+            connectorB.destroy();
+        }
+    }
+
     public static class Connector extends Entity {
         public Device.Port connection;
         private final Cable parent;
@@ -97,6 +110,12 @@ public class Cable extends Entity {
 
         public Cable getParent() {
             return parent;
+        }
+
+        @Override
+        public void destroy() {
+            super.destroy();
+            parent.destroy();
         }
     }
 }

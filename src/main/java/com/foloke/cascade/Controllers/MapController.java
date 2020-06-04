@@ -5,12 +5,10 @@ import com.foloke.cascade.Camera;
 import com.foloke.cascade.Entities.Cable;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Entity;
-import com.foloke.cascade.utils.SnmpUtils;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import org.snmp4j.smi.OID;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,15 +43,19 @@ public class MapController {
             gc.setLineWidth(1.0D);
             gc.setStroke(Color.YELLOW);
             gc.strokeRect(rectangle.getX(), rectangle.getY(), rectangle.getHeight(), rectangle.getHeight());
-        }
 
+            if(touchPoint.object instanceof Device.Port) {
+                rectangle = ((Device.Port)touchPoint.object).parent.getHitBox();
+                gc.strokeRect(rectangle.getX(), rectangle.getY(), rectangle.getHeight(), rectangle.getHeight());
+            }
+        }
     }
 
     public void tick(long timestamp) {
         entityList.addAll(toAdd);
         toAdd.clear();
-        Iterator<Entity> iterator = this.entityList.iterator();
 
+        Iterator<Entity> iterator = this.entityList.iterator();
         while(iterator.hasNext()) {
             Entity entity = iterator.next();
             if(entity.destroyed) {
@@ -62,7 +64,6 @@ public class MapController {
             }
             entity.tick(timestamp);
         }
-
     }
 
     public void addEntity(Entity entity) {
@@ -74,6 +75,7 @@ public class MapController {
             if (entity instanceof Device) {
                 for (Device.Port port : ((Device) entity).getPorts()) {
                     if (port.address.equals(address)) {
+                        port.active = true;
                         return (Device) entity;
                     }
                 }
@@ -117,8 +119,7 @@ public class MapController {
         for (Entity entity : entityList) {
             touchPoint.object = entity.hit(point2D);
             if(touchPoint.object != null) {
-                //context.getProps(touchPoint.object);
-                SnmpUtils.getRequest(((Device)touchPoint.object).target, ((Device)touchPoint.object).user,  new OID("1.3.6.1.2.1.1.1.0"));
+                context.getProps(touchPoint.object);
                 break;
             }
         }
@@ -226,5 +227,13 @@ public class MapController {
         public double prevY;
 
         public Entity object;
+    }
+
+    public double getTouchPointX() {
+        return touchPoint.prevX;
+    }
+
+    public double getTouchPointY() {
+        return touchPoint.prevY;
     }
 }

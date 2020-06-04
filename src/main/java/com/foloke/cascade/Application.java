@@ -16,11 +16,7 @@ import org.snmp4j.mp.MPv3;
 import org.snmp4j.security.*;
 import org.snmp4j.smi.OctetString;
 
-import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.net.URL;
-import java.util.Collections;
-import java.util.Enumeration;
 
 public class Application extends javafx.application.Application {
     private Renderer renderer;
@@ -70,39 +66,23 @@ public class Application extends javafx.application.Application {
             this.renderer = new Renderer(this);
             stage.show();
 
-            initLocal();
+            Device device = ScanUtils.initLocal(mapController);
+            //mapController.addEntity(device);
+
+            localEngineId = new OctetString(MPv3.createLocalEngineID());
+            USM usm = new USM(SecurityProtocols.getInstance(), localEngineId, 0);
+            SecurityModels.getInstance().addSecurityModel(usm);
+            SecurityProtocols.getInstance().addAuthenticationProtocol(new AuthMD5());
+            SecurityProtocols.getInstance().addPrivacyProtocol(new PrivDES());
+            SecurityProtocols.getInstance().addAuthenticationProtocol(new AuthSHA());
+            SecurityProtocols.getInstance().addPrivacyProtocol(new PrivAES128());
+
             this.renderer.start();
         } catch (Exception e) {
             LogUtils.log(e.toString());
         }
     }
 
-    public void initLocal() {
-        localEngineId = new OctetString(MPv3.createLocalEngineID());
-        USM usm = new USM(SecurityProtocols.getInstance(), localEngineId, 0);
-        SecurityModels.getInstance().addSecurityModel(usm);
-        SecurityProtocols.getInstance().addAuthenticationProtocol(new AuthMD5());
-        SecurityProtocols.getInstance().addPrivacyProtocol(new PrivDES());
-        SecurityProtocols.getInstance().addAuthenticationProtocol(new AuthSHA());
-        SecurityProtocols.getInstance().addPrivacyProtocol(new PrivAES128());
-
-        Device entity = new Device(image, mapController);
-        try {
-            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-            for (NetworkInterface networkInterface : Collections.list(interfaces)) {
-                if (!networkInterface.isLoopback() && !networkInterface.isVirtual()) {
-                    LogUtils.log(networkInterface.toString());
-                    Device.Port port = entity.addPort(networkInterface);
-                } else {
-                    LogUtils.log(networkInterface + " is loopback or virtual");
-                }
-            }
-        } catch (SocketException e) {
-            LogUtils.log(e.toString());
-        }
-
-        ScanUtils.scanByPing(mapController, "192.168.88.0", "24");
-    }
 
     public void getProps(Entity entity) {
         uiController.getProps(entity);

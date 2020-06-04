@@ -1,5 +1,6 @@
 package com.foloke.cascade.utils;
 
+import com.foloke.cascade.Application;
 import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.Entities.Device;
 import org.apache.commons.net.util.SubnetUtils;
@@ -8,7 +9,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -59,17 +64,67 @@ public class ScanUtils {
 
         @Override
         public void run() {
+
+            Device local = initLocal(mapController);
+            Device previousHop = null;
+            if(local.getPorts().size() > 0) {
+                Device.Port port = mapController.findPort(local.getPorts().get(0).address);
+                if(port != null) {
+                    previousHop = mapController.findPort(local.getPorts().get(0).address).parent;
+                    if (previousHop == null) {
+                        mapController.addEntity(local);
+                        previousHop = local;
+                    }
+                } else {
+                    mapController.addEntity(local);
+                    previousHop = local;
+                }
+            }
+
             try {
                 List<String> hops = trace(address, 1000, 10);
                 if(hops.get(hops.size() - 1).equals(address)) {
                     LogUtils.log("tracing succeed");
+                        for (String hop : hops) {
+                            SubnetUtils subnetUtils = new SubnetUtils(hop + "/" + 24);
+                            Device.Port portA = null;
+                            Device.Port portB = null;
+                            Device device = mapController.addOrUpdate(hop);
+
+                            for (Device.Port previousHopPort : previousHop.getPorts()) {
+                                if (previousHopPort.isInRange(hop)) {
+                                    portB = previousHopPort;
+                                }
+                            }
+                            if (portB == null) {
+                                portB = previousHop.addPort("");
+                                portB.name = "unknown (added by tracing)";
+                                portB.address = subnetUtils.getInfo().getNetworkAddress();
+                            }
+
+                            portB.active = true;
+
+                            for (Device.Port nextHopPort : device.getPorts()) {
+                                if (nextHopPort.isInRange(hop)) {
+                                    portA = nextHopPort;
+                                }
+                            }
+                            if (portA == null) {
+                                portA = device.addPort("");
+                                portA.name = "unknown (added by tracing)";
+                                portA.address = hop;
+                            }
+                            portA.active = true;
+
+                            mapController.establishConnection(portA, portB);
+
+                            previousHop = device;
+                        }
                 } else {
                     LogUtils.log("tracing fail");
                 }
 
-                for (String hop : hops) {
-                    mapController.addOrUpdate(hop);
-                }
+
             } catch (Exception e) {
                 LogUtils.log(e.toString());
             }
@@ -183,5 +238,24 @@ public class ScanUtils {
         }
 
         return cmdResult;
+    }
+
+    public static Device initLocal(MapController mapController) {
+        Device entity = new Device(Application.image, mapController);
+        try {
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            for (NetworkInterface networkInterface : Collections.list(interfaces)) {
+                if (!networkInterface.isLoopback() && !networkInterface.isVirtual()) {
+                    LogUtils.log(networkInterface.toString());
+                    Device.Port port = entity.addPort(networkInterface);
+                } else {
+                    LogUtils.log(networkInterface + " is loopback or virtual");
+                }
+            }
+        } catch (SocketException e) {
+            LogUtils.log(e.toString());
+        }
+
+        return entity;
     }
 }
