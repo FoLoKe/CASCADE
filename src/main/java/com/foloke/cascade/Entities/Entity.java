@@ -16,6 +16,8 @@ public abstract class Entity {
     public boolean destroyed;
     public boolean selected;
 
+    public Group group;
+
     protected String name = "name";
 
     protected  ArrayList<Timer> timers;
@@ -53,6 +55,10 @@ public abstract class Entity {
     public void setLocation(double x, double y) {
         rectangle.setX(x);
         rectangle.setY(y);
+    }
+
+    public void move(Point2D point2D) {
+        setLocation(rectangle.getX() + point2D.getX(),rectangle.getY() + point2D.getY());
     }
 
     public double getX() {

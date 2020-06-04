@@ -18,6 +18,7 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -84,14 +85,30 @@ public class UIController implements Initializable {
         this.canvas.setOnMousePressed(mouseEvent -> {
             objectContextMenu.hide();
             noneObjectContextMenu.hide();
-            UIController.this.mapController.pick((float) mouseEvent.getX(), (float) mouseEvent.getY());
+            if (mouseEvent.getButton() == MouseButton.PRIMARY) {
+                UIController.this.mapController.pick((float) mouseEvent.getX(), (float) mouseEvent.getY());
+            } else {
+                UIController.this.mapController.beginGrouping(mouseEvent.getX(), mouseEvent.getY());
+            }
         });
 
-        this.canvas.setOnMouseDragged(mouseEvent -> UIController.this.mapController.drag((float) mouseEvent.getX(), (float) mouseEvent.getY()));
+        this.canvas.setOnMouseDragged(mouseEvent -> {
+            if (mouseEvent.getButton() == MouseButton.PRIMARY) {
+                UIController.this.mapController.drag((float) mouseEvent.getX(), (float) mouseEvent.getY());
+            } else {
+                UIController.this.mapController.grouping(mouseEvent.getX(), mouseEvent.getY());
+            }
+        });
 
-        this.canvas.setOnMouseReleased(mouseEvent -> UIController.this.mapController.drop(mouseEvent.getX(), mouseEvent.getY()));
+        this.canvas.setOnMouseReleased(mouseEvent -> {
+            if (mouseEvent.getButton() == MouseButton.PRIMARY) {
+                UIController.this.mapController.drop(mouseEvent.getX(), mouseEvent.getY());
+            } else {
+                UIController.this.mapController.endGrouping(mouseEvent.getX(), mouseEvent.getY());
+            }
+        });
 
-        this.canvas.setOnScroll(scrollEvent -> this.mapController.zoom( scrollEvent.getDeltaY() > 0));
+        this.canvas.setOnScroll(scrollEvent -> this.mapController.zoom(scrollEvent.getDeltaY() > 0));
 
         propertyColumn.setCellValueFactory(new PropertyValueFactory<>("property"));
         valueColumn.setCellValueFactory(new PropertyValueFactory<>("value"));
@@ -111,6 +128,7 @@ public class UIController implements Initializable {
             }
         });
     }
+
 
     private static class ObjectContextMenu extends ContextMenu {
         Entity entity;

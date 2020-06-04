@@ -5,6 +5,7 @@ import com.foloke.cascade.Camera;
 import com.foloke.cascade.Entities.Cable;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Entity;
+import com.foloke.cascade.Entities.Group;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -21,10 +22,12 @@ public class MapController {
     private final Camera camera;
     private final TouchPoint touchPoint = new TouchPoint();
     private final Application context;
+    private Rectangle groupRectangle;
 
     public MapController(Application context) {
         this.camera = new Camera(0, 0, 4);
         this.context = context;
+        groupRectangle = new Rectangle();
     }
 
     public void render(GraphicsContext gc) {
@@ -42,13 +45,17 @@ public class MapController {
             Rectangle rectangle = touchPoint.object.getHitBox();
             gc.setLineWidth(1.0D);
             gc.setStroke(Color.YELLOW);
-            gc.strokeRect(rectangle.getX(), rectangle.getY(), rectangle.getHeight(), rectangle.getHeight());
+            gc.strokeRect(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
 
             if(touchPoint.object instanceof Device.Port) {
                 rectangle = ((Device.Port)touchPoint.object).parent.getHitBox();
-                gc.strokeRect(rectangle.getX(), rectangle.getY(), rectangle.getHeight(), rectangle.getHeight());
+                gc.strokeRect(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
             }
         }
+
+        gc.setStroke(Color.BLACK);
+        gc.setLineWidth(4d);
+        gc.strokeRect(groupRectangle.getX(), groupRectangle.getY(), groupRectangle.getWidth(), groupRectangle.getHeight());
     }
 
     public void tick(long timestamp) {
@@ -94,20 +101,42 @@ public class MapController {
 
         if(touchPoint.object != null ) {
             touchPoint.object.selected = false;
-            if(touchPoint.object.getHitBox().contains(point2D)) {
+
+            if (touchPoint.object instanceof Group) {
+                Entity entity = touchPoint.object.hit(point2D);
+                if (entity != null) {
+                    touchPoint.object = entity;
+                    touchPoint.prevX = (float) point2D.getX() - touchPoint.object.getX();
+                    touchPoint.prevY = (float) point2D.getY() - touchPoint.object.getY();
+                    touchPoint.object.selected = true;
+
+                    if(touchPoint.object.group != null) {
+                        touchPoint.object.group.removeFromGroup(touchPoint.object);
+                    }
+
+                    return;
+                }
+            } else if(touchPoint.object.getHitBox().contains(point2D)) {
                 touchPoint.prevX = (float) point2D.getX() - touchPoint.object.getX();
                 touchPoint.prevY = (float) point2D.getY() - touchPoint.object.getY();
                 touchPoint.object.selected = true;
+
+                if(touchPoint.object.group != null) {
+                    touchPoint.object.group.removeFromGroup(touchPoint.object);
+                }
+
                 return;
             } else if (touchPoint.object instanceof Device) {
-                touchPoint.object = ((Device) touchPoint.object).pickPort(point2D);
-                if (touchPoint.object != null) {
+                Entity entity = ((Device) touchPoint.object).pickPort(point2D);
+                if (entity != null) {
+                    touchPoint.object = entity;
                     touchPoint.object.selected = true;
                     return;
                 }
             } else if (touchPoint.object instanceof Device.Port) {
-                touchPoint.object = (((Device.Port) touchPoint.object).parent).pickPort(point2D);
-                if (touchPoint.object != null) {
+                Entity entity = (((Device.Port) touchPoint.object).parent).pickPort(point2D);
+                if (entity != null) {
+                    touchPoint.object = entity;
                     touchPoint.object.selected = true;
                     return;
                 }
@@ -135,14 +164,37 @@ public class MapController {
 
     public void drop(double x, double y) {
         Point2D point2D = camera.translate(x, y);
-        if(touchPoint.object != null && touchPoint.object instanceof Cable.Connector) {
-            for (Entity entity : entityList) {
-                if (entity instanceof Device) {
-                    for (Device.Port port : ((Device) entity).getPorts()) {
-                        if (port.getHitBox().contains(point2D.getX(), point2D.getY())) {
-                            ((Cable.Connector)touchPoint.object).connect(port);
-                            System.out.println("connected");
-                            return;
+        if(touchPoint.object != null) {
+            if (touchPoint.object instanceof Cable.Connector) {
+                for (Entity entity : entityList) {
+                    if (entity instanceof Device) {
+                        for (Device.Port port : ((Device) entity).getPorts()) {
+                            if (port.getHitBox().contains(point2D.getX(), point2D.getY())) {
+                                ((Cable.Connector) touchPoint.object).connect(port);
+                                System.out.println("connected");
+                                return;
+                            }
+                        }
+                    }
+                }
+            } else if (touchPoint.object instanceof Device || touchPoint.object instanceof Group) {
+                Rectangle rectangle = touchPoint.object.getHitBox();
+                for (Entity entity : entityList) {
+                    Entity subChild = entity.hit(point2D);
+                    if(subChild instanceof Group) {
+                        entity = subChild;
+                    }
+                    
+                    if(entity instanceof Group && entity != touchPoint.object) {
+                        if(entity.getHitBox().intersects(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight())) {
+                            if(entity.getHitBox().getWidth() > touchPoint.object.getHitBox().getWidth() &&
+                            entity.getHitBox().getHeight() > touchPoint.object.getHitBox().getHeight()) {
+                                ((Group) entity).addToGroup(touchPoint.object);
+                                return;
+                            } else if(touchPoint.object instanceof Group) {
+                                ((Group) touchPoint.object).addToGroup(entity);
+                                return;
+                            }
                         }
                     }
                 }
@@ -186,6 +238,42 @@ public class MapController {
         } else {
             camera.setLocation((x) / camera.scale  - touchPoint.prevX, (y) / camera.scale - touchPoint.prevY);
         }
+    }
+
+    public void beginGrouping(double x, double y) {
+        Point2D point2D = camera.translate(x, y);
+        groupRectangle.setWidth(0);
+        groupRectangle.setHeight(0);
+        groupRectangle.setX(point2D.getX());
+        groupRectangle.setY(point2D.getY());
+    }
+
+    public void grouping(double x, double y) {
+        Point2D point2D = camera.translate(x, y);
+        groupRectangle.setWidth(point2D.getX() - groupRectangle.getX());
+        groupRectangle.setHeight(point2D.getY() - groupRectangle.getY());
+
+    }
+
+    public void endGrouping(double x, double y) {
+        Point2D point2D = camera.translate(x, y);
+
+        if(groupRectangle.getWidth() > 20 && groupRectangle.getHeight() > 20) {
+            Group group = new Group(this);
+            group.setLocation(groupRectangle.getX(), groupRectangle.getY());
+            group.getHitBox().setWidth(groupRectangle.getWidth());
+            group.getHitBox().setHeight(groupRectangle.getHeight());
+            for (Entity entity : entityList) {
+                Rectangle rectangle = entity.getHitBox();
+                if (entity instanceof Device && groupRectangle.intersects(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight())) {
+                    group.addToGroup((Device) entity);
+                }
+            }
+            addEntity(group);
+        }
+
+        groupRectangle.setHeight(0);
+        groupRectangle.setWidth(0);
     }
 
     public void zoom(boolean direction) {
