@@ -16,6 +16,7 @@ public class Cable extends Entity {
         super(mapController);
         connectorA = new Connector(this);
         connectorB = new Connector(this);
+        LogUtils.logToFile(name, "cable created");
     }
 
     @Override
@@ -59,6 +60,8 @@ public class Cable extends Entity {
         if (!connectorB.destroyed) {
             connectorB.destroy();
         }
+
+        LogUtils.logToFile(name, "cable destroyed");
     }
 
     public static class Connector extends Entity {
@@ -70,6 +73,7 @@ public class Cable extends Entity {
             this.parent = parent;
 
             rectangle = new Rectangle(5, 5);
+            LogUtils.logToFile(parent.name, "connector created");
         }
 
         @Override
@@ -116,6 +120,7 @@ public class Cable extends Entity {
         public void destroy() {
             super.destroy();
             parent.destroy();
+            LogUtils.logToFile(parent.name, "connector destroyed");
         }
     }
 }

@@ -137,7 +137,7 @@ public class SnmpUtils {
                             if (varBinding == null) {
                                 continue;
                             }
-                            port.name = varBinding.getVariable().toString();
+                            port.setName(varBinding.getVariable().toString());
                         }
                     }
 

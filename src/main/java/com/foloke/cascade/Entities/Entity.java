@@ -1,6 +1,7 @@
 package com.foloke.cascade.Entities;
 
 import com.foloke.cascade.Controllers.MapController;
+import com.foloke.cascade.utils.LogUtils;
 import com.foloke.cascade.utils.Timer;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
@@ -10,8 +11,11 @@ import java.util.ArrayList;
 
 
 public abstract class Entity {
+    static long counter;
     public boolean destroyed;
     public boolean selected;
+
+    protected String name = "name";
 
     protected final ArrayList<Timer> timers;
 
@@ -19,9 +23,11 @@ public abstract class Entity {
     public MapController mapController;
 
     public Entity(MapController mapController) {
+        name += counter++;
         this.timers = new ArrayList<>();
         this.mapController = mapController;
         this.rectangle = new Rectangle(16, 16);
+
     }
 
     public abstract void render(GraphicsContext var1);
@@ -57,5 +63,14 @@ public abstract class Entity {
 
     public void destroy() {
         destroyed = true;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        LogUtils.logToFile(name, "name has changed: " + this.name + " to " + name);
+        this.name = name;
     }
 }

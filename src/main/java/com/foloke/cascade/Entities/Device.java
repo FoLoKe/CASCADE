@@ -34,14 +34,11 @@ public class Device extends Entity {
     public Target<UdpAddress> target;
     public UsmUser user;
 
-    String name = "name";
-
     String snmpAddress = "0.0.0.0";
     String snmpPort = "161";
     int snmpVersion = SnmpConstants.version3;
     int snmpTimeout = 1000;
     String snmpName = "publics";
-
 
     //SNMPv3
     String snmpPassword = "12345678";
@@ -55,6 +52,7 @@ public class Device extends Entity {
         this.image = image;
         ports = new ArrayList<>();
         target = new CommunityTarget<>();
+        LogUtils.logToFile(name, "device created");
     }
 
     @Override
@@ -80,12 +78,14 @@ public class Device extends Entity {
                 ports.add(port);
                 if(ports.size() == 1) {
                     updateSnmpConfiguration(networkInterface.getInetAddresses().nextElement().getHostAddress());
+                    LogUtils.logToFile(name, port.name + " is only and has sat SNMP defaults");
                 }
-
+                LogUtils.logToFile(name, port.name + " has updated");
                 return port;
             }
         } catch (SocketException e) {
             LogUtils.log(e.toString());
+            LogUtils.logToFile(name, e.toString());
         }
 
         return null;
@@ -99,12 +99,13 @@ public class Device extends Entity {
             updateSnmpConfiguration(address);
         }
 
-        LogUtils.logToFile(name, "port added");
+        LogUtils.logToFile(name, port.name + " : " + port.address + " port added");
 
         return port;
     }
 
     public void updateSnmpConfiguration(String snmpAddress) {
+        LogUtils.logToFile(name, "updating SNMP config");
         this.snmpAddress = snmpAddress;
         if(snmpVersion != SnmpConstants.version3) {
             target = new CommunityTarget<>();
@@ -124,8 +125,16 @@ public class Device extends Entity {
         target.setTimeout(snmpTimeout);
         target.setSecurityName(new OctetString(snmpName));
 
-
-
+        LogUtils.logToFile(name, "SNMP config: \n" +
+                "Address " + snmpAddress + "\n" +
+                "Community/Username " + snmpName + "\n" +
+                "Timeout " + snmpTimeout + "\n" +
+                "Version " + snmpVersion + "\n" +
+                "Level " + securityLevel + "\n" +
+                "Encryption protocol " + encryptionProtocol + "\n" +
+                "Auth protocol " + authProtocol + "\n" +
+                "Auth pass " + snmpPassword + "\n" +
+                "Encryption pass " + snmpEncryptionPass);
     }
 
     @Override
@@ -139,6 +148,7 @@ public class Device extends Entity {
     public Port pickPort(Point2D point2D) {
         for (Port port : ports) {
             if(port.rectangle.contains(point2D.getX(), point2D.getY())) {
+                LogUtils.logToFile(name, "port picked " + port.name + " : " + port.address);
                 return port;
             }
         }
@@ -166,6 +176,8 @@ public class Device extends Entity {
                 if(existingPort.mac.length() > 0 && existingPort.mac.equals(port.mac) ||
                         existingPort.address.length() > 0 &&existingPort.address.equals(port.address)) {
                     updatePort(existingPort, port);
+
+                    LogUtils.logToFile(name, "port found and updated " + port.name + " : " + port.address);
                     return existingPort;
                 }
             }
@@ -173,6 +185,7 @@ public class Device extends Entity {
 
         port.position = ports.size();
         ports.add(port);
+        LogUtils.logToFile(name, "port not found and added " + port.name + " : " + port.address);
 
         return port;
     }
@@ -294,7 +307,6 @@ public class Device extends Entity {
 
         public int id;
         public String mac;
-        public String name;
         public String address;
         public int mask = 24;
 

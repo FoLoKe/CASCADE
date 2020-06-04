@@ -7,6 +7,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -43,7 +44,7 @@ public class LogUtils {
         Platform.runLater(()->logTextArea.appendText(string + "\n"));
 
         try {
-            logWriter.write(string);
+            logWriter.write(Calendar.getInstance().getTime().toString() + ": " + string);
             logWriter.newLine();
             logWriter.flush();
         } catch (IOException e) {
@@ -54,7 +55,7 @@ public class LogUtils {
     public static void logToFile(String fileName, String string) {
         if(writerMap.containsKey(fileName)) {
             BufferedWriter bufferedWriter = writerMap.get(fileName);
-            FileUtils.writeToFile(bufferedWriter, string);
+            FileUtils.writeToFile(bufferedWriter, Calendar.getInstance().getTime().toString() + ": " + string);
         } else {
             try {
                 File logFile = new File(logsDirName + "\\" + fileName);

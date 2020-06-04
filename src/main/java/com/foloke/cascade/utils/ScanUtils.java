@@ -101,7 +101,7 @@ public class ScanUtils {
                             }
                             if (portB == null) {
                                 portB = previousHop.addPort("");
-                                portB.name = "unknown (added by tracing)";
+                                portB.setName("unknown (added by tracing)");
                                 portB.address = subnetUtils.getInfo().getNetworkAddress();
                             }
 
@@ -114,7 +114,7 @@ public class ScanUtils {
                             }
                             if (portA == null) {
                                 portA = device.addPort("");
-                                portA.name = "unknown (added by tracing)";
+                                portA.setName("unknown (added by tracing)");
                                 portA.address = hop;
                             }
                             portA.active = true;
@@ -170,6 +170,7 @@ public class ScanUtils {
                     }
                 }
                 LogUtils.log(inetAddress.getHostAddress() + " reachable: " + reachable);
+                LogUtils.logToFile(port.parent.getName(), "port with address: " + port.address + "is reachable ?: " + reachable);
             } catch (Exception e) {
                 LogUtils.log(e.toString());
             }

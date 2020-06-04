@@ -123,15 +123,44 @@ public class UIController implements Initializable {
         public void update(Entity entity) {
             this.entity = entity;
             getItems().clear();
-            if(entity instanceof Device.Port) {
+
+            ParamDialogController paramDialogController = new ParamDialogController();
+            if (entity instanceof Device.Port) {
                 CheckMenuItem checkMenuItem = new CheckMenuItem("Check status");
                 checkMenuItem.setSelected(((Device.Port) entity).pinging);
-                checkMenuItem.setOnAction(event -> {((Device.Port) entity).pinging = checkMenuItem.isSelected();});
+                checkMenuItem.setOnAction(event -> {
+                    ((Device.Port) entity).pinging = checkMenuItem.isSelected();
+                });
                 getItems().add(checkMenuItem);
+
+                MenuItem ipItem = new MenuItem("Change IP");
+                ipItem.setOnAction(event -> {
+                    paramDialogController.setName("IP address");
+                    paramDialogController.setValue(((Device.Port)entity).address);
+                    paramDialogController.setEvent(event1 -> {
+                        ((Device.Port)entity).address = paramDialogController.getValue();
+                        paramDialogController.close(event1);
+                    });
+                    UIController.openDialog(paramDialogController, Application.paramDialogURL);
+                });
+                getItems().add(ipItem);
+
+                MenuItem macItem = new MenuItem("Chang Mac");
+                macItem.setOnAction(event -> {
+                    paramDialogController.setName("Mac address");
+                    paramDialogController.setValue(((Device.Port)entity).mac);
+                    paramDialogController.setEvent(event1 -> {
+                        ((Device.Port)entity).mac = paramDialogController.getValue();
+                        paramDialogController.close(event1);
+                    });
+                    UIController.openDialog(paramDialogController, Application.paramDialogURL);
+                });
+                getItems().add(macItem);
+
             } else if (entity instanceof Device) {
                 MenuItem snmpMenuItem = new MenuItem("SNMP settings");
                 snmpMenuItem.setOnAction(event -> {
-                    UIController.openDialog(new SNMPSettingsDialogController((Device)entity), Application.snmpDialogURL);
+                    UIController.openDialog(new SNMPSettingsDialogController((Device) entity), Application.snmpDialogURL);
                 });
                 getItems().add(snmpMenuItem);
             }
@@ -142,7 +171,20 @@ public class UIController implements Initializable {
                 entity.mapController.pick(-1, -1);
             });
 
-            getItems().addAll(deleteItem);
+
+
+            MenuItem renameItem = new MenuItem("Rename");
+            renameItem.setOnAction(event -> {
+                paramDialogController.setName("Name");
+                paramDialogController.setValue(entity.getName());
+                paramDialogController.setEvent(event1 -> {
+                    entity.setName(paramDialogController.getValue());
+                    paramDialogController.close(event1);
+                });
+                UIController.openDialog(paramDialogController, Application.paramDialogURL);
+            });
+
+            getItems().addAll(renameItem, deleteItem);
         }
     }
 
@@ -177,6 +219,24 @@ public class UIController implements Initializable {
     }
 
     public static void openDialog(Initializable controller, URL url)  {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(url);
+
+            fxmlLoader.setController(controller);
+            Parent parent = fxmlLoader.load();
+
+            Scene scene = new Scene(parent);
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setScene(scene);
+            stage.showAndWait();
+        } catch (Exception e) {
+            e.printStackTrace();
+            LogUtils.log(e.toString());
+        }
+    }
+
+    public static void openParamDialog(Initializable controller, URL url) {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(url);
 

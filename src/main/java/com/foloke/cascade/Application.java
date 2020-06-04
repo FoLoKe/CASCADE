@@ -27,6 +27,7 @@ public class Application extends javafx.application.Application {
     public static URL pingOneDialogURL;
     public static URL traceDialogURL;
     public static URL snmpDialogURL;
+    public static URL paramDialogURL;
 
     public static OctetString localEngineId;
 
@@ -53,6 +54,7 @@ public class Application extends javafx.application.Application {
         pingOneDialogURL = this.getClass().getResource("/static/pingOneDialog.fxml");
         traceDialogURL = this.getClass().getResource("/static/traceDialog.fxml");
         snmpDialogURL = this.getClass().getResource("/static/SNMPSettingsDialog.fxml");
+        paramDialogURL = this.getClass().getResource("/static/paramDialog.fxml");
 
         try {
             loader.setController(this.uiController);
