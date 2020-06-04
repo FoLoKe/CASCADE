@@ -5,6 +5,10 @@ import com.foloke.cascade.Controllers.UIController;
 import com.foloke.cascade.Entities.Device;
 import org.snmp4j.*;
 import org.snmp4j.event.ResponseEvent;
+import org.snmp4j.mp.SnmpConstants;
+import org.snmp4j.security.SecurityModels;
+import org.snmp4j.security.TSM;
+import org.snmp4j.security.UsmUser;
 import org.snmp4j.smi.Address;
 import org.snmp4j.smi.OID;
 import org.snmp4j.smi.UdpAddress;
@@ -29,14 +33,14 @@ public class SnmpUtils {
     public static OID routingIDS = new OID(".1.3.6.1.2.1.4.22.1.1");
     public static OID routingMAC = new OID(".1.3.6.1.2.1.4.22.1.2");
 
-    public static void getRequest(CommunityTarget<UdpAddress> communityTarget, OID oid) {
-        SnmpGet snmpGet = new SnmpGet(communityTarget, oid);
+    public static void getRequest(Target<UdpAddress> communityTarget, UsmUser user, OID oid) {
+        SnmpGet snmpGet = new SnmpGet(communityTarget, user, oid);
         Thread thread = new Thread(snmpGet);
         thread.start();
     }
 
-    public static void walkRequest(CommunityTarget<UdpAddress> target, OID tableOid, List<UIController.Property> props) {
-        SnmpWalk snmpWalk = new SnmpWalk(target, tableOid, props);
+    public static void walkRequest(Target<UdpAddress> target,  UsmUser user, OID tableOid, List<UIController.Property> props) {
+        SnmpWalk snmpWalk = new SnmpWalk(target, user, tableOid, props);
         Thread thread = new Thread(snmpWalk);
         thread.start();
     }
@@ -56,8 +60,8 @@ public class SnmpUtils {
 
         @Override
         public void run() {
-            List<TreeEvent> events = walk(interfacesIDS, device.communityTarget);
-            List<TreeEvent> addressesEvents = walk(addressesAddress, device.communityTarget);
+            List<TreeEvent> events = walk(interfacesIDS, device.target, device.user);
+            List<TreeEvent> addressesEvents = walk(addressesAddress, device.target, device.user);
 
             if(events != null && addressesEvents != null) {
                 TreeMap<OID, String> interfacesInfo = new TreeMap<>();
@@ -96,7 +100,7 @@ public class SnmpUtils {
                     pdu.add(new VariableBinding(new OID(addressesIDS + "." + entry.getValue() + ".0")));
                     pdu.setType(PDU.GET);
 
-                    List<? extends VariableBinding> info = get(pdu, device.communityTarget);
+                    List<? extends VariableBinding> info = get(pdu, device.target, device.user);
                     if (info != null) {
                         for (VariableBinding varBinding : info) {
                             if (varBinding == null) {
@@ -118,7 +122,7 @@ public class SnmpUtils {
                     pdu.add(new VariableBinding(new OID(interfacesMAC + "." + entry.getValue() + ".0")));
                     pdu.setType(PDU.GET);
 
-                    List<? extends VariableBinding> info = get(pdu, device.communityTarget);
+                    List<? extends VariableBinding> info = get(pdu, device.target, device.user);
                     if (info != null) {
                         for (VariableBinding varBinding : info) {
                             if (varBinding == null) {
@@ -133,7 +137,7 @@ public class SnmpUtils {
                     pdu.add(new VariableBinding(new OID(interfacesDescription + "." + entry.getValue() + ".0")));
                     pdu.setType(PDU.GET);
 
-                    info = get(pdu, device.communityTarget);
+                    info = get(pdu, device.target, device.user);
                     if (info != null) {
                         for (VariableBinding varBinding : info) {
                             if (varBinding == null) {
@@ -152,7 +156,7 @@ public class SnmpUtils {
                     port = device.addOrUpdatePort(port);
 
                     if (port.address.length() > 0) {
-                        List<TreeEvent> routingEvents = walk(new OID(routingIDS + "." + entry.getValue()), device.communityTarget);
+                        List<TreeEvent> routingEvents = walk(new OID(routingIDS + "." + entry.getValue()), device.target, device.user);
 
                         if (routingEvents != null) {
                             List<OID> routingInfo = new ArrayList<>();
@@ -180,7 +184,7 @@ public class SnmpUtils {
                                     pdu.setType(PDU.GET);
                                     String mac = null;
                                     
-                                    info = get(pdu, device.communityTarget);
+                                    info = get(pdu, device.target, device.user);
                                     if (info != null) {
                                         for (VariableBinding varBinding : info) {
                                             if (varBinding == null) {
@@ -210,10 +214,12 @@ public class SnmpUtils {
 
     private static class SnmpWalk implements Runnable {
         OID oid;
-        CommunityTarget<UdpAddress> target;
+        Target<UdpAddress> target;
         List<UIController.Property> propsList;
+        UsmUser user;
 
-        public SnmpWalk(CommunityTarget<UdpAddress> communityTarget, OID oid, List<UIController.Property> propsList) {
+        public SnmpWalk(Target<UdpAddress> communityTarget, UsmUser user, OID oid, List<UIController.Property> propsList) {
+            this.user = user;
             this.target = communityTarget;
             this.oid = oid;
             this.propsList = propsList;
@@ -222,7 +228,7 @@ public class SnmpUtils {
         @Override
         public void run() {
             try {
-                List<TreeEvent> events = walk(oid, target);
+                List<TreeEvent> events = walk(oid, target, user);
 
                 if(events != null) {
                     for (TreeEvent event : events) {
@@ -259,8 +265,10 @@ public class SnmpUtils {
 
     private static class SnmpGet implements Runnable {
         PDU pdu;
-        CommunityTarget<UdpAddress> target;
-        public SnmpGet(CommunityTarget<UdpAddress> communityTarget, OID oid) {
+        Target<UdpAddress> target;
+        UsmUser usmUser;
+        public SnmpGet(Target<UdpAddress> communityTarget, UsmUser user, OID oid) {
+            this.usmUser = user;
             this.target = communityTarget;
             pdu = new PDU();
             pdu.add(new VariableBinding(oid));
@@ -269,15 +277,23 @@ public class SnmpUtils {
 
         @Override
         public void run() {
-            get(pdu, target);
+            get(pdu, target, usmUser);
         }
     }
 
-    private static List<TreeEvent> walk(OID oid, Target<UdpAddress> target) {
+    private static List<TreeEvent> walk(OID oid, Target<UdpAddress> target, UsmUser user) {
 
         try {
             TransportMapping<? extends Address> transport = new DefaultUdpTransportMapping();
             Snmp snmp = new Snmp(transport);
+            Target<UdpAddress> actualTarget = target;
+
+            if(target.getVersion() == SnmpConstants.version3) {
+                snmp.getUSM().addUser(user.getSecurityName(), user);
+                SecurityModels.getInstance().addSecurityModel(new TSM(Application.localEngineId, false));
+
+            }
+
             transport.listen();
 
             TreeUtils treeUtils = new TreeUtils(snmp, new DefaultPDUFactory());
@@ -295,18 +311,33 @@ public class SnmpUtils {
         return null;
     }
 
-    private static List<? extends VariableBinding> get(PDU pdu, Target<UdpAddress> target) {
+    private static List<? extends VariableBinding> get(PDU pdu, Target<UdpAddress> target, UsmUser user) {
         List<? extends VariableBinding> vbs = null;
         try {
             TransportMapping<UdpAddress> transport = new DefaultUdpTransportMapping();
-            transport.listen();
             Snmp snmp = new Snmp(transport);
+
+            if(target.getVersion() == SnmpConstants.version3) {
+                snmp.getUSM().addUser(user.getSecurityName(), user);
+                SecurityModels.getInstance().addSecurityModel(new TSM(Application.localEngineId, false));
+                ScopedPDU scopedPDU = new ScopedPDU();
+                scopedPDU.addAll(pdu.getVariableBindings());
+                scopedPDU.setType(PDU.GET);
+                pdu = scopedPDU;
+            }
+
+            transport.listen();
             ResponseEvent<UdpAddress> responseEvent = snmp.get(pdu, target);
             PDU response = responseEvent.getResponse();
             if(response == null) {
                 LogUtils.log("Time out: " + responseEvent.getError());
             }else if(response.getErrorStatus() == PDU.noError) {
                 vbs = response.getVariableBindings();
+                for (VariableBinding vb : vbs) {
+                    LogUtils.log(target.getAddress() + " SNMP response for OID: " + vb.getOid().toString()  + " is: "
+                    + vb.getVariable().toString());
+                }
+
             } else {
                 LogUtils.log(response.getErrorStatusText());
             }
@@ -314,6 +345,8 @@ public class SnmpUtils {
             transport.close();
         } catch (Exception e) {
             LogUtils.log(e.toString());
+        } finally {
+
         }
         return vbs;
     }

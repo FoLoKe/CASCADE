@@ -187,7 +187,7 @@ public class UIController implements Initializable {
         );
 
         if(entity instanceof Device) {
-            SnmpUtils.walkRequest(((Device)entity).communityTarget, new OID(".1.3.6"), properties);
+            SnmpUtils.walkRequest(((Device)entity).target, ((Device)entity).user, new OID(".1.3.6"), properties);
             SnmpUtils.initDevice(((Device)entity));
         }
 

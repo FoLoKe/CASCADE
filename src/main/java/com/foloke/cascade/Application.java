@@ -13,9 +13,7 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import org.snmp4j.mp.MPv3;
-import org.snmp4j.security.SecurityModels;
-import org.snmp4j.security.SecurityProtocols;
-import org.snmp4j.security.USM;
+import org.snmp4j.security.*;
 import org.snmp4j.smi.OctetString;
 
 import java.net.NetworkInterface;
@@ -33,6 +31,8 @@ public class Application extends javafx.application.Application {
     public static URL pingOneDialogURL;
     public static URL traceDialogURL;
     public static URL snmpDialogURL;
+
+    public static OctetString localEngineId;
 
     public Application() {
     }
@@ -78,9 +78,13 @@ public class Application extends javafx.application.Application {
     }
 
     public void initLocal() {
-        OctetString localEngineId = new OctetString(MPv3.createLocalEngineID());
+        localEngineId = new OctetString(MPv3.createLocalEngineID());
         USM usm = new USM(SecurityProtocols.getInstance(), localEngineId, 0);
         SecurityModels.getInstance().addSecurityModel(usm);
+        SecurityProtocols.getInstance().addAuthenticationProtocol(new AuthMD5());
+        SecurityProtocols.getInstance().addPrivacyProtocol(new PrivDES());
+        SecurityProtocols.getInstance().addAuthenticationProtocol(new AuthSHA());
+        SecurityProtocols.getInstance().addPrivacyProtocol(new PrivAES128());
 
         Device entity = new Device(image, mapController);
         try {
@@ -97,10 +101,7 @@ public class Application extends javafx.application.Application {
             LogUtils.log(e.toString());
         }
 
-        mapController.addEntity(entity);
-
         ScanUtils.scanByPing(mapController, "192.168.88.0", "24");
-        ScanUtils.traceRoute(mapController, "31.42.45.42");
     }
 
     public void getProps(Entity entity) {

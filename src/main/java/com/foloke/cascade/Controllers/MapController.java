@@ -5,10 +5,12 @@ import com.foloke.cascade.Camera;
 import com.foloke.cascade.Entities.Cable;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Entity;
+import com.foloke.cascade.utils.SnmpUtils;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import org.snmp4j.smi.OID;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,12 +69,12 @@ public class MapController {
         toAdd.add(entity);
     }
 
-    public void addOrUpdate(String address) {
+    public Device addOrUpdate(String address) {
         for (Entity entity : entityList) {
             if (entity instanceof Device) {
                 for (Device.Port port : ((Device) entity).getPorts()) {
                     if (port.address.equals(address)) {
-                        return;
+                        return (Device) entity;
                     }
                 }
             }
@@ -81,6 +83,8 @@ public class MapController {
         Device device = new Device(Application.image, this);
         toAdd.add(device);
         device.addPort(address);
+
+        return device;
     }
 
     public void pick(double x, double y) {
@@ -113,7 +117,8 @@ public class MapController {
         for (Entity entity : entityList) {
             touchPoint.object = entity.hit(point2D);
             if(touchPoint.object != null) {
-                context.getProps(touchPoint.object);
+                //context.getProps(touchPoint.object);
+                SnmpUtils.getRequest(((Device)touchPoint.object).target, ((Device)touchPoint.object).user,  new OID("1.3.6.1.2.1.1.1.0"));
                 break;
             }
         }

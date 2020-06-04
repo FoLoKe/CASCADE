@@ -11,9 +11,13 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import org.snmp4j.CommunityTarget;
+import org.snmp4j.Target;
+import org.snmp4j.UserTarget;
 import org.snmp4j.mp.SnmpConstants;
 import org.snmp4j.security.AuthMD5;
 import org.snmp4j.security.PrivDES;
+import org.snmp4j.security.SecurityLevel;
+import org.snmp4j.security.UsmUser;
 import org.snmp4j.smi.OID;
 import org.snmp4j.smi.OctetString;
 import org.snmp4j.smi.UdpAddress;
@@ -25,29 +29,30 @@ import java.util.ArrayList;
 public class Device extends Entity {
     Image image;
     ArrayList<Port> ports;
-    public CommunityTarget<UdpAddress> communityTarget;
+    public Target<UdpAddress> target;
+    public UsmUser user;
 
     String name = "name";
 
     String snmpAddress = "0.0.0.0";
     String snmpPort = "161";
-    int snmpVersion = SnmpConstants.version2c;
-    int snmpTimeout = 20000;
-    String snmpCommunity = "public";
+    int snmpVersion = SnmpConstants.version3;
+    int snmpTimeout = 1000;
+    String snmpName = "publics";
 
 
     //SNMPv3
-    String snmpPassword = "";
+    String snmpPassword = "12345678";
     OID authProtocol = AuthMD5.ID;
     OID encryptionProtocol = PrivDES.ID;
-    String snmpEncryptionPass = "";
-    String snmpSecurityName = "";
+    String snmpEncryptionPass = "12345678";
+    int securityLevel = SecurityLevel.NOAUTH_NOPRIV;
 
     public Device(Image image, MapController mapController) {
         super(mapController);
         this.image = image;
         ports = new ArrayList<>();
-        communityTarget = new CommunityTarget<>();
+        target = new CommunityTarget<>();
     }
 
     @Override
@@ -72,7 +77,7 @@ public class Device extends Entity {
                 Port port = new Port(this, networkInterface, ports.size());
                 ports.add(port);
                 if(ports.size() == 1) {
-                    setCommunityDefaults(networkInterface.getInetAddresses().nextElement().getHostAddress());
+                    updateSnmpConfiguration(networkInterface.getInetAddresses().nextElement().getHostAddress());
                 }
 
                 return port;
@@ -89,7 +94,7 @@ public class Device extends Entity {
 
         ports.add(port);
         if(ports.size() == 1) {
-            setCommunityDefaults(address);
+            updateSnmpConfiguration(address);
         }
 
         LogUtils.logToFile(name, "port added");
@@ -97,12 +102,28 @@ public class Device extends Entity {
         return port;
     }
 
-    public void setCommunityDefaults(String snmpAddress) {
+    public void updateSnmpConfiguration(String snmpAddress) {
         this.snmpAddress = snmpAddress;
-        communityTarget.setCommunity(new OctetString(snmpCommunity));
-        communityTarget.setVersion(snmpVersion);
-        communityTarget.setAddress(new UdpAddress(snmpAddress + "/" + snmpPort));
-        communityTarget.setTimeout(snmpTimeout);
+        if(snmpVersion != SnmpConstants.version3) {
+            target = new CommunityTarget<>();
+            ((CommunityTarget<UdpAddress>)target).setCommunity(new OctetString(snmpName));
+            target.setSecurityLevel(SecurityLevel.NOAUTH_NOPRIV);
+        } else {
+            user = new UsmUser(new OctetString(snmpName),
+                    authProtocol, new OctetString(snmpPassword),
+                    encryptionProtocol, new OctetString(snmpEncryptionPass));
+
+            target = new UserTarget<>();
+            target.setSecurityLevel(securityLevel);
+        }
+
+        target.setVersion(snmpVersion);
+        target.setAddress(new UdpAddress(snmpAddress + "/" + snmpPort));
+        target.setTimeout(snmpTimeout);
+        target.setSecurityName(new OctetString(snmpName));
+
+
+
     }
 
     @Override
@@ -169,6 +190,38 @@ public class Device extends Entity {
         }
     }
 
+    public OID getAuthProtocol() {
+        return authProtocol;
+    }
+
+    public int getSecurityLevel() {
+        return securityLevel;
+    }
+
+    public void setSecurityLevel(int securityLevel) {
+        this.securityLevel = securityLevel;
+    }
+
+    public void setAuthProtocol(OID authProtocol) {
+        this.authProtocol = authProtocol;
+    }
+
+    public OID getEncryptionProtocol() {
+        return encryptionProtocol;
+    }
+
+    public void setEncryptionProtocol(OID encryptionProtocol) {
+        this.encryptionProtocol = encryptionProtocol;
+    }
+
+    public String getSnmpEncryptionPass() {
+        return snmpEncryptionPass;
+    }
+
+    public void setSnmpEncryptionPass(String snmpEncryptionPass) {
+        this.snmpEncryptionPass = snmpEncryptionPass;
+    }
+
     public String getSnmpPassword() {
         return snmpPassword;
     }
@@ -210,11 +263,11 @@ public class Device extends Entity {
     }
 
     public String getSnmpCommunity() {
-        return snmpCommunity;
+        return snmpName;
     }
 
     public void setSnmpCommunity(String snmpCommunity) {
-        this.snmpCommunity = snmpCommunity;
+        this.snmpName = snmpCommunity;
     }
 
     public Port findPort(String address) {

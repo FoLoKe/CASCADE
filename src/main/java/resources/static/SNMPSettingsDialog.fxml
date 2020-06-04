@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <TitledPane text="SNMP settings" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1">
@@ -9,53 +9,96 @@
             <children>
                 <VBox prefHeight="156.0" prefWidth="594.0">
                     <children>
+                  <HBox prefHeight="42.0" prefWidth="371.0">
+                     <children>
+                        <VBox prefHeight="42.0" prefWidth="243.0">
+                           <children>
+                              <Label text="SNMP version" />
+                              <Spinner fx:id="versionSpinner" prefHeight="25.0" prefWidth="265.0" />
+                           </children>
+                           <padding>
+                              <Insets right="10.0" />
+                           </padding>
+                        </VBox>
+                        <VBox prefHeight="42.0" prefWidth="83.0">
+                           <children>
+                              <Label text="Timeout (ms)" />
+                              <TextField fx:id="timeoutTextField" prefHeight="25.0" prefWidth="92.0" />
+                           </children>
+                           <padding>
+                              <Insets right="10.0" />
+                           </padding>
+                        </VBox>
+                        <VBox prefHeight="42.0" prefWidth="74.0">
+                           <children>
+                              <Label text="Port" />
+                              <TextField fx:id="portTextField" prefHeight="25.0" prefWidth="50.0" />
+                           </children>
+                           <padding>
+                              <Insets right="10.0" />
+                           </padding>
+                        </VBox>
+                        <VBox prefHeight="42.0" prefWidth="198.0">
+                           <children>
+                              <Label text="Security Level" />
+                              <Spinner fx:id="securityLevelSpinner" prefHeight="25.0" prefWidth="197.0" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
                         <HBox prefHeight="42.0" prefWidth="552.0">
                             <children>
-                                <VBox prefHeight="42.0" prefWidth="277.0">
+                                <VBox prefHeight="42.0" prefWidth="244.0">
                                     <children>
-                                        <Label prefHeight="17.0" prefWidth="82.0" text="Community" />
+                                        <Label prefHeight="17.0" prefWidth="236.0" text="Community (Username for v3)" />
                                         <TextField fx:id="communityTextField" prefHeight="25.0" prefWidth="116.0" />
                                     </children>
                                     <padding>
                                         <Insets right="10.0" />
                                     </padding>
                                 </VBox>
-                        <VBox prefHeight="42.0" prefWidth="305.0">
+                        <VBox prefHeight="42.0" prefWidth="252.0">
                            <children>
-                              <Label text="Password" />
-                              <TextField fx:id="passwordTextField" prefHeight="25.0" prefWidth="265.0" />
+                              <Label text="Auth Password" />
+                              <TextField fx:id="passwordTextField" prefHeight="25.0" prefWidth="185.0" />
+                           </children>
+                           <padding>
+                              <Insets right="10.0" />
+                           </padding>
+                        </VBox>
+                        <VBox prefHeight="200.0" prefWidth="100.0">
+                           <children>
+                              <Label text="Auth Protocol" />
+                              <Spinner fx:id="authSpinner" />
                            </children>
                         </VBox>
                             </children>
                         </HBox>
-                  <HBox prefHeight="63.0" prefWidth="349.0">
-                     <children>
-                        <VBox prefHeight="42.0" prefWidth="279.0">
-                           <children>
-                              <Label text="SNMP version" />
-                              <Spinner fx:id="versionSpinner" prefHeight="25.0" prefWidth="265.0" />
-                           </children>
-                        </VBox>
-                        <VBox prefHeight="42.0" prefWidth="302.0">
-                           <children>
-                              <Label text="Timeout (ms)" />
-                              <TextField fx:id="timeoutTextField" prefHeight="25.0" prefWidth="303.0" />
-                           </children>
-                        </VBox>
-                     </children>
-                  </HBox>
                   <HBox prefHeight="52.0" prefWidth="349.0">
                      <children>
-                        <VBox prefHeight="42.0" prefWidth="281.0">
+                        <VBox prefHeight="42.0" prefWidth="245.0">
                            <children>
                               <Label text="Contact interface" />
-                              <Spinner fx:id="interfaceSpinner" prefHeight="25.0" prefWidth="265.0" />
+                              <Spinner fx:id="interfaceSpinner" prefHeight="25.0" prefWidth="234.0" />
+                           </children>
+                           <padding>
+                              <Insets right="10.0" />
+                           </padding>
+                        </VBox>
+                        <VBox prefHeight="42.0" prefWidth="250.0">
+                           <padding>
+                              <Insets right="10.0" />
+                           </padding>
+                           <children>
+                              <Label text="Encryption Password" />
+                              <TextField fx:id="encryptionTextField" />
+                              
                            </children>
                         </VBox>
-                        <VBox prefHeight="42.0" prefWidth="300.0">
+                        <VBox prefHeight="200.0" prefWidth="100.0">
                            <children>
-                              <Label text="Port" />
-                              <TextField fx:id="portTextField" prefHeight="25.0" prefWidth="67.0" />
+                              <Label text="Encryption Protocol" />
+                              <Spinner fx:id="encryptionSpinner" />
                            </children>
                         </VBox>
                      </children>
@@ -65,12 +108,12 @@
                   </HBox>
                         <HBox prefHeight="30.0" prefWidth="200.0">
                             <children>
-                                <AnchorPane prefHeight="200.0" prefWidth="200.0">
+                                <AnchorPane prefHeight="25.0" prefWidth="568.0">
                                     <children>
                                         <Button fx:id="cancelButton" mnemonicParsing="false" text="Cancel" />
                                     </children>
                                 </AnchorPane>
-                                <Button fx:id="okButton" mnemonicParsing="false" prefHeight="25.0" prefWidth="133.0" text="Ok" />
+                                <Button fx:id="okButton" mnemonicParsing="false" prefHeight="25.0" prefWidth="97.0" text="Ok" />
                             </children>
                         </HBox>
                     </children>
