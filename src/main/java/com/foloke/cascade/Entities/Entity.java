@@ -11,23 +11,35 @@ import java.util.ArrayList;
 
 
 public abstract class Entity {
+    public long ID;
     static long counter;
     public boolean destroyed;
     public boolean selected;
 
     protected String name = "name";
 
-    protected final ArrayList<Timer> timers;
+    protected  ArrayList<Timer> timers;
 
     protected Rectangle rectangle;
     public MapController mapController;
 
     public Entity(MapController mapController) {
+        ID = counter;
         name += counter++;
+
+        init(mapController);
+    }
+
+    public Entity(MapController mapController, String[] params) {
+        ID = Integer.parseInt(params[1]);
+        name = params[2];
+        init(mapController);
+    }
+
+    private void init(MapController mapController) {
         this.timers = new ArrayList<>();
         this.mapController = mapController;
         this.rectangle = new Rectangle(16, 16);
-
     }
 
     public abstract void render(GraphicsContext var1);
@@ -72,5 +84,19 @@ public abstract class Entity {
     public void setName(String name) {
         LogUtils.logToFile(name, "name has changed: " + this.name + " to " + name);
         this.name = name;
+    }
+
+    public void setID(long ID) {
+        this.ID = ID;
+    }
+
+    public long getID() {
+        return ID;
+    }
+
+    public String getSave() {
+        return ID + " " + name
+                + " " + rectangle.getX()
+                + " " + rectangle.getY();
     }
 }

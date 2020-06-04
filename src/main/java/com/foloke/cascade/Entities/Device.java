@@ -49,10 +49,33 @@ public class Device extends Entity {
 
     public Device(Image image, MapController mapController) {
         super(mapController);
+        init(image);
+        LogUtils.logToFile(name, "device created");
+    }
+
+    public Device(Image image, MapController mapController, String[] params) {
+        super(mapController, params);
+        init(image);
+        snmpAddress = params[5];
+        snmpPort = params[6];
+        snmpVersion = Integer.parseInt(params[7]);
+        snmpTimeout = Integer.parseInt(params[8]);
+        snmpName = params[9];
+        snmpPassword = params[10];
+        authProtocol = new OID(params[11]);
+        encryptionProtocol = new OID(params[12]);
+        snmpEncryptionPass = params[13];
+        securityLevel = Integer.parseInt(params[14]);
+        updateSnmpConfiguration(snmpAddress);
+
+        setLocation(Double.parseDouble(params[3]), Double.parseDouble(params[4]));
+
+        LogUtils.logToFile(name, "device loaded");
+    }
+
+    private void init(Image image) {
         this.image = image;
         ports = new ArrayList<>();
-        target = new CommunityTarget<>();
-        LogUtils.logToFile(name, "device created");
     }
 
     @Override
@@ -102,6 +125,11 @@ public class Device extends Entity {
         LogUtils.logToFile(name, port.name + " : " + port.address + " port added");
 
         return port;
+    }
+
+    public void addPort(Port port) {
+        ports.add(port);
+        LogUtils.logToFile(name, port.name + " : " + port.address + " port added");
     }
 
     public void updateSnmpConfiguration(String snmpAddress) {
@@ -170,7 +198,7 @@ public class Device extends Entity {
 
     public Port addOrUpdatePort(Port port) {
         for (Port existingPort : ports) {
-            if (port.id == existingPort.id ||
+            if (port.index == existingPort.index ||
                     existingPort.addType == Port.AddType.SNMP ||
                     existingPort.addType == Port.AddType.AUTO) {
                 if(existingPort.mac.length() > 0 && existingPort.mac.equals(port.mac) ||
@@ -298,6 +326,30 @@ public class Device extends Entity {
         return ports.get(0);
     }
 
+    @Override
+    public String getSave() {
+        String saveString = "DEVICE " + super.getSave() +
+                " " + snmpAddress +
+                " " + snmpPort +
+                " " + snmpVersion +
+                " " + snmpTimeout +
+                " " + snmpName +
+                " " + snmpPassword +
+                " " + authProtocol +
+                " " + encryptionProtocol +
+                " " + snmpEncryptionPass +
+                " " + securityLevel;
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (Port port: ports) {
+            stringBuilder.append("\n").append(port.getSave());
+        }
+        saveString += stringBuilder.toString();
+
+        return saveString;
+    }
+
     public static class Port extends Entity {
         public enum AddType {AUTO, MANUAL, SNMP}
         public Device parent;
@@ -305,7 +357,7 @@ public class Device extends Entity {
         public boolean pinging;
         int position;
 
-        public int id;
+        public int index;
         public String mac;
         public String address;
         public int mask = 24;
@@ -315,50 +367,49 @@ public class Device extends Entity {
 
         public Port(Device parent, NetworkInterface networkInterface, int position) {
             super(parent.mapController);
-            this.parent = parent;
-            this.position = position;
-            this.rectangle = new Rectangle(8, 8);
-
             try {
                 byte[] bytes = networkInterface.getHardwareAddress();
                 StringBuilder sb = new StringBuilder();
                 for (int i = 0; i < bytes.length; i++) {
                     sb.append(String.format("%02X%s", bytes[i], (i < bytes.length - 1) ? "-" : ""));
                 }
-
                 this.mac = sb.toString();
-
             } catch (SocketException e) {
                 LogUtils.log(e.toString());
             }
 
             this.address = networkInterface.getInetAddresses().nextElement().getHostAddress();
-            this.addType = AddType.AUTO;
-            this.name = "auto added";
 
-            addTask(new Timer(1000000000) {
-                @Override
-                public void execute() {
-                    if(pinging) {
-                        ScanUtils.ping(Port.this);
-                    }
-                }
-            });
-
-            updatePosition();
+            init(parent, position);
         }
 
         public Port(Device parent, String address, int position) {
             super(parent.mapController);
-            this.parent = parent;
-            this.position = position;
             rectangle = new Rectangle(8, 8);
-
             this.mac = "none";
-            this.name = "auto added";
             this.address = address;
-            this.addType = AddType.AUTO;
 
+            init(parent, position);
+        }
+
+        public Port(Device parent, String[] params) {
+            super(parent.mapController, params);
+            init(parent, position = Integer.parseInt(params[7]));
+            active = Boolean.parseBoolean(params[5]);
+            pinging = Boolean.parseBoolean(params[6]);
+            mac = params[8];
+            address = params[9];
+            mask = Integer.parseInt(params[10]);
+            index = Integer.parseInt(params[11]);
+            addType = AddType.valueOf(params[12]);
+        }
+
+        private void init(Device parent, int position) {
+            this.position = position;
+            this.parent = parent;
+            this.addType = AddType.AUTO;
+            this.name = "auto_added";
+            this.rectangle = new Rectangle(8, 8);
             addTask(new Timer(1000000000) {
                 @Override
                 public void execute() {
@@ -459,6 +510,21 @@ public class Device extends Entity {
             }
 
             return false;
+        }
+
+        @Override
+        public String getSave() {
+            String saveString = "PORT " + super.getSave()
+                    + " " + active
+                    + " " + pinging
+                    + " " + position
+                    + " " + mac
+                    + " " + address
+                    + " " + mask
+                    + " " + index
+                    + " " + addType;
+
+            return saveString;
         }
     }
 }

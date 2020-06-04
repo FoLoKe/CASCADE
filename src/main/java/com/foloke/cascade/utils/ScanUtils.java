@@ -101,7 +101,7 @@ public class ScanUtils {
                             }
                             if (portB == null) {
                                 portB = previousHop.addPort("");
-                                portB.setName("unknown (added by tracing)");
+                                portB.setName("unknown");
                                 portB.address = subnetUtils.getInfo().getNetworkAddress();
                             }
 
@@ -114,7 +114,7 @@ public class ScanUtils {
                             }
                             if (portA == null) {
                                 portA = device.addPort("");
-                                portA.setName("unknown (added by tracing)");
+                                portA.setName("unknown");
                                 portA.address = hop;
                             }
                             portA.active = true;

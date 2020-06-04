@@ -9,14 +9,19 @@ import javafx.scene.shape.Rectangle;
 
 public class Cable extends Entity {
 
-    public final Connector connectorA;
-    public final Connector connectorB;
+    public Connector connectorA;
+    public Connector connectorB;
 
     public Cable(MapController mapController) {
         super(mapController);
         connectorA = new Connector(this);
         connectorB = new Connector(this);
         LogUtils.logToFile(name, "cable created");
+    }
+
+    public Cable(MapController mapController, String[] params) {
+        super(mapController, params);
+        LogUtils.logToFile(name, "cable loaded");
     }
 
     @Override
@@ -64,16 +69,35 @@ public class Cable extends Entity {
         LogUtils.logToFile(name, "cable destroyed");
     }
 
+    @Override
+    public String getSave() {
+        String saveString = "CABLE " + super.getSave() +
+                "\n" + connectorA.getSave() +
+                "\n" + connectorB.getSave();
+        return saveString;
+    }
+
     public static class Connector extends Entity {
         public Device.Port connection;
-        private final Cable parent;
+        private long connectionID;
+        private Cable parent;
 
         public Connector(Cable parent) {
             super(parent.mapController);
-            this.parent = parent;
-
-            rectangle = new Rectangle(5, 5);
+            init(parent);
             LogUtils.logToFile(parent.name, "connector created");
+        }
+
+        public Connector(Cable parent, String[] params) {
+            super(parent.mapController, params);
+            connectionID = Integer.parseInt(params[5]);
+            init(parent);
+            LogUtils.logToFile(parent.name, "connector loaded");
+        }
+
+        private void init(Cable parent) {
+            this.parent = parent;
+            rectangle = new Rectangle(5, 5);
         }
 
         @Override
@@ -100,6 +124,7 @@ public class Cable extends Entity {
 
         public void connect(Device.Port connection) {
             this.connection = connection;
+            connectionID = connection.getID();
             connection.connect(this);
             LogUtils.log(connection.address + " connected with cable " + this);
         }
@@ -107,6 +132,7 @@ public class Cable extends Entity {
         public void disconnect() {
             if(connection != null) {
                 connection.disconnect(this);
+                connectionID = -1;
                 LogUtils.log(connection.address + " disconnected with cable " + this);
                 this.connection = null;
             }
@@ -121,6 +147,20 @@ public class Cable extends Entity {
             super.destroy();
             parent.destroy();
             LogUtils.logToFile(parent.name, "connector destroyed");
+        }
+
+        @Override
+        public String getSave() {
+            String saveString = "CONNECTOR " + super.getSave() + " " + connectionID;
+            return saveString;
+        }
+
+        public long getConnectionID() {
+            return connectionID;
+        }
+
+        public void setConnectionID(long connectionID) {
+            this.connectionID = connectionID;
         }
     }
 }

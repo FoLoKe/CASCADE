@@ -110,7 +110,7 @@ public class SnmpUtils {
 
                 for (Map.Entry<OID, String> entry : interfacesInfo.entrySet()) {
                     Device.Port port = new Device.Port(device, entry.getValue(), 0);
-                    port.id = Integer.parseInt(entry.getValue());
+                    port.index = Integer.parseInt(entry.getValue());
                     port.addType = Device.Port.AddType.SNMP;
 
                     PDU pdu = new PDU();
@@ -141,7 +141,7 @@ public class SnmpUtils {
                         }
                     }
 
-                    port.address = addressesMap.get(Integer.toString(port.id));
+                    port.address = addressesMap.get(Integer.toString(port.index));
                     if (port.address == null) {
                         port.address = "";
                     }

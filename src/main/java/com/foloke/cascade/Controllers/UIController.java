@@ -4,6 +4,7 @@ import com.foloke.cascade.Application;
 import com.foloke.cascade.Entities.Cable;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Entity;
+import com.foloke.cascade.utils.FileUtils;
 import com.foloke.cascade.utils.LogUtils;
 import com.foloke.cascade.utils.SnmpUtils;
 import javafx.application.Platform;
@@ -212,7 +213,13 @@ public class UIController implements Initializable {
                 mapController.addEntity(cable);
             });
 
-            getItems().addAll(pingItem, pingOneItem, traceItem, addCableItem);
+            MenuItem saveItem = new MenuItem("Save map");
+            saveItem.setOnAction(event -> FileUtils.save(mapController, "map"));
+
+            MenuItem loadItem = new MenuItem("Load map");
+            loadItem.setOnAction(event -> FileUtils.load(mapController, "map"));
+
+            getItems().addAll(pingItem, pingOneItem, traceItem, addCableItem, saveItem, loadItem);
 
 
         }

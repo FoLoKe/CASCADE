@@ -236,4 +236,8 @@ public class MapController {
     public double getTouchPointY() {
         return touchPoint.prevY;
     }
+
+    public List<Entity> getEntities() {
+        return entityList;
+    }
 }
