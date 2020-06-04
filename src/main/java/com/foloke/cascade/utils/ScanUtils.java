@@ -47,8 +47,8 @@ public class ScanUtils {
         }
     }
 
-    public static void traceRoute(MapController mapController, String destination) {
-        Trace trace = new Trace(mapController, destination);
+    public static void traceRoute(MapController mapController, String destination, int timeout, int maxHops) {
+        Trace trace = new Trace(mapController, destination, timeout, maxHops);
         Thread thread = new Thread(trace);
         thread.start();
     }
@@ -56,15 +56,18 @@ public class ScanUtils {
     static class Trace implements Runnable {
         MapController mapController;
         String address;
+        int timeout;
+        int maxHops;
 
-        public Trace(MapController mapController, String address) {
+        public Trace(MapController mapController, String address, int timeout, int maxHops) {
             this.mapController = mapController;
             this.address = address;
+            this.timeout = timeout;
+            this.maxHops = maxHops;
         }
 
         @Override
         public void run() {
-
             Device local = initLocal(mapController);
             Device previousHop = null;
             if(local.getPorts().size() > 0) {
@@ -82,7 +85,7 @@ public class ScanUtils {
             }
 
             try {
-                List<String> hops = trace(address, 1000, 10);
+                List<String> hops = trace(address, timeout, maxHops);
                 if(hops.get(hops.size() - 1).equals(address)) {
                     LogUtils.log("tracing succeed");
                         for (String hop : hops) {

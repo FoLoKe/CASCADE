@@ -182,6 +182,8 @@ public class Device extends Entity {
         existingPort.name = port.name;
         existingPort.address = port.address;
         existingPort.mac = port.mac;
+
+        LogUtils.logToFile(name, existingPort + " port updated");
     }
 
     @Override
@@ -190,6 +192,7 @@ public class Device extends Entity {
         for (Port port : ports) {
             port.destroy();
         }
+        LogUtils.logToFile(name, this + " destroyed");
     }
 
     public OID getAuthProtocol() {

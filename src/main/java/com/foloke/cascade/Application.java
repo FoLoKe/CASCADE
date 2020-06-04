@@ -67,7 +67,7 @@ public class Application extends javafx.application.Application {
             stage.show();
 
             Device device = ScanUtils.initLocal(mapController);
-            //mapController.addEntity(device);
+            mapController.addEntity(device);
 
             localEngineId = new OctetString(MPv3.createLocalEngineID());
             USM usm = new USM(SecurityProtocols.getInstance(), localEngineId, 0);

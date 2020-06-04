@@ -20,6 +20,12 @@ public class TraceDialogController implements Initializable {
     private Button cancelButton;
 
     @FXML
+    private TextField maxHopsTextField;
+
+    @FXML
+    private TextField timeoutTextField;
+
+    @FXML
     private Button okButton;
 
     private final MapController mapController;
@@ -30,12 +36,16 @@ public class TraceDialogController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        maxHopsTextField.setText("5");
+        timeoutTextField.setText("5000");
         cancelButton.setOnMousePressed(event -> {
             TraceDialogController.this.closeStage(event);
         });
 
         okButton.setOnMousePressed(event -> {
-            ScanUtils.traceRoute(mapController, addressTextField.getText());
+            ScanUtils.traceRoute(mapController, addressTextField.getText(),
+                    Integer.parseInt(timeoutTextField.getText()),
+                    Integer.parseInt(maxHopsTextField.getText()));
 
             TraceDialogController.this.closeStage(event);
         });
