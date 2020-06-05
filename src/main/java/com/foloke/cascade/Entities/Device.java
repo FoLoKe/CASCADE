@@ -213,6 +213,7 @@ public class Device extends Entity {
 
         port.position = ports.size();
         ports.add(port);
+        port.updatePosition();
         LogUtils.logToFile(name, "port not found and added " + port.name + " : " + port.address);
 
         return port;

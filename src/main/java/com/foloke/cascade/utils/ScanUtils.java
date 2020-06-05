@@ -164,13 +164,18 @@ public class ScanUtils {
 
                 if(reachable) {
                     if(port == null) {
-                        mapController.addOrUpdate(inetAddress.getHostAddress());
+                        Device device = mapController.addOrUpdate(inetAddress.getHostAddress());
+                        port = device.findPort(inetAddress.getHostAddress());
                     } else {
                         port.active = true;
                     }
                 }
                 LogUtils.log(inetAddress.getHostAddress() + " reachable: " + reachable);
-                LogUtils.logToFile(port.parent.getName(), "port with address: " + port.address + "is reachable ?: " + reachable);
+                if(port != null) {
+                    LogUtils.logToFile(port.parent.getName(), "port with address: " + port.address + "is reachable ?: " + reachable);
+                } else {
+                    LogUtils.log("port with address: " + inetAddress.getHostAddress() + "is reachable ?: " + reachable);
+                }
             } catch (Exception e) {
                 LogUtils.log(e.toString());
             }
