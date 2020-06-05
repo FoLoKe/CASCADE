@@ -209,6 +209,12 @@ public class MapController {
             if(hitted == null) {
                 if (entity instanceof Device) {
                     hitted = ((Device) entity).pickPort(point);
+                    if(hitted != null) {
+                        Entity connector = ((Device.Port) hitted).hit(point);
+                        if(connector != null) {
+                            hitted = connector;
+                        }
+                    }
                 }
             }
 

@@ -16,12 +16,10 @@ public class Cable extends Entity {
         super(mapController);
         connectorA = new Connector(this);
         connectorB = new Connector(this);
-        LogUtils.logToFile(name, "cable created");
     }
 
     public Cable(MapController mapController, String[] params) {
         super(mapController, params);
-        LogUtils.logToFile(name, "cable loaded");
     }
 
     @Override
@@ -65,8 +63,6 @@ public class Cable extends Entity {
         if (!connectorB.destroyed) {
             connectorB.destroy();
         }
-
-        LogUtils.logToFile(name, "cable destroyed");
     }
 
     @Override
@@ -85,14 +81,12 @@ public class Cable extends Entity {
         public Connector(Cable parent) {
             super(parent.mapController);
             init(parent);
-            LogUtils.logToFile(parent.name, "connector created");
         }
 
         public Connector(Cable parent, String[] params) {
             super(parent.mapController, params);
             connectionID = Integer.parseInt(params[5]);
             init(parent);
-            LogUtils.logToFile(parent.name, "connector loaded");
         }
 
         private void init(Cable parent) {
@@ -145,8 +139,8 @@ public class Cable extends Entity {
         @Override
         public void destroy() {
             super.destroy();
+            disconnect();
             parent.destroy();
-            LogUtils.logToFile(parent.name, "connector destroyed");
         }
 
         @Override

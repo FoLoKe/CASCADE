@@ -454,7 +454,11 @@ public class Device extends Entity {
         @Override
         public Entity hit(Point2D point2D) {
             if (rectangle.contains(point2D)) {
-                return this;
+                if(connectors.size() > 0) {
+                    return connectors.get(0);
+                } else {
+                    return this;
+                }
             }
 
             return null;
