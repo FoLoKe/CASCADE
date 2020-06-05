@@ -10,9 +10,25 @@ import java.util.ArrayList;
 
 public class Group extends Entity {
     ArrayList<Entity> entities;
+    public String ids;
 
     public Group(MapController mapController) {
         super(mapController);
+        init();
+    }
+
+    public Group(MapController mapController, String[] params) {
+        super(mapController, params);
+        rectangle.setWidth(Double.parseDouble(params[5]));
+        rectangle.setHeight(Double.parseDouble(params[6]));
+        rectangle.setX(Double.parseDouble(params[3]));
+        rectangle.setY(Double.parseDouble(params[4]));
+
+        if(params.length == 8) {
+            ids = params[7];
+        } else {
+            ids = "";
+        }
         init();
     }
 
@@ -70,5 +86,21 @@ public class Group extends Entity {
 
             System.out.println(entity);
         }
+    }
+
+    @Override
+    public String getSave() {
+        String saveString = "GROUP " + super.getSave()
+                + " " + rectangle.getWidth()
+                + " " + rectangle.getHeight();
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (Entity entity: entities) {
+            stringBuilder.append(entity.getID()).append(".");
+        }
+        saveString += " " + stringBuilder.toString();
+
+        return saveString;
     }
 }

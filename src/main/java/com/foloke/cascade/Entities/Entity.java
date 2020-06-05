@@ -88,7 +88,9 @@ public abstract class Entity {
     }
 
     public void setName(String name) {
-        LogUtils.logToFile(name, "name has changed: " + this.name + " to " + name);
+        if(this instanceof Device) {
+            LogUtils.logToFile(name, "name has changed: " + this.name + " to " + name);
+        }
         this.name = name;
     }
 

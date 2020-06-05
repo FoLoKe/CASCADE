@@ -5,6 +5,7 @@ import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.Entities.Cable;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Entity;
+import com.foloke.cascade.Entities.Group;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -79,6 +80,8 @@ public class FileUtils {
 
             ArrayList<Device.Port> ports = new ArrayList<>();
             ArrayList<Cable.Connector> connectors = new ArrayList<>();
+            ArrayList<Entity> grouping = new ArrayList<>();
+
             String line = null;
             Device lastDevice = null;
             Cable lastCable = null;
@@ -87,6 +90,7 @@ public class FileUtils {
                 if(params[0].equals("DEVICE")) {
                     lastDevice = new Device(Application.image, mapController, params);
                     mapController.addEntity(lastDevice);
+                    grouping.add(lastDevice);
                 } else if (params[0].equals("PORT") && lastDevice != null) {
                     Device.Port port = new Device.Port(lastDevice, params);
                     lastDevice.addPort(port);
@@ -102,6 +106,10 @@ public class FileUtils {
                         lastCable.connectorB = connector;
                     }
                     connectors.add(connector);
+                } else if (params[0].equals("GROUP")) {
+                    Group group = new Group(mapController, params);
+                    mapController.addEntity(group);
+                    grouping.add(group);
                 }
             }
             for (Cable.Connector connector: connectors) {
@@ -109,6 +117,21 @@ public class FileUtils {
                     if(connector.getConnectionID() == port.getID()) {
                         connector.connect(port);
                         break;
+                    }
+                }
+            }
+
+            for (Entity entity : grouping) {
+                if(entity instanceof Group) {
+                    String[] stringIDs = ((Group)entity).ids.split("\\.");
+                    ArrayList<Long> ids= new ArrayList<>();
+                    for(String string : stringIDs) {
+                       ids.add(Long.parseLong(string));
+                    }
+                    for(Entity toAdd : grouping) {
+                        if(ids.contains(toAdd.ID)) {
+                            ((Group)entity).addToGroup(toAdd);
+                        }
                     }
                 }
             }
