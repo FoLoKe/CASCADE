@@ -189,7 +189,8 @@ public class SnmpUtils {
                                     
                                     if(mac != null) {
                                         Device leadingDevice = new Device(Application.image, device.mapController);
-                                        leadingPort = leadingDevice.addPort(address);
+                                        leadingPort = new Device.Port(leadingDevice, address, 0);
+                                        leadingPort = leadingDevice.addOrUpdatePort(leadingPort);
                                         leadingPort.mac = mac;
                                         device.mapController.addEntity(leadingDevice);
                                     }

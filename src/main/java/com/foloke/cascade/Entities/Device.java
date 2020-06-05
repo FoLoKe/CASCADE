@@ -51,6 +51,7 @@ public class Device extends Entity {
         super(mapController);
         init(image);
         LogUtils.logToFile(name, "device created");
+        updateSnmpConfiguration(snmpAddress);
     }
 
     public Device(Image image, MapController mapController, String[] params) {
@@ -81,7 +82,7 @@ public class Device extends Entity {
     @Override
     public void render(GraphicsContext context) {
         context.drawImage(image, rectangle.getX(), rectangle.getY());
-        for(Port port : ports) {
+        for (Port port : ports) {
             port.render(context);
         }
     }
@@ -96,10 +97,10 @@ public class Device extends Entity {
 
     public Port addPort(NetworkInterface networkInterface) {
         try {
-            if(networkInterface.getHardwareAddress() != null) {
+            if (networkInterface.getHardwareAddress() != null) {
                 Port port = new Port(this, networkInterface, ports.size());
                 ports.add(port);
-                if(ports.size() == 1) {
+                if (ports.size() == 1) {
                     updateSnmpConfiguration(networkInterface.getInetAddresses().nextElement().getHostAddress());
                     LogUtils.logToFile(name, port.name + " is only and has sat SNMP defaults");
                 }
@@ -118,7 +119,7 @@ public class Device extends Entity {
         Port port = new Port(this, address, ports.size());
 
         ports.add(port);
-        if(ports.size() == 1) {
+        if (ports.size() == 1) {
             updateSnmpConfiguration(address);
         }
 
@@ -129,15 +130,19 @@ public class Device extends Entity {
 
     public void addPort(Port port) {
         ports.add(port);
+
+        if (ports.size() == 1) {
+            updateSnmpConfiguration(port.address);
+        }
         LogUtils.logToFile(name, port.name + " : " + port.address + " port added");
     }
 
     public void updateSnmpConfiguration(String snmpAddress) {
         LogUtils.logToFile(name, "updating SNMP config");
         this.snmpAddress = snmpAddress;
-        if(snmpVersion != SnmpConstants.version3) {
+        if (snmpVersion != SnmpConstants.version3) {
             target = new CommunityTarget<>();
-            ((CommunityTarget<UdpAddress>)target).setCommunity(new OctetString(snmpName));
+            ((CommunityTarget<UdpAddress>) target).setCommunity(new OctetString(snmpName));
             target.setSecurityLevel(SecurityLevel.NOAUTH_NOPRIV);
         } else {
             user = new UsmUser(new OctetString(snmpName),
@@ -175,7 +180,7 @@ public class Device extends Entity {
 
     public Port pickPort(Point2D point2D) {
         for (Port port : ports) {
-            if(port.rectangle.contains(point2D.getX(), point2D.getY())) {
+            if (port.rectangle.contains(point2D.getX(), point2D.getY())) {
                 LogUtils.logToFile(name, "port picked " + port.name + " : " + port.address);
                 return port;
             }
@@ -201,15 +206,22 @@ public class Device extends Entity {
             if (port.index == existingPort.index ||
                     existingPort.addType == Port.AddType.SNMP ||
                     existingPort.addType == Port.AddType.AUTO) {
-                if(existingPort.mac.length() > 0 && existingPort.mac.equals(port.mac) ||
-                        existingPort.address.length() > 0 &&existingPort.address.equals(port.address)) {
+                if (existingPort.mac.length() > 0 && existingPort.mac.equals(port.mac)) {
                     updatePort(existingPort, port);
-
                     LogUtils.logToFile(name, "port found and updated " + port.name + " : " + port.address);
                     return existingPort;
+                } else if (existingPort.address.length() > 0 && port.address.length() > 0) {
+                    SubnetUtils subnetUtils = new SubnetUtils(existingPort.address + "/" + existingPort.mask);
+                    if (existingPort.address.equals(port.address) || subnetUtils.getInfo().isInRange(port.address)) {
+                        updatePort(existingPort, port);
+                        LogUtils.logToFile(name, "port found and updated " + port.name + " : " + port.address);
+                        return existingPort;
+                    }
                 }
             }
         }
+
+
 
         port.position = ports.size();
         ports.add(port);
