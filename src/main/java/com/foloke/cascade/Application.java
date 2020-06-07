@@ -28,63 +28,65 @@ public class Application extends javafx.application.Application {
     public static URL traceDialogURL;
     public static URL snmpDialogURL;
     public static URL paramDialogURL;
+    public static URL mainURL;
+    private Scene scene;
 
     public static OctetString localEngineId;
-
-    public Application() {
-    }
 
     public static void main(String[] args) {
         launch(args);
     }
 
     public void start(Stage stage) {
-        this.initUI(stage);
+
+        FXMLLoader loader = new FXMLLoader();
+        loader.setController(this.uiController);
+        loader.setLocation(mainURL);
+        try {
+            SplitPane rootPane = loader.load();
+            scene = new Scene(rootPane, 1024, 640.0D, false, SceneAntialiasing.DISABLED);
+            stage.setTitle("CASCADE");
+            stage.getIcons().add(image);
+            stage.setScene(scene);
+
+            Device device = ScanUtils.initLocal(mapController);
+            mapController.addEntity(device);
+
+        } catch (Exception e) {
+            LogUtils.log(e.toString());
+        }
+
+
+        this.renderer = new Renderer(this);
+        stage.show();
+        this.renderer.start();
     }
 
-    public void initUI(Stage stage) {
-        this.mapController = new MapController(this);
+    @Override
+    public void init() throws Exception {
+        super.init();
 
         image = new Image("/images/spritesheet.png", 16.0D, 16.0D, false, false);
-        FXMLLoader loader = new FXMLLoader();
+
+        this.mapController = new MapController(this);
         this.uiController = new UIController(this.mapController);
 
-        URL url = this.getClass().getResource("/static/main.fxml");
+        mainURL = this.getClass().getResource("/static/main.fxml");
         pingDialogURL = this.getClass().getResource("/static/pingDialog.fxml");
         pingOneDialogURL = this.getClass().getResource("/static/pingOneDialog.fxml");
         traceDialogURL = this.getClass().getResource("/static/traceDialog.fxml");
         snmpDialogURL = this.getClass().getResource("/static/SNMPSettingsDialog.fxml");
         paramDialogURL = this.getClass().getResource("/static/paramDialog.fxml");
 
-        try {
-            loader.setController(this.uiController);
-            loader.setLocation(url);
-            SplitPane rootPane = loader.load();
+        localEngineId = new OctetString(MPv3.createLocalEngineID());
+        USM usm = new USM(SecurityProtocols.getInstance(), localEngineId, 0);
+        SecurityModels.getInstance().addSecurityModel(usm);
+        SecurityProtocols.getInstance().addAuthenticationProtocol(new AuthMD5());
+        SecurityProtocols.getInstance().addPrivacyProtocol(new PrivDES());
+        SecurityProtocols.getInstance().addAuthenticationProtocol(new AuthSHA());
+        SecurityProtocols.getInstance().addPrivacyProtocol(new PrivAES128());
 
-            Scene scene = new Scene(rootPane, 1024, 640.0D, false, SceneAntialiasing.DISABLED);
-            stage.setTitle("CASCADE");
-            stage.getIcons().add(image);
-            stage.setScene(scene);
-            this.renderer = new Renderer(this);
-            stage.show();
-
-            Device device = ScanUtils.initLocal(mapController);
-            mapController.addEntity(device);
-
-            localEngineId = new OctetString(MPv3.createLocalEngineID());
-            USM usm = new USM(SecurityProtocols.getInstance(), localEngineId, 0);
-            SecurityModels.getInstance().addSecurityModel(usm);
-            SecurityProtocols.getInstance().addAuthenticationProtocol(new AuthMD5());
-            SecurityProtocols.getInstance().addPrivacyProtocol(new PrivDES());
-            SecurityProtocols.getInstance().addAuthenticationProtocol(new AuthSHA());
-            SecurityProtocols.getInstance().addPrivacyProtocol(new PrivAES128());
-
-            this.renderer.start();
-        } catch (Exception e) {
-            LogUtils.log(e.toString());
-        }
     }
-
 
     public void getProps(Entity entity) {
         uiController.getProps(entity);
