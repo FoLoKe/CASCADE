@@ -36,9 +36,9 @@ public class Device extends Entity {
 
     String snmpAddress = "0.0.0.0";
     String snmpPort = "161";
-    int snmpVersion = SnmpConstants.version3;
-    int snmpTimeout = 1000;
-    String snmpName = "publics";
+    int snmpVersion = SnmpConstants.version2c;
+    int snmpTimeout = 5000;
+    String snmpName = "public";
 
     //SNMPv3
     String snmpPassword = "12345678";
@@ -99,12 +99,7 @@ public class Device extends Entity {
         try {
             if (networkInterface.getHardwareAddress() != null) {
                 Port port = new Port(this, networkInterface, ports.size());
-                ports.add(port);
-                if (ports.size() == 1) {
-                    updateSnmpConfiguration(networkInterface.getInetAddresses().nextElement().getHostAddress());
-                    LogUtils.logToFile(name, port.name + " is only and has sat SNMP defaults");
-                }
-                LogUtils.logToFile(name, port.name + " has updated");
+                addPort(port);
                 return port;
             }
         } catch (SocketException e) {
@@ -118,10 +113,7 @@ public class Device extends Entity {
     public Port addPort(String address) {
         Port port = new Port(this, address, ports.size());
 
-        ports.add(port);
-        if (ports.size() == 1) {
-            updateSnmpConfiguration(address);
-        }
+        addPort(port);
 
         LogUtils.logToFile(name, port.name + " : " + port.address + " port added");
 
@@ -133,6 +125,7 @@ public class Device extends Entity {
 
         if (ports.size() == 1) {
             updateSnmpConfiguration(port.address);
+            LogUtils.logToFile(name, port.name + " is only and has sat SNMP defaults");
         }
         LogUtils.logToFile(name, port.name + " : " + port.address + " port added");
     }
@@ -224,7 +217,7 @@ public class Device extends Entity {
 
 
         port.position = ports.size();
-        ports.add(port);
+        addPort(port);
         port.updatePosition();
         LogUtils.logToFile(name, "port not found and added " + port.name + " : " + port.address);
 

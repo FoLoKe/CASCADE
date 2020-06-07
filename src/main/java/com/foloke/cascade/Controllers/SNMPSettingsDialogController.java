@@ -62,8 +62,10 @@ public class SNMPSettingsDialogController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        ObservableList<String> versions = FXCollections.observableArrayList("version 1", "version 2c", "version 3");
-        SpinnerValueFactory<String> versionsSpinnerValueFactory = new SpinnerValueFactory.ListSpinnerValueFactory<>(versions);
+        ObservableList<String> versions
+                = FXCollections.observableArrayList("version 1", "version 2c", "version 3");
+        SpinnerValueFactory<String> versionsSpinnerValueFactory
+                = new SpinnerValueFactory.ListSpinnerValueFactory<>(versions);
 
         switch (device.getSnmpVersion()) {
             case SnmpConstants.version1:
@@ -79,6 +81,7 @@ public class SNMPSettingsDialogController implements Initializable {
                 break;
 
         }
+        versionSpinner.setValueFactory(versionsSpinnerValueFactory);
 
         ObservableList<Device.Port> portsNames = FXCollections.observableArrayList(device.getPorts());
         SpinnerValueFactory<Device.Port> interfacesSpinnerValueFactory = new SpinnerValueFactory.ListSpinnerValueFactory<>(portsNames);
@@ -114,7 +117,7 @@ public class SNMPSettingsDialogController implements Initializable {
         securityLevelSpinner.setValueFactory(securitySpinnerValueFactory);
 
         interfaceSpinner.setValueFactory(interfacesSpinnerValueFactory);
-        versionSpinner.setValueFactory(versionsSpinnerValueFactory);
+
         communityTextField.setText(device.getSnmpCommunity());
         timeoutTextField.setText(Integer.toString(device.getSnmpTimeout()));
         portTextField.setText(device.getSnmpPort());

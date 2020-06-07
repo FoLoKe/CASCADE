@@ -125,7 +125,7 @@ public class UIController {
             }
         });
     }
-    
+
     private static class ObjectContextMenu extends ContextMenu {
         Entity entity;
 
@@ -259,7 +259,7 @@ public class UIController {
     public void getProps(Entity entity) {
 
         ObservableList<Property> properties = FXCollections.observableArrayList(
-                new Property("destroyed", Boolean.toString(entity.destroyed))
+                new Property("name", entity.getName())
         );
 
         if(entity instanceof Device) {
