@@ -89,6 +89,20 @@ public class Group extends Entity {
     }
 
     @Override
+    public void destroy() {
+        super.destroy();
+    }
+
+    @Override
+    public void cleanup() {
+        for (Entity entity : entities) {
+            entity.group = null;
+        }
+
+        entities.clear();
+    }
+
+    @Override
     public String getSave() {
         String saveString = "GROUP " + super.getSave()
                 + " " + rectangle.getWidth()

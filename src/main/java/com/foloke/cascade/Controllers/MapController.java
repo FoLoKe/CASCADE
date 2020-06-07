@@ -66,6 +66,7 @@ public class MapController {
         while(iterator.hasNext()) {
             Entity entity = iterator.next();
             if(entity.destroyed) {
+                entity.cleanup();
                 iterator.remove();
                 continue;
             }

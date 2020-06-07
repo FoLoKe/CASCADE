@@ -102,6 +102,10 @@ public abstract class Entity {
         return ID;
     }
 
+    public void cleanup(){
+
+    }
+
     public String getSave() {
         return ID + " " + name
                 + " " + rectangle.getX()
