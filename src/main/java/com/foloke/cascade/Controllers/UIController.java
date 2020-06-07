@@ -26,9 +26,8 @@ import javafx.stage.Stage;
 import org.snmp4j.smi.OID;
 
 import java.net.URL;
-import java.util.ResourceBundle;
 
-public class UIController implements Initializable {
+public class UIController {
     @FXML
     private Canvas canvas;
 
@@ -71,8 +70,8 @@ public class UIController implements Initializable {
         return this.canvas;
     }
 
-    public void initialize(URL url, ResourceBundle resourceBundle) {
-        this.canvas.getGraphicsContext2D();
+    public void initialize() {
+        LogUtils.init(logTextArea);
 
         this.anchorPane.widthProperty().addListener((ov, oldValue, newValue) -> {
             this.canvas.setWidth(newValue.doubleValue());
@@ -113,8 +112,6 @@ public class UIController implements Initializable {
         propertyColumn.setCellValueFactory(new PropertyValueFactory<>("property"));
         valueColumn.setCellValueFactory(new PropertyValueFactory<>("value"));
 
-        LogUtils.init(logTextArea);
-
         objectContextMenu = new ObjectContextMenu();
         noneObjectContextMenu = new NoneObjectContextMenu(mapController);
 
@@ -128,8 +125,7 @@ public class UIController implements Initializable {
             }
         });
     }
-
-
+    
     private static class ObjectContextMenu extends ContextMenu {
         Entity entity;
 
@@ -256,25 +252,6 @@ public class UIController implements Initializable {
             stage.setScene(scene);
             stage.showAndWait();
         } catch (Exception e) {
-            e.printStackTrace();
-            LogUtils.log(e.toString());
-        }
-    }
-
-    public static void openParamDialog(Initializable controller, URL url) {
-        try {
-            FXMLLoader fxmlLoader = new FXMLLoader(url);
-
-            fxmlLoader.setController(controller);
-            Parent parent = fxmlLoader.load();
-
-            Scene scene = new Scene(parent);
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setScene(scene);
-            stage.showAndWait();
-        } catch (Exception e) {
-            e.printStackTrace();
             LogUtils.log(e.toString());
         }
     }
