@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.layout.*?>
-<SplitPane dividerPositions="0.8260869565217391" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1">
+<SplitPane dividerPositions="0.7621212121212121" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="662.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1">
   <items>
     <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
          <children>
@@ -12,7 +12,7 @@
               <items>
                 <AnchorPane fx:id="anchorPane" minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0" stylesheets="@styles.css">
                      <children>
-                        <Canvas fx:id="canvas" height="303.0" width="316.0" AnchorPane.bottomAnchor="36.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="173.0" AnchorPane.topAnchor="0.0">
+                        <Canvas fx:id="canvas" height="286.0" width="498.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <cursor>
                               <Cursor fx:constant="HAND" />
                            </cursor></Canvas>
@@ -25,12 +25,12 @@
               </items>
             </SplitPane>
          </children></AnchorPane>
-    <AnchorPane fx:id="outerPropAnchor" minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+    <AnchorPane fx:id="outerPropAnchor" minHeight="0.0" minWidth="0.0" prefHeight="398.0" prefWidth="152.0">
          <children>
             <TableView fx:id="propTable" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="400.0" prefWidth="101.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
               <columns>
-                <TableColumn fx:id="propertyColumn" prefWidth="50.0" text="Prop" />
-                <TableColumn fx:id="valueColumn" prefWidth="57.0" text="Value" />
+                <TableColumn fx:id="propertyColumn" maxWidth="64.0" prefWidth="64.0" text="Prop" />
+                <TableColumn fx:id="valueColumn" maxWidth="119.0" minWidth="0.0" prefWidth="66.0" text="Value" />
               </columns>
             </TableView>
          </children></AnchorPane>
