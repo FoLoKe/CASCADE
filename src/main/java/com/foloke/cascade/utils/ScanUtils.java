@@ -53,7 +53,7 @@ public class ScanUtils {
         thread.start();
     }
 
-    static class Trace implements Runnable {
+    private static class Trace implements Runnable {
         MapController mapController;
         String address;
         int timeout;
@@ -134,7 +134,7 @@ public class ScanUtils {
         }
     }
 
-    static class Ping implements Runnable {
+    private static class Ping implements Runnable {
         MapController mapController;
         InetAddress inetAddress;
         Device.Port port;
@@ -193,7 +193,7 @@ public class ScanUtils {
         return null;
     }
 
-    public static List<String> cmdWindowsTraceroute(String ipAddress, int timeout, int maxHops) throws IOException {
+    private static List<String> cmdWindowsTraceroute(String ipAddress, int timeout, int maxHops) throws IOException {
         Runtime runTime = Runtime.getRuntime();
         Process process;
         List<String> cmdResult = new ArrayList<>();
@@ -220,7 +220,7 @@ public class ScanUtils {
         return cmdResult;
     }
 
-    public static List<String> cmdLinuxTraceroute(String ipAddress, int timeout, int maxHops) throws IOException {
+    private static List<String> cmdLinuxTraceroute(String ipAddress, int timeout, int maxHops) throws IOException {
         List<String> commands = new ArrayList<>();
 
         commands.add("traceroute");

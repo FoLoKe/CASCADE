@@ -449,11 +449,11 @@ public class Device extends Entity {
                 graphicsContext.setStroke(Color.BLACK);
                 graphicsContext.setFont(new Font("sans", 2));
                 graphicsContext.strokeText(name, rectangle.getX(),
-                        rectangle.getY() + rectangle.getHeight());
-                graphicsContext.strokeText(address, rectangle.getX(),
                         rectangle.getY() + rectangle.getHeight() + 4);
-                graphicsContext.strokeText(mac, rectangle.getX(),
+                graphicsContext.strokeText(address, rectangle.getX(),
                         rectangle.getY() + rectangle.getHeight() + 8);
+                graphicsContext.strokeText(mac, rectangle.getX(),
+                        rectangle.getY() + rectangle.getHeight() + 12);
             }
         }
 
@@ -461,7 +461,9 @@ public class Device extends Entity {
         public Entity hit(Point2D point2D) {
             if (rectangle.contains(point2D)) {
                 if(connectors.size() > 0) {
-                    return connectors.get(0);
+                    if(connectors.get(0).getHitBox().contains(point2D)) {
+                        return connectors.get(0);
+                    }
                 } else {
                     return this;
                 }

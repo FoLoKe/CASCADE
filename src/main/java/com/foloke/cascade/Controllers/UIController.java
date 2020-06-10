@@ -126,7 +126,7 @@ public class UIController {
         });
     }
 
-    private static class ObjectContextMenu extends ContextMenu {
+    private class ObjectContextMenu extends ContextMenu {
         Entity entity;
 
         public ObjectContextMenu() {
@@ -178,6 +178,12 @@ public class UIController {
                     UIController.openDialog(new SNMPSettingsDialogController((Device) entity), Application.snmpDialogURL);
                 });
                 getItems().add(snmpMenuItem);
+
+                MenuItem updateItem = new MenuItem("Update by SNMP");
+                updateItem.setOnAction(event -> {
+                    UIController.this.getProps(entity);
+                });
+                getItems().add(updateItem);
             }
 
             MenuItem deleteItem = new MenuItem("Delete");

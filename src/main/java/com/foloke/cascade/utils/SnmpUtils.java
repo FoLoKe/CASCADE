@@ -241,8 +241,6 @@ public class SnmpUtils {
                             if (varBinding == null) {
                                 continue;
                             }
-
-                            //LogUtils.log("." + varBinding.getOid().toString() + " = " + varBinding.getVariable().toString());
                             propsList.add(new UIController.Property(varBinding.getOid().toString(), varBinding.getVariable().toString()));
                         }
 

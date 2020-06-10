@@ -33,9 +33,6 @@ public class MapController {
     public void render(GraphicsContext gc) {
         gc.scale(this.camera.scale, this.camera.scale);
         gc.translate(camera.x, camera.y);
-        gc.setLineWidth(5.0D);
-        gc.setStroke(Color.RED);
-        gc.strokeRect(-1, -1, 1 ,1);
 
         for (Entity entity : entityList) {
             entity.render(gc);
@@ -149,7 +146,6 @@ public class MapController {
         for (Entity entity : entityList) {
             touchPoint.object = entity.hit(point2D);
             if(touchPoint.object != null) {
-                context.getProps(touchPoint.object);
                 break;
             }
         }
@@ -211,7 +207,7 @@ public class MapController {
                 if (entity instanceof Device) {
                     hitted = ((Device) entity).pickPort(point);
                     if(hitted != null) {
-                        Entity connector = ((Device.Port) hitted).hit(point);
+                        Entity connector = hitted.hit(point);
                         if(connector != null) {
                             hitted = connector;
                         }

@@ -3,7 +3,6 @@ package com.foloke.cascade;
 import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.Controllers.UIController;
 import com.foloke.cascade.Entities.Device;
-import com.foloke.cascade.Entities.Entity;
 import com.foloke.cascade.utils.LogUtils;
 import com.foloke.cascade.utils.ScanUtils;
 import javafx.fxml.FXMLLoader;
@@ -86,9 +85,5 @@ public class Application extends javafx.application.Application {
         SecurityProtocols.getInstance().addAuthenticationProtocol(new AuthSHA());
         SecurityProtocols.getInstance().addPrivacyProtocol(new PrivAES128());
 
-    }
-
-    public void getProps(Entity entity) {
-        uiController.getProps(entity);
     }
 }
