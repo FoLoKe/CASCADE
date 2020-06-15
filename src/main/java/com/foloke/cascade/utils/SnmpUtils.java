@@ -27,6 +27,7 @@ public class SnmpUtils {
 
     public static OID interfacesIDS = new OID(".1.3.6.1.2.1.2.2.1.1");
     public static OID interfacesMAC = new OID(".1.3.6.1.2.1.2.2.1.6");
+    public static OID interfacesState = new OID(".1.3.6.1.2.1.2.2.1.8");
     public static OID interfacesDescription = new OID(".1.3.6.1.2.1.2.2.1.2");
     public static OID addressesAddress = new OID(".1.3.6.1.2.1.4.20.1.1");
     public static OID addressesIDS = new OID(".1.3.6.1.2.1.4.20.1.2");
@@ -141,6 +142,20 @@ public class SnmpUtils {
                         }
                     }
 
+                    pdu = new PDU();
+                    pdu.add(new VariableBinding(new OID(interfacesState + "." + entry.getValue() + ".0")));
+                    pdu.setType(PDU.GET);
+
+                    info = get(pdu, device.target, device.user);
+                    if (info != null) {
+                        for (VariableBinding varBinding : info) {
+                            if (varBinding == null) {
+                                continue;
+                            }
+                            port.setState(varBinding.getVariable().toInt());
+                        }
+                    }
+
                     port.address = addressesMap.get(Integer.toString(port.index));
                     if (port.address == null) {
                         port.address = "";
@@ -169,9 +184,7 @@ public class SnmpUtils {
                                 String address = routeOID.getSuffix(new OID(routingIDS + "." + entry.getValue())).toString();
                                 Device.Port leadingPort = device.mapController.findPort(address);
 
-                                if (leadingPort != null) {
-                                    device.mapController.establishConnection(port, leadingPort);
-                                } else {
+                                if (leadingPort == null) {
                                     pdu = new PDU();
                                     pdu.add(new VariableBinding(new OID(routingMAC + "." + entry.getValue() + "." + address + ".0")));
                                     pdu.setType(PDU.GET);
@@ -195,7 +208,6 @@ public class SnmpUtils {
                                         device.mapController.addEntity(leadingDevice);
                                     }
                                 }
-
                                 device.mapController.establishConnection(port, leadingPort);
                             }
                         }
@@ -288,9 +300,12 @@ public class SnmpUtils {
             List<TreeEvent> events = treeUtils.getSubtree(target, oid);
             if (events == null || events.size() == 0) {
                 LogUtils.log("Error: Unable to read table...");
+                snmp.close();
+                transport.close();
                 return null;
             }
             snmp.close();
+            transport.close();
             return events;
 
         } catch (Exception e) {

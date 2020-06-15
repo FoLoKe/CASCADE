@@ -80,7 +80,7 @@ public class MapController {
             if (entity instanceof Device) {
                 for (Device.Port port : ((Device) entity).getPorts()) {
                     if (port.address.equals(address)) {
-                        port.active = true;
+                        port.setState(Device.Port.State.UP);
                         return (Device) entity;
                     }
                 }

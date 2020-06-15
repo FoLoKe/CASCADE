@@ -358,8 +358,9 @@ public class Device extends Entity {
 
     public static class Port extends Entity {
         public enum AddType {AUTO, MANUAL, SNMP}
+        public enum State {UP, DOWN, TESTING, UNKNOWN, DORMANT, NOT_PRESENT, LOWER_LAYER_DOWN}
         public Device parent;
-        public boolean active;
+        public State state = State.DOWN;
         public boolean pinging;
         int position;
 
@@ -401,7 +402,7 @@ public class Device extends Entity {
         public Port(Device parent, String[] params) {
             super(parent.mapController, params);
             init(parent, position = Integer.parseInt(params[7]));
-            active = Boolean.parseBoolean(params[5]);
+            state = State.valueOf(params[5]);
             pinging = Boolean.parseBoolean(params[6]);
             mac = params[8];
             address = params[9];
@@ -434,10 +435,28 @@ public class Device extends Entity {
         }
 
         public void render(GraphicsContext graphicsContext) {
-            if(active) {
-                graphicsContext.setStroke(Color.GREEN);
-            } else {
-                graphicsContext.setStroke(Color.RED);
+            switch (state) {
+                case UP:
+                    graphicsContext.setStroke(Color.GREEN);
+                    break;
+                case DOWN:
+                    graphicsContext.setStroke(Color.RED);
+                    break;
+                case TESTING:
+                    graphicsContext.setStroke(Color.YELLOW);
+                    break;
+                case UNKNOWN:
+                    graphicsContext.setStroke(Color.BLACK);
+                    break;
+                case NOT_PRESENT:
+                    graphicsContext.setStroke(Color.GRAY);
+                    break;
+                case DORMANT:
+                    graphicsContext.setStroke(Color.CYAN);
+                    break;
+                case LOWER_LAYER_DOWN:
+                    graphicsContext.setStroke(Color.BLUE);
+                    break;
             }
 
             graphicsContext.setLineWidth(0.2f);
@@ -524,10 +543,19 @@ public class Device extends Entity {
             return false;
         }
 
+        public void setState(State state) {
+            this.state = state;
+        }
+
+        public void setState(int i) {
+            State[] stateList = State.values();
+            state = stateList[i - 1];
+        }
+
         @Override
         public String getSave() {
             String saveString = "PORT " + super.getSave()
-                    + " " + active
+                    + " " + state.toString()
                     + " " + pinging
                     + " " + position
                     + " " + mac

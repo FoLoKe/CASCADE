@@ -69,25 +69,20 @@ public class ScanUtils {
         @Override
         public void run() {
             Device local = initLocal(mapController);
-            Device previousHop = null;
+            Device previousHop;
             if(local.getPorts().size() > 0) {
                 Device.Port port = mapController.findPort(local.getPorts().get(0).address);
                 if(port != null) {
-                    previousHop = mapController.findPort(local.getPorts().get(0).address).parent;
-                    if (previousHop == null) {
-                        mapController.addEntity(local);
-                        previousHop = local;
-                    }
+                    previousHop = port.parent;
                 } else {
                     mapController.addEntity(local);
                     previousHop = local;
                 }
-            }
 
-            try {
-                List<String> hops = trace(address, timeout, maxHops);
-                if(hops.get(hops.size() - 1).equals(address)) {
-                    LogUtils.log("tracing succeed");
+                try {
+                    List<String> hops = trace(address, timeout, maxHops);
+                    if(hops.get(hops.size() - 1).equals(address)) {
+                        LogUtils.log("tracing succeed");
                         for (String hop : hops) {
                             SubnetUtils subnetUtils = new SubnetUtils(hop + "/" + 24);
                             Device.Port portA = null;
@@ -105,7 +100,7 @@ public class ScanUtils {
                                 portB.address = subnetUtils.getInfo().getNetworkAddress();
                             }
 
-                            portB.active = true;
+                            portB.setState(Device.Port.State.UP);
 
                             for (Device.Port nextHopPort : device.getPorts()) {
                                 if (nextHopPort.isInRange(hop)) {
@@ -117,19 +112,20 @@ public class ScanUtils {
                                 portA.setName("unknown");
                                 portA.address = hop;
                             }
-                            portA.active = true;
+                            portA.setState(Device.Port.State.UP);
 
                             mapController.establishConnection(portA, portB);
 
                             previousHop = device;
                         }
-                } else {
-                    LogUtils.log("tracing fail");
+                    } else {
+                        LogUtils.log("tracing fail");
+                    }
+
+
+                } catch (Exception e) {
+                    LogUtils.log(e.toString());
                 }
-
-
-            } catch (Exception e) {
-                LogUtils.log(e.toString());
             }
         }
     }
@@ -166,15 +162,17 @@ public class ScanUtils {
                     if(port == null) {
                         Device device = mapController.addOrUpdate(inetAddress.getHostAddress());
                         port = device.findPort(inetAddress.getHostAddress());
-                    } else {
-                        port.active = true;
                     }
                 }
+
                 LogUtils.log(inetAddress.getHostAddress() + " reachable: " + reachable);
                 if(port != null) {
+                    if(reachable) {
+                        port.setState(Device.Port.State.UP);
+                    } else {
+                        port.setState(Device.Port.State.DOWN);
+                    }
                     LogUtils.logToFile(port.parent.getName(), "port with address: " + port.address + "is reachable ?: " + reachable);
-                } else {
-                    LogUtils.log("port with address: " + inetAddress.getHostAddress() + "is reachable ?: " + reachable);
                 }
             } catch (Exception e) {
                 LogUtils.log(e.toString());
