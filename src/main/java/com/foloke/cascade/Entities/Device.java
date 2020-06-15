@@ -26,11 +26,14 @@ import org.snmp4j.smi.UdpAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
 public class Device extends Entity {
+    List<Port> toAdd = Collections.synchronizedList(new ArrayList<>());
     Image image;
-    ArrayList<Port> ports;
+    List<Port> ports;
     public Target<UdpAddress> target;
     public UsmUser user;
 
@@ -90,8 +93,26 @@ public class Device extends Entity {
     @Override
     public void tick(long timestamp) {
         super.tick(timestamp);
-        for (Port port : ports) {
+        ports.addAll(toAdd);
+        toAdd.clear();
+
+        Iterator<Port> portIterator = ports.iterator();
+        while (portIterator.hasNext()) {
+            Port port = portIterator.next();
             port.tick(timestamp);
+            if(port.destroyed) {
+                port.cleanup();
+                portIterator.remove();
+                recalculatePortsPositions();
+            }
+        }
+    }
+
+    private void recalculatePortsPositions() {
+        int position = 0;
+        for (Port port : ports) {
+            port.position = position++;
+            port.updatePosition();
         }
     }
 
@@ -121,7 +142,7 @@ public class Device extends Entity {
     }
 
     public void addPort(Port port) {
-        ports.add(port);
+        toAdd.add(port);
 
         if (ports.size() == 1) {
             updateSnmpConfiguration(port.address);
@@ -190,7 +211,7 @@ public class Device extends Entity {
         return null;
     }
 
-    public ArrayList<Port> getPorts() {
+    public List<Port> getPorts() {
         return ports;
     }
 
@@ -413,7 +434,7 @@ public class Device extends Entity {
             this.position = position;
             this.parent = parent;
             this.addType = AddType.AUTO;
-            
+
             this.rectangle = new Rectangle(8, 8);
             addTask(new Timer(1000000000) {
                 @Override

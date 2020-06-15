@@ -177,13 +177,18 @@ public class UIController {
                 snmpMenuItem.setOnAction(event -> {
                     UIController.openDialog(new SNMPSettingsDialogController((Device) entity), Application.snmpDialogURL);
                 });
-                getItems().add(snmpMenuItem);
 
                 MenuItem updateItem = new MenuItem("Update by SNMP");
                 updateItem.setOnAction(event -> {
                     UIController.this.getProps(entity);
                 });
-                getItems().add(updateItem);
+
+                MenuItem addItem = new MenuItem("Add new Port");
+                addItem.setOnAction(event -> {
+                    ((Device) entity).addPort("");
+                });
+
+                getItems().addAll(snmpMenuItem, updateItem, addItem);
             }
 
             MenuItem deleteItem = new MenuItem("Delete");
