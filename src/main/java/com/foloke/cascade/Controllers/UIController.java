@@ -185,10 +185,17 @@ public class UIController {
 
                 MenuItem addItem = new MenuItem("Add new Port");
                 addItem.setOnAction(event -> {
-                    ((Device) entity).addPort("");
+                    Device.Port port = ((Device) entity).addPort("");
+                    port.addType = Device.Port.AddType.MANUAL;
                 });
 
-                getItems().addAll(snmpMenuItem, updateItem, addItem);
+                CheckMenuItem showNameItem = new CheckMenuItem("Show name");
+                showNameItem.setSelected(((Device)entity).showName);
+                showNameItem.setOnAction(event -> {
+                    ((Device) entity).showName = showNameItem.isSelected();
+                });
+
+                getItems().addAll(showNameItem, snmpMenuItem, updateItem, addItem);
             }
 
             MenuItem deleteItem = new MenuItem("Delete");

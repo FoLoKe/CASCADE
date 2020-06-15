@@ -71,6 +71,7 @@ public class FileUtils {
         for(Entity entity : mapController.getEntities()) {
             entity.destroy();
         }
+        mapController.deselect();
 
         File saveFile = new File("maps\\" + saveName);
 

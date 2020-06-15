@@ -331,4 +331,11 @@ public class MapController {
     public List<Entity> getEntities() {
         return entityList;
     }
+
+    public void deselect() {
+        if(touchPoint.object != null) {
+            touchPoint.object.selected = false;
+            touchPoint.object = null;
+        }
+    }
 }

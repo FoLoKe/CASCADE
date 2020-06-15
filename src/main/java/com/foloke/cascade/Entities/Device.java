@@ -36,6 +36,7 @@ public class Device extends Entity {
     List<Port> ports;
     public Target<UdpAddress> target;
     public UsmUser user;
+    public boolean showName;
 
     String snmpAddress = "0.0.0.0";
     String snmpPort = "161";
@@ -85,6 +86,11 @@ public class Device extends Entity {
     @Override
     public void render(GraphicsContext context) {
         context.drawImage(image, rectangle.getX(), rectangle.getY());
+        if(showName) {
+            context.setFill(Color.BLACK);
+            context.setFont(new Font(4));
+            context.fillText(name, rectangle.getX(), rectangle.getY());
+        }
         for (Port port : ports) {
             port.render(context);
         }

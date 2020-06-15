@@ -73,9 +73,11 @@ public class Group extends Entity {
     }
 
     public void addToGroup(Entity entity) {
-        if(!entities.contains(entity)) {
-            entities.add(entity);
-            entity.group = this;
+        if(entity.group == null) {
+            if (!entities.contains(entity)) {
+                entities.add(entity);
+                entity.group = this;
+            }
         }
     }
 
@@ -113,6 +115,7 @@ public class Group extends Entity {
         for (Entity entity: entities) {
             stringBuilder.append(entity.getID()).append(".");
         }
+        stringBuilder.replace(stringBuilder.lastIndexOf("."), stringBuilder.lastIndexOf("."), "");
         saveString += " " + stringBuilder.toString();
 
         return saveString;
