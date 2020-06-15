@@ -214,8 +214,6 @@ public class Device extends Entity {
             }
         }
 
-
-
         port.position = ports.size();
         addPort(port);
         port.updatePosition();
@@ -386,7 +384,7 @@ public class Device extends Entity {
             }
 
             this.address = networkInterface.getInetAddresses().nextElement().getHostAddress();
-
+            this.name = "auto_added";
             init(parent, position);
         }
 
@@ -395,7 +393,7 @@ public class Device extends Entity {
             rectangle = new Rectangle(8, 8);
             this.mac = "none";
             this.address = address;
-
+            this.name = "auto_added";
             init(parent, position);
         }
 
@@ -415,7 +413,7 @@ public class Device extends Entity {
             this.position = position;
             this.parent = parent;
             this.addType = AddType.AUTO;
-            this.name = "auto_added";
+            
             this.rectangle = new Rectangle(8, 8);
             addTask(new Timer(1000000000) {
                 @Override
