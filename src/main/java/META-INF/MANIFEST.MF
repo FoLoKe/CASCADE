@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Main-Class: com.foloke.cascade.Launcher
+Class-Path: snmp4j-3.3.3.jar javafx-fxml-14.jar javafx-graphics-14.0.1.j
+ ar commons-net-3.6.jar src.zip javafx-swt.jar javafx.web.jar javafx.bas
+ e.jar javafx.fxml.jar javafx.media.jar javafx.swing.jar javafx.controls
+ .jar javafx.graphics.jar javafx-base-14.0.1.jar javafx-graphics-14.0.1-
+ win.jar javafx-controls-14.0.1.jar javafx-fxml-14-win.jar javafx-contro
+ ls-14.0.1-win.jar javafx-base-14.0.1-win.jar
+

@@ -1,3 +1,5 @@
 /target/classes/
 /logs/
 /maps/
+/out/
+/.idea/artifacts/
