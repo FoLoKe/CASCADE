@@ -31,9 +31,8 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Device extends Entity {
-    List<Port> toAdd = Collections.synchronizedList(new ArrayList<>());
     Image image;
-    List<Port> ports;
+    List<Port> ports = Collections.synchronizedList(new ArrayList<>());;
     public Target<UdpAddress> target;
     public UsmUser user;
     public boolean showName;
@@ -99,8 +98,6 @@ public class Device extends Entity {
     @Override
     public void tick(long timestamp) {
         super.tick(timestamp);
-        ports.addAll(toAdd);
-        toAdd.clear();
 
         Iterator<Port> portIterator = ports.iterator();
         while (portIterator.hasNext()) {
@@ -148,7 +145,7 @@ public class Device extends Entity {
     }
 
     public void addPort(Port port) {
-        toAdd.add(port);
+        ports.add(port);
 
         if (ports.size() == 1) {
             updateSnmpConfiguration(port.address);
