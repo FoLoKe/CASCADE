@@ -37,7 +37,7 @@ public class Device extends Entity {
     public UsmUser user;
     public boolean showName;
 
-    String snmpAddress = "0.0.0.0";
+    String snmpAddress = "127.0.0.1";
     String snmpPort = "161";
     int snmpVersion = SnmpConstants.version2c;
     int snmpTimeout = 5000;
