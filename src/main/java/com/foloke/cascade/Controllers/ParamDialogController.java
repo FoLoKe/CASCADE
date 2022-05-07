@@ -39,16 +39,14 @@ public class ParamDialogController implements Initializable {
 
     public ParamDialogController() {
 
-    };
+    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         paramTextField.setText(value);
         paramLabel.setText(name);
 
-        cancelButton.setOnMousePressed(event -> {
-            ParamDialogController.this.closeStage(event);
-        });
+        cancelButton.setOnMousePressed(ParamDialogController.this::closeStage);
 
         okButton.setOnMousePressed(event);
     }

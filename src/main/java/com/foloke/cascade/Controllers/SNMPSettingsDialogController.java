@@ -1,6 +1,7 @@
 package com.foloke.cascade.Controllers;
 
 import com.foloke.cascade.Entities.Device;
+import com.foloke.cascade.Entities.Port;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -46,7 +47,7 @@ public class SNMPSettingsDialogController implements Initializable {
     private Spinner<String> encryptionSpinner;
 
     @FXML
-    private Spinner<Device.Port> interfaceSpinner;
+    private Spinner<Port> interfaceSpinner;
 
     @FXML
     private javafx.scene.control.Button cancelButton;
@@ -83,8 +84,8 @@ public class SNMPSettingsDialogController implements Initializable {
         }
         versionSpinner.setValueFactory(versionsSpinnerValueFactory);
 
-        ObservableList<Device.Port> portsNames = FXCollections.observableArrayList(device.getPorts());
-        SpinnerValueFactory<Device.Port> interfacesSpinnerValueFactory = new SpinnerValueFactory.ListSpinnerValueFactory<>(portsNames);
+        ObservableList<Port> portsNames = FXCollections.observableArrayList(device.getPorts());
+        SpinnerValueFactory<Port> interfacesSpinnerValueFactory = new SpinnerValueFactory.ListSpinnerValueFactory<>(portsNames);
         interfacesSpinnerValueFactory.setValue(device.findPort(device.getSnmpAddress()));
 
         ObservableList<String> encryptionList = FXCollections.observableArrayList("DES", "AES");
@@ -125,9 +126,7 @@ public class SNMPSettingsDialogController implements Initializable {
         passwordTextField.setText(device.getSnmpPassword());
         encryptionTextField.setText(device.getSnmpEncryptionPass());
 
-        cancelButton.setOnMousePressed(event -> {
-            SNMPSettingsDialogController.this.closeStage(event);
-        });
+        cancelButton.setOnMousePressed(SNMPSettingsDialogController.this::closeStage);
 
         okButton.setOnMousePressed(event -> {
             device.setSnmpCommunity(communityTextField.getText());

@@ -10,8 +10,8 @@
 
     <repositories>
         <repository>
-            <id>lumaserv</id>
-            <url>https://maven.lumaserv.cloud</url>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
         </repository>
     </repositories>
 
@@ -44,9 +44,20 @@
         </dependency>
 
         <dependency>
-            <groupId>com.lumaserv</groupId>
+            <groupId>com.github.FoLoKe</groupId>
             <artifactId>netflow-java</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>42ff7fd</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.pcap4j</groupId>
+            <artifactId>pcap4j-core</artifactId>
+            <version>1.8.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.pcap4j</groupId>
+            <artifactId>pcap4j-packetfactory-static</artifactId>
+            <version>1.8.2</version>
         </dependency>
 
     </dependencies>

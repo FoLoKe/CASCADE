@@ -3,6 +3,7 @@ package com.foloke.cascade.utils;
 import com.foloke.cascade.Application;
 import com.foloke.cascade.Controllers.UIController;
 import com.foloke.cascade.Entities.Device;
+import com.foloke.cascade.Entities.Port;
 import org.snmp4j.*;
 import org.snmp4j.event.ResponseEvent;
 import org.snmp4j.mp.SnmpConstants;
@@ -74,9 +75,9 @@ public class SnmpUtils {
             }
 
             for (Map.Entry<OID, String> entry : interfacesInfo.entrySet()) {
-                Device.Port port = new Device.Port(device, entry.getValue(), 0);
+                Port port = new Port(device, entry.getValue(), 0);
                 port.index = Integer.parseInt(entry.getValue());
-                port.addType = Device.Port.AddType.SNMP;
+                port.addType = Port.AddType.SNMP;
 
                 VariableBinding macBinding = getFirst(new OID(interfacesMAC + "." + entry.getValue() + ".0"), device);
                 if (macBinding != null) {
@@ -105,7 +106,7 @@ public class SnmpUtils {
 
                     for (OID routeOID : routingInfo) {
                         String address = routeOID.getSuffix(new OID(routingIDS + "." + entry.getValue())).toString();
-                        Device.Port leadingPort = device.mapController.findPort(address);
+                        Port leadingPort = device.mapController.findPort(address);
 
                         if (leadingPort == null) {
                             String mac = null;
@@ -117,7 +118,7 @@ public class SnmpUtils {
 
                             if (mac != null) {
                                 Device leadingDevice = new Device(Application.image, device.mapController);
-                                leadingPort = new Device.Port(leadingDevice, address, 0);
+                                leadingPort = new Port(leadingDevice, address, 0);
                                 leadingPort = leadingDevice.addOrUpdatePort(leadingPort);
                                 leadingPort.mac = mac;
                                 device.mapController.addEntity(leadingDevice);
@@ -338,10 +339,6 @@ public class SnmpUtils {
         }
 
         VariableBinding[] varBindings = event.getVariableBindings();
-        if (varBindings == null || varBindings.length == 0) {
-            return false;
-        }
-
-        return true;
+        return varBindings != null && varBindings.length != 0;
     }
 }

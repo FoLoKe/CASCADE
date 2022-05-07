@@ -5,6 +5,7 @@ import com.foloke.cascade.Controllers.UIController;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.utils.LogUtils;
 import com.foloke.cascade.utils.ScanUtils;
+import com.foloke.cascade.utils.SimpleFlow;
 import com.lumaserv.netflow.NetFlowCollector;
 import com.lumaserv.netflow.NetFlowSession;
 import com.lumaserv.netflow.flowset.FlowField;
@@ -19,13 +20,10 @@ import org.snmp4j.security.*;
 import org.snmp4j.smi.OctetString;
 
 import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 public class Application extends javafx.application.Application {
-    private Renderer renderer;
     public MapController mapController;
     public UIController uiController;
     public static Image image;
@@ -36,14 +34,15 @@ public class Application extends javafx.application.Application {
     public static URL snmpDialogURL;
     public static URL paramDialogURL;
     public static URL mainURL;
-    private Scene scene;
 
     public static OctetString localEngineId;
 
     private Thread netFlowThread;
     private NetFlowCollector collector;
+    // MAP: SOURCE : FLOWS
+    // FLOWS: PORT : ADDRESS
 
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+    private final Map<Integer, Set<SimpleFlow>> flowSources = new HashMap<>();
 
     public static void main(String[] args) {
         launch(args);
@@ -55,7 +54,7 @@ public class Application extends javafx.application.Application {
         loader.setLocation(mainURL);
         try {
             SplitPane rootPane = loader.load();
-            scene = new Scene(rootPane, 1024, 640.0D, false, SceneAntialiasing.DISABLED);
+            Scene scene = new Scene(rootPane, 1024, 640.0D, false, SceneAntialiasing.DISABLED);
             stage.setTitle("CASCADE");
             stage.getIcons().add(icon);
             stage.setScene(scene);
@@ -64,39 +63,58 @@ public class Application extends javafx.application.Application {
             mapController.addEntity(device);
 
             NetFlowSession session = new NetFlowSession(source -> {
-                System.out.println("source: " + source.getId());
-                source.listen((id, values) -> {
-                    // DO WHATEVER YOU WANT
-                    System.out.println(sdf.format(Calendar.getInstance().getTime())
-                            + " " + values.get(FlowField.L4_DST_PORT).asUShort()
-                            + " " + toAddress(values.get(FlowField.IPV4_DST_ADDR).asBytes()));
-                });
+                try {
+                    ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+                    byteBuffer.putInt(source.getDeviceIP());
+
+                    System.out.println("Device: " + SimpleFlow.ipToString(byteBuffer.array()) + " source: " + source.getId());
+                    if(!flowSources.containsKey(source.getId())) {
+                        flowSources.put(source.getDeviceIP(), new HashSet<>());
+                    }
+
+                    Set<SimpleFlow> flows = flowSources.get(source.getDeviceIP());
+                    source.listen((id, values) -> {
+                        System.out.println(flows.size());
+                        synchronized (flows) {
+                            float flowTime = (values.get(FlowField.LAST_SWITCHED).asInt() - values.get(FlowField.FIRST_SWITCHED).asInt()) / 1000f;
+
+                            SimpleFlow flow = new SimpleFlow(values, 0);
+                            if (flowTime == 0) {
+                                if(flows.remove(flow)) {
+                                    System.out.println("update");
+                                }
+
+                                flows.add(flow);
+                            } else {
+                                if(flows.remove(flow)) {
+                                    System.out.println("ended");
+                                }
+                            }
+
+                            //Predicate<SimpleFlow> isExpired = simpleFlow -> System.currentTimeMillis() - simpleFlow.timestamp > simpleFlow.timeout;
+                            //flows.removeIf(isExpired);
+                        }
+                    });
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             });
 
-            collector = new NetFlowCollector(session);
+            collector = new NetFlowCollector(session, 9996);
 
             netFlowThread = new Thread(collector);
             netFlowThread.setDaemon(true);
             netFlowThread.start();
 
+
         } catch (Exception e) {
             LogUtils.log(e.toString());
         }
 
-        this.renderer = new Renderer(this);
+        Renderer renderer = new Renderer(this);
         stage.show();
-        this.renderer.start();
-    }
-
-    private String toAddress(byte[] bytes) {
-        StringBuilder stringBuilder = new StringBuilder("");
-
-        stringBuilder.append(bytes[0] > 0 ? bytes[0] : 256 + bytes[0]).append('.');
-        stringBuilder.append(bytes[1] > 0 ? bytes[1] : 256 + bytes[1]).append('.');
-        stringBuilder.append(bytes[2] > 0 ? bytes[2] : 256 + bytes[2]).append('.');
-        stringBuilder.append(bytes[3] > 0 ? bytes[3] : 256 + bytes[3]);
-
-        return stringBuilder.toString();
+        renderer.start();
     }
 
     @Override
@@ -106,7 +124,7 @@ public class Application extends javafx.application.Application {
         image = new Image("/images/spritesheet.png", 16.0D, 16.0D, false, false);
         icon = new Image("/images/icon.png");
 
-        this.mapController = new MapController(this);
+        this.mapController = new MapController();
         this.uiController = new UIController(this.mapController);
 
         mainURL = this.getClass().getResource("/static/main.fxml");

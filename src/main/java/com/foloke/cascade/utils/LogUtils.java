@@ -25,10 +25,17 @@ public class LogUtils {
 
         try {
             File logsDir = new File(logsDirName);
-            logsDir.mkdir();
+            if(!logsDir.mkdir()) {
+                System.out.println("log folder write error");
+                return;
+            }
 
             File logFile = new File(logsDirName + "\\" + sysLogName);
-            logFile.createNewFile();
+
+            if(!logFile.createNewFile()) {
+                System.out.println("log folder write error");
+                return;
+            }
 
             FileWriter writer = new FileWriter(logFile);
             logWriter = new BufferedWriter(writer);
@@ -44,22 +51,25 @@ public class LogUtils {
         Platform.runLater(()->logTextArea.appendText(string + "\n"));
 
         try {
-            logWriter.write(Calendar.getInstance().getTime().toString() + ": " + string);
+            if(logWriter == null)
+                return;
+            logWriter.write(Calendar.getInstance().getTime() + ": " + string);
             logWriter.newLine();
             logWriter.flush();
         } catch (IOException e) {
-            System.out.println(e);
+           e.printStackTrace();
         }
     }
 
     public static void logToFile(String fileName, String string) {
         if(writerMap.containsKey(fileName)) {
             BufferedWriter bufferedWriter = writerMap.get(fileName);
-            FileUtils.writeToFile(bufferedWriter, Calendar.getInstance().getTime().toString() + ": " + string);
+            FileUtils.writeToFile(bufferedWriter, Calendar.getInstance().getTime() + ": " + string);
         } else {
             try {
                 File logFile = new File(logsDirName + "\\" + fileName);
-                logFile.createNewFile();
+                if(!logFile.createNewFile())
+                    return;
 
                 FileWriter writer = new FileWriter(logFile);
                 BufferedWriter bufferedWriter = new BufferedWriter(writer);

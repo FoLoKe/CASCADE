@@ -38,9 +38,7 @@ public class TraceDialogController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         maxHopsTextField.setText("5");
         timeoutTextField.setText("5000");
-        cancelButton.setOnMousePressed(event -> {
-            TraceDialogController.this.closeStage(event);
-        });
+        cancelButton.setOnMousePressed(TraceDialogController.this::closeStage);
 
         okButton.setOnMousePressed(event -> {
             ScanUtils.traceRoute(mapController, addressTextField.getText(),

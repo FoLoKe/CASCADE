@@ -116,7 +116,7 @@ public class Group extends Entity {
             stringBuilder.append(entity.getID()).append(".");
         }
         stringBuilder.replace(stringBuilder.lastIndexOf("."), stringBuilder.lastIndexOf("."), "");
-        saveString += " " + stringBuilder.toString();
+        saveString += " " + stringBuilder;
 
         return saveString;
     }

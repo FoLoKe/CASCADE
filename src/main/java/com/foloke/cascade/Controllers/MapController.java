@@ -2,10 +2,7 @@ package com.foloke.cascade.Controllers;
 
 import com.foloke.cascade.Application;
 import com.foloke.cascade.Camera;
-import com.foloke.cascade.Entities.Cable;
-import com.foloke.cascade.Entities.Device;
-import com.foloke.cascade.Entities.Entity;
-import com.foloke.cascade.Entities.Group;
+import com.foloke.cascade.Entities.*;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -21,12 +18,10 @@ public class MapController {
     private final List<Entity> toAdd = Collections.synchronizedList(new ArrayList<>());
     private final Camera camera;
     private final TouchPoint touchPoint = new TouchPoint();
-    private final Application context;
-    private Rectangle groupRectangle;
+    private final Rectangle groupRectangle;
 
-    public MapController(Application context) {
+    public MapController() {
         this.camera = new Camera(0, 0, 4);
-        this.context = context;
         groupRectangle = new Rectangle();
     }
 
@@ -44,8 +39,8 @@ public class MapController {
             gc.setStroke(Color.YELLOW);
             gc.strokeRect(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
 
-            if(touchPoint.object instanceof Device.Port) {
-                rectangle = ((Device.Port)touchPoint.object).parent.getHitBox();
+            if(touchPoint.object instanceof Port) {
+                rectangle = ((Port)touchPoint.object).parent.getHitBox();
                 gc.strokeRect(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
             }
         }
@@ -78,9 +73,9 @@ public class MapController {
     public Device addOrUpdate(String address) {
         for (Entity entity : entityList) {
             if (entity instanceof Device) {
-                for (Device.Port port : ((Device) entity).getPorts()) {
+                for (Port port : ((Device) entity).getPorts()) {
                     if (port.address.equals(address)) {
-                        port.setState(Device.Port.State.UP);
+                        port.setState(Port.State.UP);
                         return (Device) entity;
                     }
                 }
@@ -131,8 +126,8 @@ public class MapController {
                     touchPoint.object.selected = true;
                     return;
                 }
-            } else if (touchPoint.object instanceof Device.Port) {
-                Entity entity = (((Device.Port) touchPoint.object).parent).pickPort(point2D);
+            } else if (touchPoint.object instanceof Port) {
+                Entity entity = (((Port) touchPoint.object).parent).pickPort(point2D);
                 if (entity != null) {
                     touchPoint.object = entity;
                     touchPoint.object.selected = true;
@@ -165,7 +160,7 @@ public class MapController {
             if (touchPoint.object instanceof Cable.Connector) {
                 for (Entity entity : entityList) {
                     if (entity instanceof Device) {
-                        for (Device.Port port : ((Device) entity).getPorts()) {
+                        for (Port port : ((Device) entity).getPorts()) {
                             if (port.getHitBox().contains(point2D.getX(), point2D.getY())) {
                                 ((Cable.Connector) touchPoint.object).connect(port);
                                 System.out.println("connected");
@@ -227,13 +222,13 @@ public class MapController {
         Point2D point2D = camera.translate(x, y);
 
         if (touchPoint.object != null) {
-            if(!(touchPoint.object instanceof Device.Port)) {
+            if(!(touchPoint.object instanceof Port)) {
                if (touchPoint.object instanceof Cable.Connector) {
                     ((Cable.Connector)touchPoint.object).disconnect();
                }
                touchPoint.object.setLocation((float) point2D.getX() - touchPoint.prevX, (float) point2D.getY() - touchPoint.prevY);
             } else {
-                Entity entity = ((Device.Port)touchPoint.object).getObject();
+                Entity entity = ((Port)touchPoint.object).getObject();
                 if (entity != null) {
                     touchPoint.object = entity;
                 }
@@ -259,7 +254,7 @@ public class MapController {
     }
 
     public void endGrouping(double x, double y) {
-        Point2D point2D = camera.translate(x, y);
+        camera.translate(x, y);
 
         if(groupRectangle.getWidth() > 20 && groupRectangle.getHeight() > 20) {
             Group group = new Group(this);
@@ -269,7 +264,7 @@ public class MapController {
             for (Entity entity : entityList) {
                 Rectangle rectangle = entity.getHitBox();
                 if (entity instanceof Device && groupRectangle.intersects(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight())) {
-                    group.addToGroup((Device) entity);
+                    group.addToGroup(entity);
                 }
             }
             addEntity(group);
@@ -287,10 +282,10 @@ public class MapController {
         }
     }
 
-    public Device.Port findPort(String address) {
+    public Port findPort(String address) {
         for (Entity entity : entityList) {
             if(entity instanceof Device) {
-                for(Device.Port port : ((Device)entity).getPorts()) {
+                for(Port port : ((Device)entity).getPorts()) {
                     if(port.address.equals(address)) {
                         return port;
                     }
@@ -301,7 +296,7 @@ public class MapController {
         return null;
     }
 
-    public void establishConnection(Device.Port port1, Device.Port port2) {
+    public void establishConnection(Port port1, Port port2) {
         if(port1.isConnectedTo(port2)) {
             return;
         }

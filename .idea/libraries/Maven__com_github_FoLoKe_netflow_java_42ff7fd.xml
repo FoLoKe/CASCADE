@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.github.FoLoKe:netflow-java:42ff7fd">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/FoLoKe/netflow-java/42ff7fd/netflow-java-42ff7fd.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/FoLoKe/netflow-java/42ff7fd/netflow-java-42ff7fd-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/FoLoKe/netflow-java/42ff7fd/netflow-java-42ff7fd-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

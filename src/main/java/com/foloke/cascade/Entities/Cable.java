@@ -67,14 +67,13 @@ public class Cable extends Entity {
 
     @Override
     public String getSave() {
-        String saveString = "CABLE " + super.getSave() +
+        return "CABLE " + super.getSave() +
                 "\n" + connectorA.getSave() +
                 "\n" + connectorB.getSave();
-        return saveString;
     }
 
     public static class Connector extends Entity {
-        public Device.Port connection;
+        public Port connection;
         private long connectionID;
         private Cable parent;
 
@@ -116,7 +115,7 @@ public class Cable extends Entity {
             return null;
         }
 
-        public void connect(Device.Port connection) {
+        public void connect(Port connection) {
             this.connection = connection;
             connectionID = connection.getID();
             connection.connect(this);
@@ -145,8 +144,7 @@ public class Cable extends Entity {
 
         @Override
         public String getSave() {
-            String saveString = "CONNECTOR " + super.getSave() + " " + connectionID;
-            return saveString;
+            return "CONNECTOR " + super.getSave() + " " + connectionID;
         }
 
         public long getConnectionID() {

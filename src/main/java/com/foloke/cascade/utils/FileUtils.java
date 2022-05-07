@@ -2,10 +2,7 @@ package com.foloke.cascade.utils;
 
 import com.foloke.cascade.Application;
 import com.foloke.cascade.Controllers.MapController;
-import com.foloke.cascade.Entities.Cable;
-import com.foloke.cascade.Entities.Device;
-import com.foloke.cascade.Entities.Entity;
-import com.foloke.cascade.Entities.Group;
+import com.foloke.cascade.Entities.*;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -79,7 +76,7 @@ public class FileUtils {
             FileReader fileReader = new FileReader(saveFile);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
 
-            ArrayList<Device.Port> ports = new ArrayList<>();
+            ArrayList<Port> ports = new ArrayList<>();
             ArrayList<Cable.Connector> connectors = new ArrayList<>();
             ArrayList<Entity> grouping = new ArrayList<>();
 
@@ -93,7 +90,7 @@ public class FileUtils {
                     mapController.addEntity(lastDevice);
                     grouping.add(lastDevice);
                 } else if (params[0].equals("PORT") && lastDevice != null) {
-                    Device.Port port = new Device.Port(lastDevice, params);
+                    Port port = new Port(lastDevice, params);
                     lastDevice.addPort(port);
                     ports.add(port);
                 } else if (params[0].equals("CABLE")) {
@@ -114,7 +111,7 @@ public class FileUtils {
                 }
             }
             for (Cable.Connector connector: connectors) {
-                for (Device.Port port : ports) {
+                for (Port port : ports) {
                     if(connector.getConnectionID() == port.getID()) {
                         connector.connect(port);
                         break;

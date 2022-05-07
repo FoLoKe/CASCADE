@@ -25,7 +25,7 @@ public class PingDialogController implements Initializable {
     @FXML
     private Button okButton;
 
-    private MapController mapController;
+    private final MapController mapController;
 
     public PingDialogController(MapController mapController) {
         this.mapController = mapController;
@@ -33,9 +33,7 @@ public class PingDialogController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        cancelButton.setOnMousePressed(event -> {
-            PingDialogController.this.closeStage(event);
-        });
+        cancelButton.setOnMousePressed(PingDialogController.this::closeStage);
 
         okButton.setOnMousePressed(event -> {
             ScanUtils.scanByPing(mapController, addressTextField.getText(), maskTextField.getText());

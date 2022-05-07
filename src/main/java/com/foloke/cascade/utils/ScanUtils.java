@@ -3,6 +3,7 @@ package com.foloke.cascade.utils;
 import com.foloke.cascade.Application;
 import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.Entities.Device;
+import com.foloke.cascade.Entities.Port;
 import org.apache.commons.net.util.SubnetUtils;
 
 import java.io.BufferedReader;
@@ -39,7 +40,7 @@ public class ScanUtils {
         }
     }
 
-    public static void ping(Device.Port port) {
+    public static void ping(Port port) {
         if(port.address.length() > 0) {
             Ping ping = new Ping(port);
             Thread thread = new Thread(ping);
@@ -71,7 +72,7 @@ public class ScanUtils {
             Device local = initLocal(mapController);
             Device previousHop;
             if(local.getPorts().size() > 0) {
-                Device.Port port = mapController.findPort(local.getPorts().get(0).address);
+                Port port = mapController.findPort(local.getPorts().get(0).address);
                 if(port != null) {
                     previousHop = port.parent;
                 } else {
@@ -85,11 +86,11 @@ public class ScanUtils {
                         LogUtils.log("tracing succeed");
                         for (String hop : hops) {
                             SubnetUtils subnetUtils = new SubnetUtils(hop + "/" + 24);
-                            Device.Port portA = null;
-                            Device.Port portB = null;
+                            Port portA = null;
+                            Port portB = null;
                             Device device = mapController.addOrUpdate(hop);
 
-                            for (Device.Port previousHopPort : previousHop.getPorts()) {
+                            for (Port previousHopPort : previousHop.getPorts()) {
                                 if (previousHopPort.isInRange(hop)) {
                                     portB = previousHopPort;
                                 }
@@ -100,9 +101,9 @@ public class ScanUtils {
                                 portB.address = subnetUtils.getInfo().getNetworkAddress();
                             }
 
-                            portB.setState(Device.Port.State.UP);
+                            portB.setState(Port.State.UP);
 
-                            for (Device.Port nextHopPort : device.getPorts()) {
+                            for (Port nextHopPort : device.getPorts()) {
                                 if (nextHopPort.isInRange(hop)) {
                                     portA = nextHopPort;
                                 }
@@ -112,7 +113,7 @@ public class ScanUtils {
                                 portA.setName("unknown");
                                 portA.address = hop;
                             }
-                            portA.setState(Device.Port.State.UP);
+                            portA.setState(Port.State.UP);
 
                             mapController.establishConnection(portA, portB);
 
@@ -133,7 +134,7 @@ public class ScanUtils {
     private static class Ping implements Runnable {
         MapController mapController;
         InetAddress inetAddress;
-        Device.Port port;
+        Port port;
 
         public Ping(MapController mapController, String address) {
             this.mapController = mapController;
@@ -144,7 +145,7 @@ public class ScanUtils {
             }
         }
 
-        public Ping(Device.Port port) {
+        public Ping(Port port) {
             this.port = port;
             try {
                 this.inetAddress = InetAddress.getByName(port.address);
@@ -168,9 +169,9 @@ public class ScanUtils {
                 LogUtils.log(inetAddress.getHostAddress() + " reachable: " + reachable);
                 if(port != null) {
                     if(reachable) {
-                        port.setState(Device.Port.State.UP);
+                        port.setState(Port.State.UP);
                     } else {
-                        port.setState(Device.Port.State.DOWN);
+                        port.setState(Port.State.DOWN);
                     }
                     LogUtils.logToFile(port.parent.getName(), "port with address: " + port.address + "is reachable ?: " + reachable);
                 }
@@ -188,7 +189,7 @@ public class ScanUtils {
             return  cmdLinuxTraceroute(address, timeout, maxHops);
         }
 
-        return null;
+        return new ArrayList<>();
     }
 
     private static List<String> cmdWindowsTraceroute(String ipAddress, int timeout, int maxHops) throws IOException {
@@ -212,7 +213,7 @@ public class ScanUtils {
             }
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
+            return cmdResult;
         }
 
         return cmdResult;
@@ -241,7 +242,7 @@ public class ScanUtils {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return cmdResult;
         }
 
         return cmdResult;
@@ -254,7 +255,7 @@ public class ScanUtils {
             for (NetworkInterface networkInterface : Collections.list(interfaces)) {
                 if (!networkInterface.isLoopback() && !networkInterface.isVirtual()) {
                     LogUtils.log(networkInterface.toString());
-                    Device.Port port = entity.addPort(networkInterface);
+                    entity.addPort(networkInterface);
                 } else {
                     LogUtils.log(networkInterface + " is loopback or virtual");
                 }

@@ -4,6 +4,7 @@ import com.foloke.cascade.Application;
 import com.foloke.cascade.Entities.Cable;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Entity;
+import com.foloke.cascade.Entities.Port;
 import com.foloke.cascade.utils.FileUtils;
 import com.foloke.cascade.utils.LogUtils;
 import com.foloke.cascade.utils.SnmpUtils;
@@ -130,9 +131,7 @@ public class UIController {
         Entity entity;
 
         public ObjectContextMenu() {
-
             setAutoHide(true);
-
         }
 
         public void update(Entity entity) {
@@ -140,20 +139,18 @@ public class UIController {
             getItems().clear();
 
             ParamDialogController paramDialogController = new ParamDialogController();
-            if (entity instanceof Device.Port) {
+            if (entity instanceof Port) {
                 CheckMenuItem checkMenuItem = new CheckMenuItem("Check status");
-                checkMenuItem.setSelected(((Device.Port) entity).pinging);
-                checkMenuItem.setOnAction(event -> {
-                    ((Device.Port) entity).pinging = checkMenuItem.isSelected();
-                });
+                checkMenuItem.setSelected(((Port) entity).pinging);
+                checkMenuItem.setOnAction(event -> ((Port) entity).pinging = checkMenuItem.isSelected());
                 getItems().add(checkMenuItem);
 
                 MenuItem ipItem = new MenuItem("Change IP");
                 ipItem.setOnAction(event -> {
                     paramDialogController.setName("IP address");
-                    paramDialogController.setValue(((Device.Port)entity).address);
+                    paramDialogController.setValue(((Port)entity).address);
                     paramDialogController.setEvent(event1 -> {
-                        ((Device.Port)entity).address = paramDialogController.getValue();
+                        ((Port)entity).address = paramDialogController.getValue();
                         paramDialogController.close(event1);
                     });
                     UIController.openDialog(paramDialogController, Application.paramDialogURL);
@@ -163,9 +160,9 @@ public class UIController {
                 MenuItem macItem = new MenuItem("Chang Mac");
                 macItem.setOnAction(event -> {
                     paramDialogController.setName("Mac address");
-                    paramDialogController.setValue(((Device.Port)entity).mac);
+                    paramDialogController.setValue(((Port)entity).mac);
                     paramDialogController.setEvent(event1 -> {
-                        ((Device.Port)entity).mac = paramDialogController.getValue();
+                        ((Port)entity).mac = paramDialogController.getValue();
                         paramDialogController.close(event1);
                     });
                     UIController.openDialog(paramDialogController, Application.paramDialogURL);
@@ -174,26 +171,20 @@ public class UIController {
 
             } else if (entity instanceof Device) {
                 MenuItem snmpMenuItem = new MenuItem("SNMP settings");
-                snmpMenuItem.setOnAction(event -> {
-                    UIController.openDialog(new SNMPSettingsDialogController((Device) entity), Application.snmpDialogURL);
-                });
+                snmpMenuItem.setOnAction(event -> UIController.openDialog(new SNMPSettingsDialogController((Device) entity), Application.snmpDialogURL));
 
                 MenuItem updateItem = new MenuItem("Update by SNMP");
-                updateItem.setOnAction(event -> {
-                    UIController.this.getProps(entity);
-                });
+                updateItem.setOnAction(event -> UIController.this.getProps(entity));
 
                 MenuItem addItem = new MenuItem("Add new Port");
                 addItem.setOnAction(event -> {
-                    Device.Port port = ((Device) entity).addPort("");
-                    port.addType = Device.Port.AddType.MANUAL;
+                    Port port = ((Device) entity).addPort("");
+                    port.addType = Port.AddType.MANUAL;
                 });
 
                 CheckMenuItem showNameItem = new CheckMenuItem("Show name");
                 showNameItem.setSelected(((Device)entity).showName);
-                showNameItem.setOnAction(event -> {
-                    ((Device) entity).showName = showNameItem.isSelected();
-                });
+                showNameItem.setOnAction(event -> ((Device) entity).showName = showNameItem.isSelected());
 
                 getItems().addAll(showNameItem, snmpMenuItem, updateItem, addItem);
             }
