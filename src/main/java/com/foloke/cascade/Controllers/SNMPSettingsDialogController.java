@@ -167,7 +167,7 @@ public class SNMPSettingsDialogController implements Initializable {
                 device.setSecurityLevel(SecurityLevel.AUTH_PRIV);
             }
 
-            device.updateSnmpConfiguration(interfaceSpinner.getValue().address);
+            device.updateSnmpConfiguration(interfaceSpinner.getValue().primaryAddress);
 
             SNMPSettingsDialogController.this.closeStage(event);
         });

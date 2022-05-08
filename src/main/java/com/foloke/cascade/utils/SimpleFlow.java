@@ -3,12 +3,13 @@ package com.foloke.cascade.utils;
 import com.lumaserv.netflow.flowset.FlowField;
 import com.lumaserv.netflow.flowset.FlowValue;
 
-import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Map;
 
 public class SimpleFlow {
+    public int sourceIP;
+    public boolean expired = false;
     public int address;
     public int port;
     public Map<FlowField, FlowValue> data;
@@ -16,8 +17,9 @@ public class SimpleFlow {
     public int timeout;
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
-    public SimpleFlow(Map<FlowField, FlowValue> data, int timeout) {
-        timestamp = System.currentTimeMillis();
+    public SimpleFlow(int sourceIP, Map<FlowField, FlowValue> data, int timeout) {
+        this.sourceIP = sourceIP;
+        this.timestamp = System.currentTimeMillis();
         this.timeout = timeout;
         this.data = data;
         this.address = data.get(FlowField.IPV4_DST_ADDR).asInt();
@@ -27,6 +29,11 @@ public class SimpleFlow {
                 + " " + ipToString(data.get(FlowField.IPV4_DST_ADDR).asBytes())
                 + " " + ipToString(data.get(FlowField.IPV4_SRC_ADDR).asBytes())
                 + " " + data.get(FlowField.L4_SRC_PORT).asUShort());
+    }
+
+    public void tick() {
+        if (System.currentTimeMillis() - timestamp >= timeout)
+            expired = true;
     }
 
     @Override

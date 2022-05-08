@@ -8,13 +8,11 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class MapController {
     private final List<Entity> entityList = new ArrayList<>();
+    //private final Map<Integer, Device> devices = new HashMap<>();
     private final List<Entity> toAdd = Collections.synchronizedList(new ArrayList<>());
     private final Camera camera;
     private final TouchPoint touchPoint = new TouchPoint();
@@ -68,23 +66,29 @@ public class MapController {
 
     public void addEntity(Entity entity) {
         toAdd.add(entity);
+        if(entity instanceof Device) {
+            Application.databaseSession.beginTransaction();
+            Application.databaseSession.persist(entity);
+            Application.databaseSession.flush();
+        }
     }
 
     public Device addOrUpdate(String address) {
         for (Entity entity : entityList) {
             if (entity instanceof Device) {
                 for (Port port : ((Device) entity).getPorts()) {
-                    if (port.address.equals(address)) {
-                        port.setState(Port.State.UP);
-                        return (Device) entity;
+                    for (String portAddress : port.addresses) {
+                        if (portAddress.equals(address)) {
+                            port.setState(Port.State.UP);
+                            return (Device) entity;
+                        }
                     }
                 }
             }
         }
 
-        Device device = new Device(Application.image, this);
+        Device device = new Device(this, address);
         toAdd.add(device);
-        device.addPort(address);
 
         return device;
     }
@@ -286,8 +290,10 @@ public class MapController {
         for (Entity entity : entityList) {
             if(entity instanceof Device) {
                 for(Port port : ((Device)entity).getPorts()) {
-                    if(port.address.equals(address)) {
-                        return port;
+                    for (String portAddress : port.addresses) {
+                        if (portAddress.equals(address)) {
+                            return port;
+                        }
                     }
                 }
             }

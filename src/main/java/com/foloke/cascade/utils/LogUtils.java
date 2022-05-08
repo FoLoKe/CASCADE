@@ -25,16 +25,20 @@ public class LogUtils {
 
         try {
             File logsDir = new File(logsDirName);
-            if(!logsDir.mkdir()) {
-                System.out.println("log folder write error");
-                return;
+            if(!logsDir.exists()) {
+                if (!logsDir.mkdir()) {
+                    System.out.println("log folder write error");
+                    return;
+                }
             }
 
             File logFile = new File(logsDirName + "\\" + sysLogName);
 
-            if(!logFile.createNewFile()) {
-                System.out.println("log folder write error");
-                return;
+            if(!logFile.exists()) {
+                if (!logFile.createNewFile()) {
+                    System.out.println("log folder write error");
+                    return;
+                }
             }
 
             FileWriter writer = new FileWriter(logFile);

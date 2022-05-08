@@ -1,27 +1,24 @@
 package com.foloke.cascade;
 
 import com.foloke.cascade.Controllers.MapController;
+import com.foloke.cascade.Controllers.NetFlowController;
 import com.foloke.cascade.Controllers.UIController;
 import com.foloke.cascade.Entities.Device;
+import com.foloke.cascade.utils.HibernateUtil;
 import com.foloke.cascade.utils.LogUtils;
 import com.foloke.cascade.utils.ScanUtils;
-import com.foloke.cascade.utils.SimpleFlow;
-import com.lumaserv.netflow.NetFlowCollector;
-import com.lumaserv.netflow.NetFlowSession;
-import com.lumaserv.netflow.flowset.FlowField;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.control.SplitPane;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import org.hibernate.Session;
 import org.snmp4j.mp.MPv3;
 import org.snmp4j.security.*;
 import org.snmp4j.smi.OctetString;
 
 import java.net.URL;
-import java.nio.ByteBuffer;
-import java.util.*;
 
 public class Application extends javafx.application.Application {
     public MapController mapController;
@@ -34,15 +31,11 @@ public class Application extends javafx.application.Application {
     public static URL snmpDialogURL;
     public static URL paramDialogURL;
     public static URL mainURL;
+    public static URL netflowURL;
 
     public static OctetString localEngineId;
-
-    private Thread netFlowThread;
-    private NetFlowCollector collector;
-    // MAP: SOURCE : FLOWS
-    // FLOWS: PORT : ADDRESS
-
-    private final Map<Integer, Set<SimpleFlow>> flowSources = new HashMap<>();
+    public static NetFlowController netFlowController;
+    public static Session databaseSession;
 
     public static void main(String[] args) {
         launch(args);
@@ -58,63 +51,20 @@ public class Application extends javafx.application.Application {
             stage.setTitle("CASCADE");
             stage.getIcons().add(icon);
             stage.setScene(scene);
-
-            Device device = ScanUtils.initLocal(mapController);
-            mapController.addEntity(device);
-
-            NetFlowSession session = new NetFlowSession(source -> {
-                try {
-                    ByteBuffer byteBuffer = ByteBuffer.allocate(4);
-                    byteBuffer.putInt(source.getDeviceIP());
-
-                    System.out.println("Device: " + SimpleFlow.ipToString(byteBuffer.array()) + " source: " + source.getId());
-                    if(!flowSources.containsKey(source.getId())) {
-                        flowSources.put(source.getDeviceIP(), new HashSet<>());
-                    }
-
-                    Set<SimpleFlow> flows = flowSources.get(source.getDeviceIP());
-                    source.listen((id, values) -> {
-                        System.out.println(flows.size());
-                        synchronized (flows) {
-                            float flowTime = (values.get(FlowField.LAST_SWITCHED).asInt() - values.get(FlowField.FIRST_SWITCHED).asInt()) / 1000f;
-
-                            SimpleFlow flow = new SimpleFlow(values, 0);
-                            if (flowTime == 0) {
-                                if(flows.remove(flow)) {
-                                    System.out.println("update");
-                                }
-
-                                flows.add(flow);
-                            } else {
-                                if(flows.remove(flow)) {
-                                    System.out.println("ended");
-                                }
-                            }
-
-                            //Predicate<SimpleFlow> isExpired = simpleFlow -> System.currentTimeMillis() - simpleFlow.timestamp > simpleFlow.timeout;
-                            //flows.removeIf(isExpired);
-                        }
-                    });
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-
-            collector = new NetFlowCollector(session, 9996);
-
-            netFlowThread = new Thread(collector);
-            netFlowThread.setDaemon(true);
-            netFlowThread.start();
-
-
         } catch (Exception e) {
             LogUtils.log(e.toString());
         }
 
+        databaseSession = HibernateUtil.getSessionFactory().openSession();
+
+        Device device = ScanUtils.initLocal(mapController);
+        mapController.addEntity(device);
+
         Renderer renderer = new Renderer(this);
         stage.show();
         renderer.start();
+
+        netFlowController = new NetFlowController(mapController);
     }
 
     @Override
@@ -133,6 +83,7 @@ public class Application extends javafx.application.Application {
         traceDialogURL = this.getClass().getResource("/static/traceDialog.fxml");
         snmpDialogURL = this.getClass().getResource("/static/SNMPSettingsDialog.fxml");
         paramDialogURL = this.getClass().getResource("/static/paramDialog.fxml");
+        netflowURL = this.getClass().getResource("/static/flowDialog.fxml");
 
         localEngineId = new OctetString(MPv3.createLocalEngineID());
         USM usm = new USM(SecurityProtocols.getInstance(), localEngineId, 0);
@@ -147,9 +98,7 @@ public class Application extends javafx.application.Application {
     @Override
     public void stop() throws Exception {
         super.stop();
-
-        collector.close();
-        collector.join();
-        netFlowThread.interrupt();
+        netFlowController.close();
+        HibernateUtil.shutdown();
     }
 }

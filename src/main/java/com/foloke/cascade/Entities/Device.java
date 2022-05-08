@@ -1,7 +1,12 @@
 package com.foloke.cascade.Entities;
 
+import com.foloke.cascade.Application;
 import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.utils.LogUtils;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
@@ -20,20 +25,32 @@ import org.snmp4j.smi.OID;
 import org.snmp4j.smi.OctetString;
 import org.snmp4j.smi.UdpAddress;
 
-import java.net.NetworkInterface;
-import java.net.SocketException;
+import java.net.InetAddress;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+@jakarta.persistence.Entity
+@Table(name = "device")
 public class Device extends Entity {
-    Image image;
+    @Transient
+    Image image = Application.image;
+    @Transient
     List<Port> ports = Collections.synchronizedList(new ArrayList<>());
-    public Target<UdpAddress> target;
-    public UsmUser user;
+
+    @Id
+    @Column(name = "primaryIp")
+    public int primaryIp;
+
     public boolean showName;
 
+    //SNMP
+    @Transient
+    public Target<UdpAddress> target;
+    @Transient
+    public UsmUser user;
     String snmpAddress = "127.0.0.1";
     String snmpPort = "161";
     int snmpVersion = SnmpConstants.version2c;
@@ -42,21 +59,30 @@ public class Device extends Entity {
 
     //SNMPv3
     String snmpPassword = "12345678";
+    @Transient
     OID authProtocol = AuthMD5.ID;
+    @Transient
     OID encryptionProtocol = PrivDES.ID;
     String snmpEncryptionPass = "12345678";
     int securityLevel = SecurityLevel.NOAUTH_NOPRIV;
 
-    public Device(Image image, MapController mapController) {
+    public Device(MapController mapController, String defaultIp) {
         super(mapController);
-        init(image);
-        LogUtils.logToFile(name, "device created");
+
+        try {
+            this.primaryIp = ByteBuffer.wrap(InetAddress.getByName(defaultIp).getAddress()).getInt();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        addPort(defaultIp);
         updateSnmpConfiguration(snmpAddress);
+
+        LogUtils.logToFile(name, "device created");
     }
 
-    public Device(Image image, MapController mapController, String[] params) {
+    public Device(MapController mapController, String[] params) {
         super(mapController, params);
-        init(image);
         snmpAddress = params[5];
         snmpPort = params[6];
         snmpVersion = Integer.parseInt(params[7]);
@@ -69,14 +95,11 @@ public class Device extends Entity {
         securityLevel = Integer.parseInt(params[14]);
         updateSnmpConfiguration(snmpAddress);
 
+        primaryIp = Integer.parseInt(params[15]);
+
         setLocation(Double.parseDouble(params[3]), Double.parseDouble(params[4]));
 
         LogUtils.logToFile(name, "device loaded");
-    }
-
-    private void init(Image image) {
-        this.image = image;
-        ports = new ArrayList<>();
     }
 
     @Override
@@ -116,25 +139,11 @@ public class Device extends Entity {
         }
     }
 
-    public void addPort(NetworkInterface networkInterface) {
-        try {
-            if (networkInterface.getHardwareAddress() != null) {
-                Port port = new Port(this, networkInterface, ports.size());
-                addPort(port);
-            }
-        } catch (SocketException e) {
-            LogUtils.log(e.toString());
-            LogUtils.logToFile(name, e.toString());
-        }
-
-    }
-
     public Port addPort(String address) {
         Port port = new Port(this, address, ports.size());
 
         addPort(port);
-
-        LogUtils.logToFile(name, port.name + " : " + port.address + " port added");
+        LogUtils.logToFile(name, port.name + " : " + port.primaryAddress + " port added");
 
         return port;
     }
@@ -143,10 +152,11 @@ public class Device extends Entity {
         ports.add(port);
 
         if (ports.size() == 1) {
-            updateSnmpConfiguration(port.address);
+            updateSnmpConfiguration(port.primaryAddress);
+
             LogUtils.logToFile(name, port.name + " is only and has sat SNMP defaults");
         }
-        LogUtils.logToFile(name, port.name + " : " + port.address + " port added");
+        LogUtils.logToFile(name, port.name + " : " + port.primaryAddress + " port added");
     }
 
     public void updateSnmpConfiguration(String snmpAddress) {
@@ -193,7 +203,7 @@ public class Device extends Entity {
     public Port pickPort(Point2D point2D) {
         for (Port port : ports) {
             if (port.rectangle.contains(point2D.getX(), point2D.getY())) {
-                LogUtils.logToFile(name, "port picked " + port.name + " : " + port.address);
+                LogUtils.logToFile(name, "port picked " + port.name + " : " + port.primaryAddress);
                 return port;
             }
         }
@@ -220,13 +230,13 @@ public class Device extends Entity {
                     existingPort.addType == Port.AddType.AUTO) {
                 if (existingPort.mac.length() > 0 && existingPort.mac.equals(port.mac)) {
                     updatePort(existingPort, port);
-                    LogUtils.logToFile(name, "port found and updated " + port.name + " : " + port.address);
+                    LogUtils.logToFile(name, "port found and updated " + port.name + " : " + port.primaryAddress);
                     return existingPort;
-                } else if (existingPort.address.length() > 0 && port.address.length() > 0) {
-                    SubnetUtils subnetUtils = new SubnetUtils(existingPort.address + "/" + existingPort.mask);
-                    if (existingPort.address.equals(port.address) || subnetUtils.getInfo().isInRange(port.address)) {
+                } else if (existingPort.primaryAddress.length() > 0 && port.primaryAddress.length() > 0) {
+                    SubnetUtils subnetUtils = new SubnetUtils(existingPort.primaryAddress + "/" + existingPort.mask);
+                    if (existingPort.primaryAddress.equals(port.primaryAddress) || subnetUtils.getInfo().isInRange(port.primaryAddress)) {
                         updatePort(existingPort, port);
-                        LogUtils.logToFile(name, "port found and updated " + port.name + " : " + port.address);
+                        LogUtils.logToFile(name, "port found and updated " + port.name + " : " + port.primaryAddress);
                         return existingPort;
                     }
                 }
@@ -236,7 +246,7 @@ public class Device extends Entity {
         port.position = ports.size();
         addPort(port);
         port.updatePosition();
-        LogUtils.logToFile(name, "port not found and added " + port.name + " : " + port.address);
+        LogUtils.logToFile(name, "port not found and added " + port.name + " : " + port.primaryAddress);
 
         return port;
     }
@@ -244,7 +254,7 @@ public class Device extends Entity {
     private void updatePort(Port existingPort, Port port) {
         existingPort.addType = Port.AddType.SNMP;
         existingPort.name = port.name;
-        existingPort.address = port.address;
+        existingPort.primaryAddress = port.primaryAddress;
         existingPort.mac = port.mac;
 
         LogUtils.logToFile(name, existingPort + " port updated");
@@ -341,8 +351,9 @@ public class Device extends Entity {
 
     public Port findPort(String address) {
         for (Port port : ports) {
-            if(port.address.equals(address)) {
-                return port;
+            for(String portAddress : port.addresses) {
+                if (portAddress.equals(address))
+                    return port;
             }
         }
 
@@ -361,7 +372,8 @@ public class Device extends Entity {
                 " " + authProtocol +
                 " " + encryptionProtocol +
                 " " + snmpEncryptionPass +
-                " " + securityLevel;
+                " " + securityLevel +
+                " " + primaryIp;
 
         StringBuilder stringBuilder = new StringBuilder();
 

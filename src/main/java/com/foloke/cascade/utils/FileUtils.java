@@ -1,6 +1,5 @@
 package com.foloke.cascade.utils;
 
-import com.foloke.cascade.Application;
 import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.Entities.*;
 
@@ -86,7 +85,7 @@ public class FileUtils {
             while ((line = bufferedReader.readLine()) != null) {
                 String[] params = line.split(" ");
                 if(params[0].equals("DEVICE")) {
-                    lastDevice = new Device(Application.image, mapController, params);
+                    lastDevice = new Device(mapController, params);
                     mapController.addEntity(lastDevice);
                     grouping.add(lastDevice);
                 } else if (params[0].equals("PORT") && lastDevice != null) {

@@ -10,10 +10,13 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import org.apache.commons.net.util.SubnetUtils;
 
+import java.net.InetAddress;
+import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public class Port extends Entity {
     public enum AddType {AUTO, MANUAL, SNMP}
@@ -25,7 +28,8 @@ public class Port extends Entity {
 
     public int index;
     public String mac;
-    public String address;
+    public List<String> addresses = new ArrayList<>();
+    public String primaryAddress;
     public int mask = 24;
 
     public ArrayList<Cable.Connector> connectors = new ArrayList<>();
@@ -44,7 +48,12 @@ public class Port extends Entity {
             LogUtils.log(e.toString());
         }
 
-        this.address = networkInterface.getInetAddresses().nextElement().getHostAddress();
+        List<InterfaceAddress> addressesList = networkInterface.getInterfaceAddresses();
+        primaryAddress = addressesList.get(0).getAddress().getHostAddress();
+        for (InterfaceAddress interfaceAddress : addressesList) {
+            addresses.add(interfaceAddress.getAddress().getHostAddress());
+        }
+
         this.name = "auto_added";
         init(parent, position);
     }
@@ -53,7 +62,8 @@ public class Port extends Entity {
         super(parent.mapController);
         rectangle = new Rectangle(8, 8);
         this.mac = "none";
-        this.address = address;
+        this.primaryAddress = address;
+        this.addresses.add(address);
         this.name = "auto_added";
         init(parent, position);
     }
@@ -64,7 +74,9 @@ public class Port extends Entity {
         state = State.valueOf(params[5]);
         pinging = Boolean.parseBoolean(params[6]);
         mac = params[8];
-        address = params[9];
+        String addressesLine = params[9];
+        String[] addressesArray = addressesLine.split("&");
+        addresses = List.of(addressesArray);
         mask = Integer.parseInt(params[10]);
         index = Integer.parseInt(params[11]);
         addType = AddType.valueOf(params[12]);
@@ -128,10 +140,12 @@ public class Port extends Entity {
             graphicsContext.setFont(new Font("sans", 2));
             graphicsContext.strokeText(name, rectangle.getX(),
                     rectangle.getY() + rectangle.getHeight() + 4);
-            graphicsContext.strokeText(address, rectangle.getX(),
-                    rectangle.getY() + rectangle.getHeight() + 8);
             graphicsContext.strokeText(mac, rectangle.getX(),
-                    rectangle.getY() + rectangle.getHeight() + 12);
+                    rectangle.getY() + rectangle.getHeight() + 8);
+            for (int i = 0; i < addresses.size(); i++) {
+                graphicsContext.strokeText(addresses.get(i), rectangle.getX(),
+                        rectangle.getY() + rectangle.getHeight() + 12 + 4 * i);
+            }
         }
     }
 
@@ -190,13 +204,16 @@ public class Port extends Entity {
 
     @Override
     public String toString() {
-        return name + " " + this.address;
+        return name + " " + this.index;
     }
 
-    public boolean isInRange(String address) {
-        if(this.address.length() > 0) {
-            SubnetUtils subnetUtils = new SubnetUtils(this.address + "/" + mask);
-            return subnetUtils.getInfo().isInRange(address);
+    public boolean isInRange(String toCheck) {
+        for(String address : addresses) {
+            if (address.length() > 0) {
+                SubnetUtils subnetUtils = new SubnetUtils(address + "/" + mask);
+                if (subnetUtils.getInfo().isInRange(toCheck))
+                    return true;
+            }
         }
 
         return false;
@@ -213,12 +230,17 @@ public class Port extends Entity {
 
     @Override
     public String getSave() {
+        StringBuilder addressesSave = new StringBuilder();
+        addressesSave.append(addresses.get(0));
+        for (int i = 1; i < addresses.size(); i++) {
+            addressesSave.append("&").append(addresses.get(i));
+        }
         return "PORT " + super.getSave()
                 + " " + state.toString()
                 + " " + pinging
                 + " " + position
                 + " " + mac
-                + " " + address
+                + " " + addressesSave
                 + " " + mask
                 + " " + index
                 + " " + addType;

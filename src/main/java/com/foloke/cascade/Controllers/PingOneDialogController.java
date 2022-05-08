@@ -1,6 +1,5 @@
 package com.foloke.cascade.Controllers;
 
-import com.foloke.cascade.Application;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Port;
 import com.foloke.cascade.utils.ScanUtils;
@@ -37,13 +36,13 @@ public class PingOneDialogController implements Initializable {
         cancelButton.setOnMousePressed(PingOneDialogController.this::closeStage);
 
         okButton.setOnMousePressed(event -> {
-            Port port = mapController.findPort(addressTextField.getText());
+            String address = addressTextField.getText();
+            Port port = mapController.findPort(address);
             if(port != null) {
                 ScanUtils.ping(port);
             } else {
-                Device device = new Device(Application.image, mapController);
-                port = device.addPort(addressTextField.getText());
-                ScanUtils.ping(port);
+                Device device = new Device(mapController, address);
+                ScanUtils.ping(device.getPorts().get(0));
                 mapController.addEntity(device);
             }
 

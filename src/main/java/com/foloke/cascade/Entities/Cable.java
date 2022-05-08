@@ -119,14 +119,14 @@ public class Cable extends Entity {
             this.connection = connection;
             connectionID = connection.getID();
             connection.connect(this);
-            LogUtils.log(connection.address + " connected with cable " + this);
+            LogUtils.log(connection.primaryAddress + " connected with cable " + this);
         }
 
         public void disconnect() {
             if(connection != null) {
                 connection.disconnect(this);
                 connectionID = -1;
-                LogUtils.log(connection.address + " disconnected with cable " + this);
+                LogUtils.log(connection.primaryAddress + " disconnected with cable " + this);
                 this.connection = null;
             }
         }

@@ -94,14 +94,14 @@ public class SnmpUtils {
                     port.setState(stateBinding.getVariable().toInt());
                 }
 
-                port.address = addressesMap.get(Integer.toString(port.index));
-                if (port.address == null) {
-                    port.address = "";
+                port.primaryAddress = addressesMap.get(Integer.toString(port.index));
+                if (port.primaryAddress == null) {
+                    port.primaryAddress = "";
                 }
 
                 port = device.addOrUpdatePort(port);
 
-                if (port.address.length() > 0) {
+                if (port.primaryAddress.length() > 0) {
                     List<OID> routingInfo = walkToOIDList(new OID(routingIDS + "." + entry.getValue()), device);
 
                     for (OID routeOID : routingInfo) {
@@ -117,7 +117,7 @@ public class SnmpUtils {
                             }
 
                             if (mac != null) {
-                                Device leadingDevice = new Device(Application.image, device.mapController);
+                                Device leadingDevice = new Device(device.mapController, "127.0.0.1");
                                 leadingPort = new Port(leadingDevice, address, 0);
                                 leadingPort = leadingDevice.addOrUpdatePort(leadingPort);
                                 leadingPort.mac = mac;

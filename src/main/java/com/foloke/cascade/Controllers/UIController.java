@@ -148,9 +148,9 @@ public class UIController {
                 MenuItem ipItem = new MenuItem("Change IP");
                 ipItem.setOnAction(event -> {
                     paramDialogController.setName("IP address");
-                    paramDialogController.setValue(((Port)entity).address);
+                    paramDialogController.setValue(((Port)entity).primaryAddress);
                     paramDialogController.setEvent(event1 -> {
-                        ((Port)entity).address = paramDialogController.getValue();
+                        ((Port)entity).primaryAddress = paramDialogController.getValue();
                         paramDialogController.close(event1);
                     });
                     UIController.openDialog(paramDialogController, Application.paramDialogURL);
@@ -176,17 +176,20 @@ public class UIController {
                 MenuItem updateItem = new MenuItem("Update by SNMP");
                 updateItem.setOnAction(event -> UIController.this.getProps(entity));
 
-                MenuItem addItem = new MenuItem("Add new Port");
-                addItem.setOnAction(event -> {
+                MenuItem addPort = new MenuItem("Add new Port");
+                addPort.setOnAction(event -> {
                     Port port = ((Device) entity).addPort("");
                     port.addType = Port.AddType.MANUAL;
                 });
+
+                MenuItem openNetFlow = new MenuItem("NetFlow");
+                openNetFlow.setOnAction(event -> UIController.openDialog(new NetFlowDialogController((Device) entity), Application.netflowURL));
 
                 CheckMenuItem showNameItem = new CheckMenuItem("Show name");
                 showNameItem.setSelected(((Device)entity).showName);
                 showNameItem.setOnAction(event -> ((Device) entity).showName = showNameItem.isSelected());
 
-                getItems().addAll(showNameItem, snmpMenuItem, updateItem, addItem);
+                getItems().addAll(showNameItem, snmpMenuItem, updateItem, addPort, openNetFlow);
             }
 
             MenuItem deleteItem = new MenuItem("Delete");
