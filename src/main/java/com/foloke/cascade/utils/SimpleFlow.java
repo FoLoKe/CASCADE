@@ -17,18 +17,28 @@ public class SimpleFlow {
     public int timeout;
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
-    public SimpleFlow(int sourceIP, Map<FlowField, FlowValue> data, int timeout) {
+    public SimpleFlow(int sourceIP, Map<FlowField, FlowValue> data) {
         this.sourceIP = sourceIP;
         this.timestamp = System.currentTimeMillis();
-        this.timeout = timeout;
         this.data = data;
         this.address = data.get(FlowField.IPV4_DST_ADDR).asInt();
         this.port = data.get(FlowField.L4_DST_PORT).asUShort();
-        System.out.println(sdf.format(Calendar.getInstance().getTime())
-                + " " + data.get(FlowField.L4_DST_PORT).asUShort()
-                + " " + ipToString(data.get(FlowField.IPV4_DST_ADDR).asBytes())
-                + " " + ipToString(data.get(FlowField.IPV4_SRC_ADDR).asBytes())
-                + " " + data.get(FlowField.L4_SRC_PORT).asUShort());
+//        System.out.println(sdf.format(Calendar.getInstance().getTime())
+//                + " " + data.get(FlowField.L4_DST_PORT).asUShort()
+//                + " " + ipToString(data.get(FlowField.IPV4_DST_ADDR).asBytes())
+//                + " " + ipToString(data.get(FlowField.IPV4_SRC_ADDR).asBytes())
+//                + " " + data.get(FlowField.L4_SRC_PORT).asUShort()
+//                + " timeout: " + timeout);
+
+        if(data.get(FlowField.PROTOCOL).asByte() == 6) {
+            byte flags = data.get(FlowField.TCP_FLAGS).asByte();
+            if ((flags & 1) == 1 || (data.get(FlowField.LAST_SWITCHED).asInt()
+                    - data.get(FlowField.FIRST_SWITCHED).asInt()) > 0) {
+                timeout = 0;
+            } else {
+                timeout = 1000 * 16; //MicroTick router has default 15s timeout for inactive flows
+            }
+        }
     }
 
     public void tick() {

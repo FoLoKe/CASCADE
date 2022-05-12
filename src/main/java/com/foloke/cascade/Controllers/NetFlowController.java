@@ -1,52 +1,65 @@
 package com.foloke.cascade.Controllers;
 
+import com.foloke.cascade.Entities.Device;
+import com.foloke.cascade.utils.LogUtils;
+import com.foloke.cascade.utils.SimpleCumulativeEMWA;
 import com.foloke.cascade.utils.SimpleFlow;
 import com.lumaserv.netflow.NetFlowCollector;
 import com.lumaserv.netflow.NetFlowSession;
-import com.lumaserv.netflow.flowset.FlowField;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.Property;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.value.ObservableIntegerValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
 
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 
-public class NetFlowController implements Runnable {
+public class NetFlowController {
 
     private NetFlowCollector collector;
-    private Thread updaterThread;
-    NetFlowDialogController window;
 
-    private final List<SimpleFlow> toAdd = Collections.synchronizedList(new ArrayList<>());
+    //private final List<SimpleFlow> toAdd = new ArrayList<>();
 
+    //TODO: REFACTOR THIS SHIT
     // MAP: DEVICE : FLOWS SET (UNIQUE: DST PORT:ADR)
-    private final Map<Integer, HashSet<SimpleFlow>> activeFlows = Collections.synchronizedMap(new ConcurrentHashMap<>());
+    //private final Map<Integer, HashSet<SimpleFlow>> latestFlows = Collections.synchronizedMap(new ConcurrentHashMap<>());
+    private final Map<Integer, Sampler> samplers = new HashMap<>();
 
     //statistics
-    private final Map<Integer, ObservableMap<String, IntegerProperty>> activeFlowsStat = new HashMap<>();
-    private final Map<Integer, ObservableMap<String, IntegerProperty>> endedFlowsStat = new HashMap<>();
-    MapController mapController;
+    private final Map<Integer, ObservableMap<Integer, IntegerProperty>> latestFlowsStat = new HashMap<>();
+    private final Map<Integer, ObservableMap<Integer, IntegerProperty>> endedFlowsStat = new HashMap<>();
 
+    //MAP: DEVICE: TIMESTAMP: FLOWTYPE: FLOWS-COUNT TODO: should be in database
+    //private final Map<Integer, Map<Long, List<FlowStat>>> flowStat = new HashMap<>();
+
+    private final ScheduledExecutorService scheduledExecutorService;
+
+    MapController mapController;
 
     public NetFlowController(MapController mapController) {
         this.mapController = mapController;
+        scheduledExecutorService = new ScheduledThreadPoolExecutor(100);
         NetFlowSession session = new NetFlowSession(source -> {
             try {
                 ByteBuffer ipBuffer = ByteBuffer.allocate(4);
                 ipBuffer.putInt(source.getDeviceIP());
+                String ip = SimpleFlow.ipToString(ipBuffer.array());
+                LogUtils.log("Incoming NetFlow from " + ip + " source id: " + source.getId());
+                Device device = mapController.addOrUpdate(ip);
 
-                System.out.println("Incoming NetFlow from " + SimpleFlow.ipToString(ipBuffer.array()) + " source id: " + source.getId());
-                mapController.addOrUpdate(SimpleFlow.ipToString(ipBuffer.array()));
+                Sampler sampler = getSampler(source.getDeviceIP(), device);
+
                 source.listen((id, values) -> {
-                    int timeout =
-                            (values.get(FlowField.LAST_SWITCHED).asInt()
-                                    - values.get(FlowField.FIRST_SWITCHED).asInt()) == 0 ? 20000 : 0;
 
-                    SimpleFlow flow = new SimpleFlow(source.getDeviceIP(), values, timeout);
-
-                    toAdd.add(flow);
+                    SimpleFlow flow = new SimpleFlow(source.getDeviceIP(), values);
+                    try {
+                        sampler.add(flow);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 });
 
             } catch (Exception e) {
@@ -56,134 +69,222 @@ public class NetFlowController implements Runnable {
 
         try {
             collector = new NetFlowCollector(session, 9996);
-            updaterThread = new Thread(this);
-            updaterThread.start();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private Sampler getSampler(int ip, Device device) {
+        Sampler sampler = samplers.get(ip);
+        if (sampler == null) {
+            sampler = new Sampler(device);
+            samplers.put(ip, sampler);
+            scheduledExecutorService.scheduleWithFixedDelay(sampler, 1, 1, TimeUnit.SECONDS);
+        }
+        return sampler;
     }
 
     public void close() {
         collector.close();
-        updaterThread.interrupt();
+        scheduledExecutorService.shutdown();
     }
 
-    @Override
-    public void run() {
-        try {
-            while (!updaterThread.isInterrupted()) {
-                for (SimpleFlow flow : toAdd) {
-                    Set<SimpleFlow> deviceFlows = activeFlows.computeIfAbsent(flow.sourceIP, k -> new HashSet<>());
+//                long timestamp = System.currentTimeMillis();
 
-
-                    if (flow.timeout > 0) {
-                        if(!deviceFlows.remove(flow))
-                            putIntoActive(flow);
-
-                        deviceFlows.add(flow);
-                    } else {
-                        putIntoEnded(flow);
-                    }
-                }
-
-                //TODO: Device specific
-                for (Map.Entry<Integer, HashSet<SimpleFlow>> activeFlowsEntry : activeFlows.entrySet()){
-                    Iterator<SimpleFlow> it = activeFlowsEntry.getValue().iterator();
-                    Map<String, IntegerProperty> activeMap = activeFlowsStat.get(activeFlowsEntry.getKey());
-
-                    while (it.hasNext()) {
-                        SimpleFlow flow = it.next();
-
-                        flow.tick();
-                        if(flow.expired) {
-                            it.remove();
-                            putIntoEnded(flow);
-                        }
-                    }
-
-                    if(activeMap!= null && window != null && window.deviceIp == activeFlowsEntry.getKey()) {
-                        //window.updateTraffic(activeMap);
-                    }
-
-                    //System.out.println(activeFlowsEntry.getValue().size());
-                }
-
-                Thread.sleep(1000);
-            }
-        } catch (InterruptedException e) {
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//                for (SimpleFlow flow : toAdd) {
+//                    Set<SimpleFlow> deviceFlows = latestFlows.computeIfAbsent(flow.sourceIP, k -> new HashSet<>());
+//
+//
+//                    if (flow.timeout > 0) {
+//                        if(!deviceFlows.remove(flow))
+//                            putIntoActive(flow);
+//
+//                        deviceFlows.add(flow);
+//                    } else {
+//                        deviceFlows.remove(flow); //TODO:????
+//                        putIntoEnded(flow);
+//                    }
+//                }
+//
+//                toAdd.clear();
+//
+//                for (Map.Entry<Integer, HashSet<SimpleFlow>> activeFlowsEntry : latestFlows.entrySet()){
+//                    Iterator<SimpleFlow> it = activeFlowsEntry.getValue().iterator();
+//                    Map<Integer, IntegerProperty> activeMap = latestFlowsStat.get(activeFlowsEntry.getKey());
+//                    //Map<Long, List<FlowStat>> trafficStat = flowStat.computeIfAbsent(activeFlowsEntry.getKey(), k -> new HashMap<>());
+//                    //List<FlowStat> trafficList = trafficStat.computeIfAbsent(timestamp, k -> new ArrayList<>());
+//
+//
+//                    while (it.hasNext()) {
+//                        SimpleFlow flow = it.next();
+//
+//                        flow.tick();
+//                        if(flow.expired) {
+//                            it.remove();
+//                            putIntoEnded(flow);
+//                        }
+//                    }
+//
+//                    if(activeMap!= null) {
+//                        for (Map.Entry<Integer, IntegerProperty> e : activeMap.entrySet()) {
+//                            FlowStat flowStat = new FlowStat(e.getKey(), e.getValue().intValue());
+//                            trafficList.add(flowStat);
+//                            //Transaction transaction = Application.databaseSession.beginTransaction();
+//                            //Application.databaseSession.persist(flowStat);
+//                            //Application.databaseSession.flush();
+//                            //transaction.commit();
+//                        }
+//                        if(window != null && window.deviceIp == activeFlowsEntry.getKey()) {
+//                            window.updateTraffic(trafficList, timestamp);
+//                        }
+//                    }
+//
+//                    //System.out.println(activeFlowsEntry.getValue().size());
+//                }
 
     private void putIntoActive(SimpleFlow flow) {
-        Map<String, IntegerProperty> active = activeFlowsStat.computeIfAbsent(flow.sourceIP, k -> FXCollections.observableHashMap());
-        String app = categories.get(flow.port);
+        Map<Integer, IntegerProperty> active = latestFlowsStat.computeIfAbsent(flow.sourceIP, k -> FXCollections.observableHashMap());
         IntegerProperty value;
-
-        if (app == null) {
-            value = active.get("Other");
-        } else {
-            value = active.get(app);
-        }
-
+        value = active.get(flow.port);
 
         if(value != null) {
             value.setValue(value.intValue() + 1);
         } else {
             value = new SimpleIntegerProperty(1);
-            active.put(app, value);
-            if (window != null && window.deviceIp == flow.sourceIP) {
-                window.putActive(flow.port, value);
-            }
+            active.put(flow.port, value);
+            //if (window != null && window.deviceIp == flow.sourceIP) {
+            //    window.putActive(flow.port, value);
+            //}
         }
     }
 
     private void putIntoEnded(SimpleFlow flow) {
-        Map<String, IntegerProperty> ended = endedFlowsStat.computeIfAbsent(flow.sourceIP, k -> FXCollections.observableHashMap());
-        Map<String, IntegerProperty> active = activeFlowsStat.get(flow.sourceIP);
+        Map<Integer, IntegerProperty> ended = endedFlowsStat.computeIfAbsent(flow.sourceIP, k -> FXCollections.observableHashMap());
+        Map<Integer, IntegerProperty> active = latestFlowsStat.get(flow.sourceIP);
 
-        String app = categories.get(flow.port);
-        IntegerProperty value;
-        if (app == null) {
-            value = ended.get("Other");
-        } else {
-            value = ended.get(app);
-        }
+        IntegerProperty value = ended.get(flow.port);
 
         if(value != null) {
             value.setValue(value.intValue() + 1);
         } else {
             value = new SimpleIntegerProperty(1);
-            ended.put(app, value);
-            if (window != null && window.deviceIp == flow.sourceIP) {
-                window.putEnded(flow.port, value);
-            }
+            ended.put(flow.port, value);
+            //if (window != null && window.deviceIp == flow.sourceIP) {
+            //    window.putEnded(flow.port, value);
+            //}
         }
 
         if (active == null)
             return;
 
-        value = active.get(app);
+        value = active.get(flow.port);
         if (value != null) {
             value.setValue(value.intValue() - 1);
             if (value.intValue() <= 0) {
-                active.remove(app);
-                if (window != null && window.deviceIp == flow.sourceIP) {
-                    window.removeActive(flow.port);
-                }
+                active.remove(flow.port);
+                //if (window != null && window.deviceIp == flow.sourceIP) {
+                //    window.removeActive(flow.port);
+                //}
             }
         }
     }
 
     public void bind(NetFlowDialogController netFlowDialogController) {
-        this.window = netFlowDialogController;
-        window.activeChartData.clear();
-        window.endedChartData.clear();
-
+        Sampler sampler = getSampler(netFlowDialogController.device.primaryIp, netFlowDialogController.device); // TODO: should be device
+        sampler.bind(netFlowDialogController);
+        //netFlowDialogController.activeChartData.clear();
+        //netFlowDialogController.endedChartData.clear();
+        //netFlowDialogController.trafficChart.getData().clear();
     }
 
-    // user-defined categories PORT: APP NAME; Otherwise it should be "OTHER" category
-    Map<Integer, String> categories = new HashMap<>();
+    private static class Sampler implements Runnable {
+        private final long startTimestamp;
+        private int count = 0;
+        private final Semaphore semaphore = new Semaphore(1);
+        private final List<SimpleFlow> toAdd = new ArrayList<>();
+
+        private final HashSet<SimpleFlow> latestFlows = new HashSet<>();
+        private final SimpleCumulativeEMWA simpleCumulativeEMWA = new SimpleCumulativeEMWA();
+        private NetFlowDialogController window;
+        private Device device;
+
+        // cached stats (there should be tail-drop to prevent leaks)
+        private final Map<Long, Integer> stampedCounts = new HashMap<>();
+        private final Map<Long, Integer> stampedDeltas = new HashMap<>();
+        private final Map<Long, Boolean> stampedAlarms = new HashMap<>();
+        private final Map<Integer, Integer> latestStatistics = new HashMap<>();
+        private final Map<Integer, Integer> wholeStatistics = new HashMap<>();
+
+        public Sampler(Device device) {
+            this.device = device;
+            startTimestamp = System.currentTimeMillis();
+        }
+
+        @Override
+        public void run() {
+            try {
+                semaphore.acquire();
+
+                long timestamp = System.currentTimeMillis();
+
+                int created = toAdd.size();
+                for (SimpleFlow flow : toAdd) {
+                    latestFlows.remove(flow);
+                    latestFlows.add(flow);
+
+                    Integer value = wholeStatistics.putIfAbsent(flow.port, 1);
+                    if(value != null) {
+                        wholeStatistics.put(flow.port, value + 1);
+                    }
+
+                    value = latestStatistics.putIfAbsent(flow.port, 1);
+                    if(value != null) {
+                        latestStatistics.put(flow.port, value + 1);
+                    }
+                    count++;
+                }
+                toAdd.clear();
+
+                semaphore.release();
+
+                Iterator<SimpleFlow> simpleFlowIterator = latestFlows.iterator();
+                while (simpleFlowIterator.hasNext()) {
+                    SimpleFlow flow = simpleFlowIterator.next();
+                    flow.tick();
+                    if (flow.expired) {
+                        simpleFlowIterator.remove();
+                        Integer value = latestStatistics.get(flow.port);
+                        if(value != null) {
+                            if (value > 1) {
+                                latestStatistics.put(flow.port, value - 1);
+                            } else {
+                                latestStatistics.remove(flow.port);
+                            }
+                        }
+                    }
+                }
+                boolean alarm = simpleCumulativeEMWA.put(created);
+                stampedAlarms.put(timestamp, alarm);
+                stampedCounts.put(timestamp, latestFlows.size());
+                stampedDeltas.put(timestamp, created);
+
+                if (window != null) {
+                    window.updateTraffic((int) ((timestamp - startTimestamp) / 1000), latestFlows.size(), created, alarm, count, new HashMap<>(latestStatistics), new HashMap<>(wholeStatistics));
+                }
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void add(SimpleFlow flow) throws InterruptedException {
+            semaphore.acquire();
+            toAdd.add(flow);
+            semaphore.release();
+        }
+
+        public void bind(NetFlowDialogController netFlowDialogController) {
+            this.window = netFlowDialogController;
+        }
+    }
 }

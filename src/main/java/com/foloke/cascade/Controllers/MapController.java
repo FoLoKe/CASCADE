@@ -7,6 +7,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import org.hibernate.Transaction;
 
 import java.util.*;
 
@@ -67,9 +68,10 @@ public class MapController {
     public void addEntity(Entity entity) {
         toAdd.add(entity);
         if(entity instanceof Device) {
-            Application.databaseSession.beginTransaction();
+            Transaction transaction = Application.databaseSession.beginTransaction();
             Application.databaseSession.persist(entity);
             Application.databaseSession.flush();
+            transaction.commit();
         }
     }
 

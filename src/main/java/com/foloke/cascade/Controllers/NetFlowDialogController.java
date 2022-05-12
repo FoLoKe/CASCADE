@@ -3,7 +3,6 @@ package com.foloke.cascade.Controllers;
 import com.foloke.cascade.Application;
 import com.foloke.cascade.Entities.Device;
 import javafx.application.Platform;
-import javafx.beans.property.IntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -11,9 +10,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.chart.*;
 
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.*;
 
 public class NetFlowDialogController implements Initializable {
     @FXML
@@ -25,90 +22,221 @@ public class NetFlowDialogController implements Initializable {
     public ObservableList<PieChart.Data> endedChartData = FXCollections.observableArrayList();
 
     @FXML
-    StackedAreaChart<Integer, Integer> trafficChart;
-    public ObservableList<XYChart.Series<Integer, Integer>> trafficData = FXCollections.observableArrayList();
+    LineChart<Number, Number> trafficChart2d;
+    private NumberAxis xAxis;
 
-    public int deviceIp;
+    public Device device;
+
+    // user-defined categories PORT: APP NAME; Otherwise it should be "OTHER" category
+    Rules categories = new Rules();
+
+    XYChart.Series<Number, Number> active = new XYChart.Series<>();
+    XYChart.Series<Number, Number> delta = new XYChart.Series<>();
+    XYChart.Series<Number, Number> anomaly = new XYChart.Series<>();
 
     public NetFlowDialogController(Device device) {
-        this.deviceIp = device.primaryIp;
+        this.device = device;
+        categories.addRule(443, "Web");
+        categories.addRule(80, "Web");
+        categories.addRule(9996, "NetFlow");
+        categories.addRule(21, "FTP");
+        categories.addRule(22, "FTP");
+        categories.addRule(23, "Telnet");
+        categories.addRule(25, "SMTP");
+        categories.addRule(54, "DNS");
+        categories.addRule(161, "SNMP");
+        categories.addRule(49152, 65535, "Applications");
+        categories.addRule(6881, 6887, "BitTorrent");
+        categories.addRule(6888, 6900, "BitTorrent");
+        categories.addRule(6902, 6970, "BitTorrent");
     }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         activeChart.setData(activeChartData);
         endedChart.setData(endedChartData);
-        trafficChart.setData(trafficData);
+        //trafficChart2d.setData(trafficData);
 
-        trafficChart.setCreateSymbols(false);
-        trafficChart.setAnimated(false);
-        ((ValueAxis<Integer>)trafficChart.getXAxis()).setLowerBound(counter);
+        trafficChart2d.setCreateSymbols(false);
+        trafficChart2d.setAnimated(false);
+
+        anomaly.setName("Anomaly");
+        trafficChart2d.getData().add(anomaly);
+
+        delta.setName("Delta");
+        trafficChart2d.getData().add(delta);
+
+        active.setName("Activity");
+        trafficChart2d.getData().add(active);
+
+        xAxis = (NumberAxis) trafficChart2d.getXAxis();
+        xAxis.setAutoRanging(false);
+        xAxis.setAnimated(false);
+        xAxis.setTickUnit(1);
+        xAxis.setLabel("seconds");
 
         Application.netFlowController.bind(this);
     }
 
-    int counter = 1;
-    Map<Integer, XYChart.Series<Integer, Integer>> seriesMap = new HashMap<>();
-    public void updateTraffic(Map<Integer, IntegerProperty> traffic) {
+    //Map<String, XYChart.Series<Number, Number>> seriesMap = new HashMap<>();
+
+    // cached
+    Map<String, PieChartDataWrapper> latestMap = new HashMap<>();
+    Map<String, PieChart.Data> wholeMap = new HashMap<>();
+
+    int samplingRange = 180;
+    public void updateTraffic(int timestamp, int activeFlows, int createdFlows, boolean alarm, int wholeCount,
+                              Map<Integer, Integer> latest, Map<Integer, Integer> whole) {
         Platform.runLater(() -> {
-            int activeCount = 0;
-            for (Map.Entry<Integer, IntegerProperty> trafficEntry : traffic.entrySet()) {
-                XYChart.Series<Integer, Integer> series = seriesMap.get(trafficEntry.getKey());
-                if(series == null) {
-                    series = new XYChart.Series<>();
-                    series.setName(trafficEntry.getKey() + "");
-                    seriesMap.put(trafficEntry.getKey(), series);
-                    series.getData().add(new XYChart.Data<>(counter - 1, 0));
-                    trafficData.add(series);
+            xAxis.setLowerBound(Math.max(timestamp - 180, 0));
+            xAxis.setUpperBound(Math.max(timestamp, 180));
+
+            System.out.println(timestamp + " " + activeFlows + " " + createdFlows + " " + alarm);
+            active.getData().add(new XYChart.Data<>(timestamp, activeFlows));
+            delta.getData().add(new XYChart.Data<>(timestamp, createdFlows));
+
+            if(alarm) {
+                this.anomaly.getData().add(new XYChart.Data<>(timestamp - 0.1, 0));
+                this.anomaly.getData().add(new XYChart.Data<>(timestamp, activeFlows + 2));
+                this.anomaly.getData().add(new XYChart.Data<>(timestamp + 0.1, 0));
+
+            }
+
+            cutTraffic(active);
+            cutTraffic(delta);
+            cutTraffic(this.anomaly);
+
+            activeChart.setTitle("Active: " + activeFlows);
+
+            for (Map.Entry<Integer, Integer> flowStat : latest.entrySet()) {
+                String key = categories.getKey(flowStat.getKey());
+                PieChartDataWrapper wrapped = latestMap.get(key);
+                if (wrapped == null) {
+                    PieChart.Data data = new PieChart.Data(key, flowStat.getValue());
+                    latestMap.put(key, new PieChartDataWrapper(data, timestamp));
+                    activeChartData.add(data);
                 } else {
-                    if(series.getData().size() > 1) {
-                        XYChart.Data<Integer, Integer> last = series.getData().get(series.getData().size() - 2);
-                        XYChart.Data<Integer, Integer> prev = series.getData().get(series.getData().size() - 1);
-                        if (prev != null && prev.getYValue() == trafficEntry.getValue().intValue()) {
-                            series.getData().remove(series.getData().size() - 1);
-                        }
-                    }
+                    wrapped.data.setPieValue(wrapped.data.getPieValue() + flowStat.getValue());
+                    wrapped.timestamp = timestamp;
                 }
-                if(trafficEntry.getValue().intValue() <= 0) {
-                    System.out.println("ERROR");
-                }
-
-                series.getData().add(new XYChart.Data<>(counter, trafficEntry.getValue().intValue()));
-                activeCount += trafficEntry.getValue().intValue();
             }
 
-            for (XYChart.Series<Integer, Integer> series : seriesMap.values()) {
-                series.getData().removeIf(data -> data.getXValue() < counter - 10);
-                //series.getData().g
-                System.out.println("dataSize:" + series.getData().size());
+            Iterator<PieChartDataWrapper> iterator = latestMap.values().iterator();
+            while (iterator.hasNext()) {
+                PieChartDataWrapper wrapped = iterator.next();
+                if(wrapped.timestamp != timestamp) {
+                    System.out.println("deleted");
+                    iterator.remove();
+                    activeChartData.remove(wrapped.data);
+                }
             }
 
-            activeChart.setTitle("Active: " + activeCount);
-            //((ValueAxis<Integer>)trafficChart.getXAxis()).setLowerBound(counter);
-            //((ValueAxis<Integer>)trafficChart.getXAxis()).setUpperBound(counter);
-            counter++;
+            for (Map.Entry<Integer, Integer> flowStat : whole.entrySet()) {
+                String key = categories.getKey(flowStat.getKey());
+                PieChart.Data data = wholeMap.get(key);
+                if (data == null) {
+                    data = new PieChart.Data(key, flowStat.getValue());
+                    wholeMap.put(key,data);
+                    endedChartData.add(data);
+                } else {
+                    data.setPieValue(data.getPieValue() + flowStat.getValue());
+                }
+            }
+
+            endedChart.setTitle("Ended: " + wholeCount);
         });
     }
 
-    public void putEnded(int port, IntegerProperty prop) {
-        PieChart.Data data = new PieChart.Data(port + "", 0);
-        data.pieValueProperty().bind(prop);
-        Platform.runLater(() -> {
-            endedChartData.add(data);
-            endedChart.setTitle("Ended: " + endedChartData.size());
-        });
+    private void cutTraffic(XYChart.Series<Number, Number> series) {
+        if (series.getData().size() > samplingRange + 10) {
+            series.getData().remove(0);
+        }
     }
 
-    public void removeActive(int port) {
-        String name = port + "";
-        Platform.runLater(() -> System.out.println(activeChartData.removeIf(d -> d.getName().equals(name))));
+    public static class PieChartDataWrapper {
+        public PieChart.Data data;
+        public int timestamp;
+
+        public PieChartDataWrapper(PieChart.Data data, int timestamp) {
+            this.data = data;
+            this.timestamp = timestamp;
+        }
     }
 
-    public void putActive(int port, IntegerProperty prop) {
-        PieChart.Data data = new PieChart.Data(port + "", 0);
-        data.pieValueProperty().bind(prop);
-        Platform.runLater(() -> {
-            activeChartData.add(data);
-        });
+    public static class Rules {
+        private static String defaultCategory = "Other";
+        private List<NamingRule> rules = new ArrayList<>();
+
+        public void addRule(int value, String key) {
+            addRule(value, value, key);
+        }
+
+        public void addRule(int min, int max, String key) {
+            NamingRule rule = new NamingRule(min, max, key);
+
+            int index = 0;
+            for (int i = 0; i < rules.size(); i++) {
+                if(!rule.isIn(min))
+                    break;
+                index++;
+            }
+
+            rules.add(index, rule);
+        }
+
+        public String getKey(int value) {
+            for (NamingRule rule : rules) {
+                if(rule.isIn(value)) {
+                    return rule.key;
+                }
+            }
+
+            return defaultCategory;
+        }
+    }
+
+    public static class NamingRule {
+        private int min;
+        private int max;
+        public String key;
+
+        public NamingRule(int value, String key) {
+            this(value, value, key);
+        }
+
+        public NamingRule(int min, int max, String key) {
+            this.min = min;
+            this.max = max;
+            this.key = key;
+        }
+
+        public int range() {
+            return 1 + max - min;
+        }
+
+        public boolean isIn(int value) {
+            return value >= min && value <= max;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            NamingRule that = (NamingRule) o;
+
+            if (key != null)
+                if(key.equals(that.key)) return true;
+
+            if (isIn(that.min)) return true;
+            return (isIn(that.max));
+        }
+
+        @Override
+        public int hashCode() {
+            int result = min;
+            result = 31 * result + max;
+            return result;
+        }
     }
 }

@@ -11,16 +11,16 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="lib" level="project" />
-    <orderEntry type="library" name="Maven: org.snmp4j:snmp4j:3.6.3" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-fxml:17.0.0.1" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-fxml:win:17.0.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.snmp4j:snmp4j:3.6.7" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-fxml:18.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-fxml:win:18.0.1" level="project" />
     <orderEntry type="library" name="Maven: commons-net:commons-net:3.8.0" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:17.0.0.1" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:win:17.0.0.1" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:17.0.0.1" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:win:17.0.0.1" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:17.0.0.1" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:win:17.0.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:18.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:win:18.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:18.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:win:18.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:18.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:win:18.0.1" level="project" />
     <orderEntry type="library" name="Maven: com.github.FoLoKe:netflow-java:42ff7fd" level="project" />
     <orderEntry type="library" name="Maven: org.pcap4j:pcap4j-core:1.8.2" level="project" />
     <orderEntry type="library" name="Maven: net.java.dev.jna:jna:5.3.1" level="project" />
