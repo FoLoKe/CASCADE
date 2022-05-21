@@ -1,18 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.chart.CategoryAxis?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 
-<TitledPane fx:id="flowDialog" animated="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="495.0" prefWidth="791.0" text="NerFlow" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
+<TitledPane fx:id="flowDialog" animated="false" collapsible="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="495.0" prefWidth="791.0" text="NerFlow" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
   <content>
     <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0">
          <children>
@@ -54,7 +58,58 @@
                 </Tab>
                 <Tab text="Settings">
                   <content>
-                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                           <children>
+                              <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                <items>
+                                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+                                       <children>
+                                          <VBox prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                             <children>
+                                                <HBox prefHeight="100.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
+                                                   <children>
+                                                      <TableView fx:id="InterfacesTable" prefHeight="201.0" prefWidth="753.0">
+                                                        <columns>
+                                                          <TableColumn fx:id="interfaceName" editable="false" prefWidth="559.0" text="Interface" />
+                                                          <TableColumn fx:id="incommnigCol" prefWidth="94.0" text="Incomming" />
+                                                            <TableColumn fx:id="outcommnigCol" prefWidth="99.0" text="Outcomming" />
+                                                        </columns>
+                                                      </TableView>
+                                                   </children>
+                                                </HBox>
+                                                <HBox alignment="CENTER_LEFT" prefHeight="29.0" prefWidth="758.0" spacing="10.0" VBox.vgrow="NEVER">
+                                                   <children>
+                                                      <HBox alignment="CENTER_LEFT" prefHeight="29.0" prefWidth="603.0" spacing="20.0" HBox.hgrow="ALWAYS">
+                                                         <children>
+                                                            <CheckBox fx:id="legendCB" mnemonicParsing="false" text="Active legend" />
+                                                            <CheckBox fx:id="eLegendCB" mnemonicParsing="false" text="Ended legend" />
+                                                            <CheckBox fx:id="trafficCB" mnemonicParsing="false" text="Live traffic - last active chart" />
+                                                         </children>
+                                                      </HBox>
+                                                      <Button fx:id="disableButton" mnemonicParsing="false" text="Disable Netflow" />
+                                                   </children>
+                                                   <VBox.margin>
+                                                      <Insets />
+                                                   </VBox.margin>
+                                                </HBox>
+                                             </children>
+                                          </VBox>
+                                       </children>
+                                    </AnchorPane>
+                                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+                                       <children>
+                                          <TableView fx:id="RulesTable" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                            <columns>
+                                              <TableColumn fx:id="ruleName" maxWidth="1.7976931348623157E308" prefWidth="532.0" text="Rule" />
+                                              <TableColumn fx:id="minPortCol" prefWidth="112.0" text="Min port" />
+                                                <TableColumn fx:id="maxPortCol" prefWidth="113.0" text="Max port" />
+                                            </columns>
+                                          </TableView>
+                                       </children>
+                                    </AnchorPane>
+                                </items>
+                              </SplitPane>
+                           </children></AnchorPane>
                   </content>
                 </Tab>
               </tabs>

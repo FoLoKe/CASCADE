@@ -172,11 +172,11 @@ public class NetFlowDialogController implements Initializable {
         }
 
         public void addRule(int min, int max, String key) {
-            NamingRule rule = new NamingRule(min, max, key);
-
+            NamingRule rule = new NamingRule(min, max, key); // Создание правила
+            int size = max - min;
             int index = 0;
             for (int i = 0; i < rules.size(); i++) {
-                if(!rule.isIn(min))
+                if(rule.max - rule.min > size)
                     break;
                 index++;
             }
