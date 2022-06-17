@@ -59,12 +59,12 @@ public class UIController {
     @FXML
     private TableColumn<Property, String> valueColumn;
 
-    private final MapController mapController;
+    private final Application application;
     private ObjectContextMenu objectContextMenu;
     private NoneObjectContextMenu noneObjectContextMenu;
 
-    public UIController(MapController mapController) {
-        this.mapController = mapController;
+    public UIController(Application application) {
+        this.application = application;
     }
 
     public Canvas getCanvas() {
@@ -82,48 +82,37 @@ public class UIController {
             this.canvas.setHeight(newValue.doubleValue());
         });
 
-        this.canvas.setOnMousePressed(mouseEvent -> {
+        this.canvas.setOnMouseClicked(mouseEvent -> {
             objectContextMenu.hide();
-            noneObjectContextMenu.hide();
-            if (mouseEvent.getButton() == MouseButton.PRIMARY) {
-                UIController.this.mapController.pick((float) mouseEvent.getX(), (float) mouseEvent.getY());
-            } else {
-                UIController.this.mapController.beginGrouping(mouseEvent.getX(), mouseEvent.getY());
-            }
+            //noneObjectContextMenu.hide();
+            application.updater.mouseInput(mouseEvent);
         });
 
         this.canvas.setOnMouseDragged(mouseEvent -> {
-            if (mouseEvent.getButton() == MouseButton.PRIMARY) {
-                UIController.this.mapController.drag((float) mouseEvent.getX(), (float) mouseEvent.getY());
-            } else {
-                UIController.this.mapController.grouping(mouseEvent.getX(), mouseEvent.getY());
-            }
+            application.updater.mouseInput(mouseEvent);
         });
 
         this.canvas.setOnMouseReleased(mouseEvent -> {
-            if (mouseEvent.getButton() == MouseButton.PRIMARY) {
-                UIController.this.mapController.drop(mouseEvent.getX(), mouseEvent.getY());
-            } else {
-                UIController.this.mapController.endGrouping(mouseEvent.getX(), mouseEvent.getY());
-            }
+            application.updater.mouseInput(mouseEvent);
         });
 
-        this.canvas.setOnScroll(scrollEvent -> this.mapController.zoom(scrollEvent.getDeltaY() > 0));
+        this.canvas.setOnScroll(scrollEvent -> application.updater.mouseScroll(scrollEvent));
 
         propertyColumn.setCellValueFactory(new PropertyValueFactory<>("property"));
         valueColumn.setCellValueFactory(new PropertyValueFactory<>("value"));
 
         objectContextMenu = new ObjectContextMenu();
-        noneObjectContextMenu = new NoneObjectContextMenu(mapController);
+        //noneObjectContextMenu = new NoneObjectContextMenu(mapController);
 
         canvas.setOnContextMenuRequested(event -> {
-            Entity entity = mapController.hit(event.getX(), event.getY());
-            if (entity != null) {
-                objectContextMenu.update(entity);
-                objectContextMenu.show(canvas, event.getScreenX(), event.getScreenY());
-            } else {
-                noneObjectContextMenu.show(canvas, event.getScreenX(), event.getScreenY());
-            }
+            // TODO: callback from
+//            Entity entity = mapController.hit(event.getX(), event.getY());
+//            if (entity != null) {
+//                objectContextMenu.update(entity);
+//                objectContextMenu.show(canvas, event.getScreenX(), event.getScreenY());
+//            } else {
+//                noneObjectContextMenu.show(canvas, event.getScreenX(), event.getScreenY());
+//            }
         });
     }
 
@@ -195,7 +184,7 @@ public class UIController {
             MenuItem deleteItem = new MenuItem("Delete");
             deleteItem.setOnAction(event -> {
                 entity.destroy();
-                entity.mapController.pick(-1, -1);
+                //entity.mapController.pick(-1, -1);
             });
 
 
@@ -236,7 +225,7 @@ public class UIController {
                 Cable cable = new Cable(mapController);
                 cable.connectorA.setPosition(mapController.getTouchPointX(), mapController.getTouchPointY());
                 cable.connectorB.setPosition(mapController.getTouchPointX() + 32, mapController.getTouchPointY());
-                mapController.addEntity(cable);
+                //mapController.addEntity(cable);
             });
 
             MenuItem saveItem = new MenuItem("Save map");

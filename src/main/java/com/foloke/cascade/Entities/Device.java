@@ -1,6 +1,10 @@
 package com.foloke.cascade.Entities;
 
 import com.foloke.cascade.Application;
+import com.foloke.cascade.Components.CameraComponent;
+import com.foloke.cascade.Components.CollisionComponent;
+import com.foloke.cascade.Components.PositionComponent;
+import com.foloke.cascade.Components.SpriteComponent;
 import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.utils.Led;
 import com.foloke.cascade.utils.LogUtils;
@@ -280,4 +284,13 @@ public class Device extends Entity {
     }
 
     //TODO: MAKE IT JSON OR DATABASE SAVE
+
+    public static com.badlogic.ashley.core.Entity instance() {
+        com.badlogic.ashley.core.Entity device = new com.badlogic.ashley.core.Entity();
+        device.add(new PositionComponent());
+        device.add(new SpriteComponent(Sprite.create(Application.spriteSheet, 0, 0, 16, 16, 1)));
+        device.add(new CollisionComponent());
+
+        return device;
+    }
 }

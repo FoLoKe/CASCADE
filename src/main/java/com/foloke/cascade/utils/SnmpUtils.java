@@ -36,15 +36,15 @@ public class SnmpUtils {
     public static OID routingMAC = new OID(".1.3.6.1.2.1.4.22.1.2");
 
     public static void getRequest(Target<UdpAddress> communityTarget, UsmUser user, OID oid) {
-        SnmpGet snmpGet = new SnmpGet(communityTarget, user, oid);
-        Thread thread = new Thread(snmpGet);
-        thread.start();
+//        SnmpGet snmpGet = new SnmpGet(communityTarget, user, oid);
+//        Thread thread = new Thread(snmpGet);
+//        thread.start();
     }
 
     public static void walkRequest(Target<UdpAddress> target, UsmUser user, OID tableOid, List<UIController.Property> props) {
-        SnmpWalk snmpWalk = new SnmpWalk(target, user, tableOid, props);
-        Thread thread = new Thread(snmpWalk);
-        thread.start();
+//        SnmpWalk snmpWalk = new SnmpWalk(target, user, tableOid, props);
+//        Thread thread = new Thread(snmpWalk);
+//        thread.start();
     }
 
     public static void initDevice(Device device) {
@@ -106,25 +106,25 @@ public class SnmpUtils {
 
                     for (OID routeOID : routingInfo) {
                         String address = routeOID.getSuffix(new OID(routingIDS + "." + entry.getValue())).toString();
-                        Port leadingPort = device.mapController.findPort(address);
-
-                        if (leadingPort == null) {
-                            String mac = null;
-
-                            VariableBinding rotingBinding = getFirst(new OID(routingMAC + "." + entry.getValue() + "." + address + ".0"), device);
-                            if (rotingBinding != null) {
-                                mac = rotingBinding.getVariable().toString();
-                            }
-
-                            if (mac != null) {
-                                Device leadingDevice = new Device(device.mapController, "127.0.0.1");
-                                leadingPort = new Port(leadingDevice, address);
-                                leadingPort = leadingDevice.addOrUpdatePort(leadingPort);
-                                leadingPort.mac = mac;
-                                device.mapController.addEntity(leadingDevice);
-                            }
-                        }
-                        device.mapController.establishConnection(port, leadingPort);
+//                        Port leadingPort = device.mapController.findPort(address);
+//
+//                        if (leadingPort == null) {
+//                            String mac = null;
+//
+//                            VariableBinding rotingBinding = getFirst(new OID(routingMAC + "." + entry.getValue() + "." + address + ".0"), device);
+//                            if (rotingBinding != null) {
+//                                mac = rotingBinding.getVariable().toString();
+//                            }
+//
+//                            if (mac != null) {
+//                                Device leadingDevice = new Device(device.mapController, "127.0.0.1");
+//                                leadingPort = new Port(leadingDevice, address);
+//                                leadingPort = leadingDevice.addOrUpdatePort(leadingPort);
+//                                leadingPort.mac = mac;
+//                                device.mapController.addEntity(leadingDevice);
+//                            }
+//                        }
+//                        device.mapController.establishConnection(port, leadingPort);
                     }
 
                 }

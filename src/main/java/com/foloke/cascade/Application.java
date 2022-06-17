@@ -3,10 +3,8 @@ package com.foloke.cascade;
 import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.Controllers.NetFlowController;
 import com.foloke.cascade.Controllers.UIController;
-import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.utils.HibernateUtil;
 import com.foloke.cascade.utils.LogUtils;
-import com.foloke.cascade.utils.ScanUtils;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
@@ -37,6 +35,8 @@ public class Application extends javafx.application.Application {
     public static NetFlowController netFlowController;
     public static Session databaseSession;
 
+    public Updater updater;
+
     public static void main(String[] args) {
         launch(args);
     }
@@ -57,12 +57,13 @@ public class Application extends javafx.application.Application {
 
         //databaseSession = HibernateUtil.getSessionFactory().openSession();
 
-        Device device = ScanUtils.initLocal(mapController);
-        mapController.addEntity(device);
-
-        Renderer renderer = new Renderer(this);
+        //Device device = ScanUtils.initLocal(mapController);
+        //mapController.addEntity(device);
         stage.show();
-        renderer.start();
+
+
+        updater = new Updater(uiController.getCanvas());
+        updater.start();
 
         netFlowController = new NetFlowController(mapController);
     }
@@ -75,7 +76,7 @@ public class Application extends javafx.application.Application {
         icon = new Image("/images/icon.png");
 
         this.mapController = new MapController();
-        this.uiController = new UIController(this.mapController);
+        this.uiController = new UIController(this);
 
         mainURL = this.getClass().getResource("/static/main.fxml");
         pingDialogURL = this.getClass().getResource("/static/pingDialog.fxml");

@@ -37,14 +37,14 @@ public class PingOneDialogController implements Initializable {
 
         okButton.setOnMousePressed(event -> {
             String address = addressTextField.getText();
-            Port port = mapController.findPort(address);
-            if(port != null) {
-                ScanUtils.ping(port);
-            } else {
-                Device device = new Device(mapController, address);
-                ScanUtils.ping(device.getPorts().get(0));
-                mapController.addEntity(device);
-            }
+            //Port port = mapController.findPort(address);
+//            if(port != null) {
+//                ScanUtils.ping(port);
+//            } else {
+//                Device device = new Device(mapController, address);
+//                ScanUtils.ping(device.getPorts().get(0));
+//                //mapController.addEntity(device);
+//            }
 
             PingOneDialogController.this.closeStage(event);
         });

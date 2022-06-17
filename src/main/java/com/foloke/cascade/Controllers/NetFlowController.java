@@ -48,19 +48,19 @@ public class NetFlowController {
                 ipBuffer.putInt(source.getDeviceIP());
                 String ip = SimpleFlow.ipToString(ipBuffer.array());
                 LogUtils.log("Incoming NetFlow from " + ip + " source id: " + source.getId());
-                Device device = mapController.addOrUpdate(ip);
+                //Device device = mapController.addOrUpdate(ip);
 
-                Sampler sampler = getSampler(source.getDeviceIP(), device);
+                //Sampler sampler = getSampler(source.getDeviceIP(), device);
 
-                source.listen((id, values) -> {
-                    device.flowLed.activate(0.25);
-                    SimpleFlow flow = new SimpleFlow(source.getDeviceIP(), values);
-                    try {
-                        sampler.add(flow);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                });
+//                source.listen((id, values) -> {
+//                    //device.flowLed.activate(0.25);
+//                    SimpleFlow flow = new SimpleFlow(source.getDeviceIP(), values);
+//                    try {
+//                        //sampler.add(flow);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                });
 
             } catch (Exception e) {
                 e.printStackTrace();
