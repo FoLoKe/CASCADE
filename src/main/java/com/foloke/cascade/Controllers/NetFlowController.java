@@ -53,7 +53,7 @@ public class NetFlowController {
                 Sampler sampler = getSampler(source.getDeviceIP(), device);
 
                 source.listen((id, values) -> {
-
+                    device.flowLed.activate(0.25);
                     SimpleFlow flow = new SimpleFlow(source.getDeviceIP(), values);
                     try {
                         sampler.add(flow);
@@ -228,6 +228,7 @@ public class NetFlowController {
                 long timestamp = System.currentTimeMillis();
 
                 int created = toAdd.size();
+
                 for (SimpleFlow flow : toAdd) {
                     latestFlows.remove(flow);
                     latestFlows.add(flow);
@@ -264,6 +265,9 @@ public class NetFlowController {
                     }
                 }
                 boolean alarm = simpleCumulativeEMWA.put(created);
+                if (alarm) {
+                    device.alarmLed.activate(3);
+                }
                 stampedAlarms.put(timestamp, alarm);
                 stampedCounts.put(timestamp, latestFlows.size());
                 stampedDeltas.put(timestamp, created);

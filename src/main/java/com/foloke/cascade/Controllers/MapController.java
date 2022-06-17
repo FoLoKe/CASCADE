@@ -1,13 +1,11 @@
 package com.foloke.cascade.Controllers;
 
-import com.foloke.cascade.Application;
 import com.foloke.cascade.Camera;
 import com.foloke.cascade.Entities.*;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import org.hibernate.Transaction;
 
 import java.util.*;
 
@@ -36,11 +34,11 @@ public class MapController {
             Rectangle rectangle = touchPoint.object.getHitBox();
             gc.setLineWidth(1.0D);
             gc.setStroke(Color.YELLOW);
-            gc.strokeRect(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
+            gc.strokeRect(rectangle.getX() + 0.5, rectangle.getY() + 0.5, rectangle.getWidth() - 1, rectangle.getHeight() - 1);
 
             if(touchPoint.object instanceof Port) {
                 rectangle = ((Port)touchPoint.object).parent.getHitBox();
-                gc.strokeRect(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
+                gc.strokeRect(rectangle.getX() + 0.5, rectangle.getY() + 0.5, rectangle.getWidth() - 1, rectangle.getHeight() - 1);
             }
         }
 
@@ -67,12 +65,16 @@ public class MapController {
 
     public void addEntity(Entity entity) {
         toAdd.add(entity);
-        if(entity instanceof Device) {
-            Transaction transaction = Application.databaseSession.beginTransaction();
-            Application.databaseSession.persist(entity);
-            Application.databaseSession.flush();
-            transaction.commit();
-        }
+        Random random = new Random();
+        entity.setPosition(camera.x + random.nextInt(30) * camera.scale,
+                -camera.y + random.nextInt(20) * camera.scale);
+
+        //if(entity instanceof Device) {
+        //    Transaction transaction = Application.databaseSession.beginTransaction();
+        //    Application.databaseSession.persist(entity);
+        //    Application.databaseSession.flush();
+        //    transaction.commit();
+        //}
     }
 
     public Device addOrUpdate(String address) {
@@ -232,7 +234,7 @@ public class MapController {
                if (touchPoint.object instanceof Cable.Connector) {
                     ((Cable.Connector)touchPoint.object).disconnect();
                }
-               touchPoint.object.setLocation((float) point2D.getX() - touchPoint.prevX, (float) point2D.getY() - touchPoint.prevY);
+               touchPoint.object.setPosition((float) point2D.getX() - touchPoint.prevX, (float) point2D.getY() - touchPoint.prevY);
             } else {
                 Entity entity = ((Port)touchPoint.object).getObject();
                 if (entity != null) {
@@ -264,7 +266,7 @@ public class MapController {
 
         if(groupRectangle.getWidth() > 20 && groupRectangle.getHeight() > 20) {
             Group group = new Group(this);
-            group.setLocation(groupRectangle.getX(), groupRectangle.getY());
+            group.setPosition(groupRectangle.getX(), groupRectangle.getY());
             group.getHitBox().setWidth(groupRectangle.getWidth());
             group.getHitBox().setHeight(groupRectangle.getHeight());
             for (Entity entity : entityList) {

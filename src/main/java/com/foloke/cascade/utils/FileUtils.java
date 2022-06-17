@@ -49,7 +49,7 @@ public class FileUtils {
             LogUtils.log("saving map " + saveName);
 
             for (Entity entity : mapController.getEntities()) {
-                bufferedWriter.write(entity.getSave());
+                //bufferedWriter.write(entity.getSave());
                 bufferedWriter.newLine();
                 bufferedWriter.flush();
             }
@@ -85,28 +85,28 @@ public class FileUtils {
             while ((line = bufferedReader.readLine()) != null) {
                 String[] params = line.split(" ");
                 if(params[0].equals("DEVICE")) {
-                    lastDevice = new Device(mapController, params);
-                    mapController.addEntity(lastDevice);
-                    grouping.add(lastDevice);
+//                    lastDevice = new Device(mapController, params);
+//                    mapController.addEntity(lastDevice);
+//                    grouping.add(lastDevice);
                 } else if (params[0].equals("PORT") && lastDevice != null) {
-                    Port port = new Port(lastDevice, params);
-                    lastDevice.addPort(port);
-                    ports.add(port);
+//                    Port port = new Port(lastDevice, params);
+//                    lastDevice.addPort(port);
+//                    ports.add(port);
                 } else if (params[0].equals("CABLE")) {
-                    lastCable = new Cable(mapController, params);
-                    mapController.addEntity(lastCable);
+//                    lastCable = new Cable(mapController, params);
+//                    mapController.addEntity(lastCable);
                 } else if (params[0].equals("CONNECTOR") && lastCable != null) {
-                    Cable.Connector connector = new Cable.Connector(lastCable, params);
-                    if(lastCable.connectorA == null) {
-                        lastCable.connectorA = connector;
-                    } else {
-                        lastCable.connectorB = connector;
-                    }
-                    connectors.add(connector);
+//                    Cable.Connector connector = new Cable.Connector(lastCable, params);
+//                    if(lastCable.connectorA == null) {
+//                        lastCable.connectorA = connector;
+//                    } else {
+//                        lastCable.connectorB = connector;
+//                    }
+//                    connectors.add(connector);
                 } else if (params[0].equals("GROUP")) {
-                    Group group = new Group(mapController, params);
-                    mapController.addEntity(group);
-                    grouping.add(group);
+//                    Group group = new Group(mapController, params);
+//                    mapController.addEntity(group);
+//                    grouping.add(group);
                 }
             }
             for (Cable.Connector connector: connectors) {

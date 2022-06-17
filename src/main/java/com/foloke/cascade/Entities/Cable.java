@@ -1,7 +1,9 @@
 package com.foloke.cascade.Entities;
 
+import com.foloke.cascade.Application;
 import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.utils.LogUtils;
+import com.foloke.cascade.utils.Sprite;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -18,19 +20,17 @@ public class Cable extends Entity {
         connectorB = new Connector(this);
     }
 
-    public Cable(MapController mapController, String[] params) {
-        super(mapController, params);
-    }
-
     @Override
     public void render(GraphicsContext gc) {
-        gc.setStroke(Color.BLACK);
-        gc.strokeLine(connectorA.getX() + connectorA.rectangle.getWidth() / 2,
-                connectorA.getY() + connectorA.rectangle.getHeight() / 2,
-                connectorB.getX() + connectorB.rectangle.getWidth() / 2,
-                connectorB.getY() + connectorB.rectangle.getHeight() / 2);
         connectorA.render(gc);
         connectorB.render(gc);
+
+        gc.setLineWidth(1.5f);
+        gc.setStroke(Color.BLACK);
+        gc.strokeLine(connectorA.getX() + connectorA.getHitBox().getWidth() / 2f,
+                connectorA.getY() + connectorA.getHitBox().getHeight() / 2f + 1f,
+                connectorB.getX() + connectorB.getHitBox().getWidth() / 2f,
+                connectorB.getY() + connectorB.getHitBox().getHeight() / 2f + 1f);
     }
 
     @Override
@@ -65,54 +65,34 @@ public class Cable extends Entity {
         }
     }
 
-    @Override
-    public String getSave() {
-        return "CABLE " + super.getSave() +
-                "\n" + connectorA.getSave() +
-                "\n" + connectorB.getSave();
-    }
-
     public static class Connector extends Entity {
         public Port connection;
         private long connectionID;
         private Cable parent;
+        private Sprite sprite;
 
         public Connector(Cable parent) {
             super(parent.mapController);
-            init(parent);
-        }
-
-        public Connector(Cable parent, String[] params) {
-            super(parent.mapController, params);
-            connectionID = Integer.parseInt(params[5]);
+            this.sprite = Sprite.create(Application.spriteSheet, 24, 0, 8, 8, 1);
             init(parent);
         }
 
         private void init(Cable parent) {
             this.parent = parent;
-            rectangle = new Rectangle(5, 5);
+            hitBox = new Rectangle(8, 8);
         }
 
         @Override
         public void render(GraphicsContext gc) {
-            gc.setStroke(Color.BLACK);
-            gc.strokeRect(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
+            sprite.render(gc, getX(), getY());
         }
 
         @Override
         public void tick(long timestamp) {
             if(connection != null) {
-                rectangle.setX(connection.getX());
-                rectangle.setY(connection.getY());
+                hitBox.setX(connection.getX());
+                hitBox.setY(connection.getY());
             }
-        }
-
-        @Override
-        public Entity hit(Point2D point2D) {
-            if(rectangle.contains(point2D)) {
-                return this;
-            }
-            return null;
         }
 
         public void connect(Port connection) {
@@ -140,11 +120,6 @@ public class Cable extends Entity {
             super.destroy();
             disconnect();
             parent.destroy();
-        }
-
-        @Override
-        public String getSave() {
-            return "CONNECTOR " + super.getSave() + " " + connectionID;
         }
 
         public long getConnectionID() {

@@ -23,7 +23,7 @@ import java.net.URL;
 public class Application extends javafx.application.Application {
     public MapController mapController;
     public UIController uiController;
-    public static Image image;
+    public static Image spriteSheet;
     public static Image icon;
     public static URL pingDialogURL;
     public static URL pingOneDialogURL;
@@ -55,7 +55,7 @@ public class Application extends javafx.application.Application {
             LogUtils.log(e.toString());
         }
 
-        databaseSession = HibernateUtil.getSessionFactory().openSession();
+        //databaseSession = HibernateUtil.getSessionFactory().openSession();
 
         Device device = ScanUtils.initLocal(mapController);
         mapController.addEntity(device);
@@ -71,7 +71,7 @@ public class Application extends javafx.application.Application {
     public void init() throws Exception {
         super.init();
 
-        image = new Image("/images/spritesheet.png", 16.0D, 16.0D, false, false);
+        spriteSheet = new Image("/images/spritesheet.png", 0, 0, false, false);
         icon = new Image("/images/icon.png");
 
         this.mapController = new MapController();

@@ -234,8 +234,8 @@ public class UIController {
             MenuItem addCableItem = new MenuItem("Add Cable");
             addCableItem.setOnAction(event -> {
                 Cable cable = new Cable(mapController);
-                cable.connectorA.setLocation(mapController.getTouchPointX(), mapController.getTouchPointY());
-                cable.connectorB.setLocation(mapController.getTouchPointX() + 32, mapController.getTouchPointY());
+                cable.connectorA.setPosition(mapController.getTouchPointX(), mapController.getTouchPointY());
+                cable.connectorB.setPosition(mapController.getTouchPointX() + 32, mapController.getTouchPointY());
                 mapController.addEntity(cable);
             });
 

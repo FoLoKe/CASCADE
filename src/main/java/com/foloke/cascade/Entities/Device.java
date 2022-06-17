@@ -2,17 +2,18 @@ package com.foloke.cascade.Entities;
 
 import com.foloke.cascade.Application;
 import com.foloke.cascade.Controllers.MapController;
+import com.foloke.cascade.utils.Led;
 import com.foloke.cascade.utils.LogUtils;
+import com.foloke.cascade.utils.PortGroup;
+import com.foloke.cascade.utils.Sprite;
 import jakarta.persistence.Column;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-import org.apache.commons.net.util.SubnetUtils;
 import org.snmp4j.CommunityTarget;
 import org.snmp4j.Target;
 import org.snmp4j.UserTarget;
@@ -28,17 +29,18 @@ import org.snmp4j.smi.UdpAddress;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 @jakarta.persistence.Entity
 @Table(name = "device")
 public class Device extends Entity {
+    public Led flowLed = new Led(this, Color.BLUE, 11, 7, 1, 1);
+    public Led alarmLed = new Led(this, Color.RED, 12, 7, 1, 1);
+
     @Transient
-    Image image = Application.image;
-    @Transient
-    List<Port> ports = Collections.synchronizedList(new ArrayList<>());
+    Sprite sprite;
+
+    PortGroup ports = new PortGroup(mapController, this);
 
     @Id
     @Column(name = "primaryIp")
@@ -66,8 +68,15 @@ public class Device extends Entity {
     String snmpEncryptionPass = "12345678";
     int securityLevel = SecurityLevel.NOAUTH_NOPRIV;
 
+    public Device(MapController mapController) {
+        super(mapController);
+    }
+
     public Device(MapController mapController, String defaultIp) {
         super(mapController);
+        sprite = Sprite.create(Application.spriteSheet, 0, 0, 16, 16, 1);
+        children.add(ports);
+        ports.setLocalPosition(0, 16);
 
         try {
             this.primaryIp = ByteBuffer.wrap(InetAddress.getByName(defaultIp).getAddress()).getInt();
@@ -81,66 +90,28 @@ public class Device extends Entity {
         LogUtils.logToFile(name, "device created");
     }
 
-    public Device(MapController mapController, String[] params) {
-        super(mapController, params);
-        snmpAddress = params[5];
-        snmpPort = params[6];
-        snmpVersion = Integer.parseInt(params[7]);
-        snmpTimeout = Integer.parseInt(params[8]);
-        snmpName = params[9];
-        snmpPassword = params[10];
-        authProtocol = new OID(params[11]);
-        encryptionProtocol = new OID(params[12]);
-        snmpEncryptionPass = params[13];
-        securityLevel = Integer.parseInt(params[14]);
-        updateSnmpConfiguration(snmpAddress);
-
-        primaryIp = Integer.parseInt(params[15]);
-
-        setLocation(Double.parseDouble(params[3]), Double.parseDouble(params[4]));
-
-        LogUtils.logToFile(name, "device loaded");
-    }
-
     @Override
-    public void render(GraphicsContext context) {
-        context.drawImage(image, rectangle.getX(), rectangle.getY());
+    public void render(GraphicsContext gc) {
+        sprite.render(gc, getX(), getY());
+        flowLed.render(gc);
+        alarmLed.render(gc);
+
         if(showName) {
-            context.setFill(Color.BLACK);
-            context.setFont(new Font(4));
-            context.fillText(name, rectangle.getX(), rectangle.getY());
+            gc.setFill(Color.BLACK);
+            gc.setFont(new Font(4));
+            gc.fillText(name, getX(), getY());
         }
-        for (Port port : ports) {
-            port.render(context);
-        }
+
+        ports.render(gc);
     }
 
     @Override
     public void tick(long timestamp) {
         super.tick(timestamp);
-
-        Iterator<Port> portIterator = ports.iterator();
-        while (portIterator.hasNext()) {
-            Port port = portIterator.next();
-            port.tick(timestamp);
-            if(port.destroyed) {
-                port.cleanup();
-                portIterator.remove();
-                recalculatePortsPositions();
-            }
-        }
-    }
-
-    private void recalculatePortsPositions() {
-        int position = 0;
-        for (Port port : ports) {
-            port.position = position++;
-            port.updatePosition();
-        }
     }
 
     public Port addPort(String address) {
-        Port port = new Port(this, address, ports.size());
+        Port port = new Port(this, address);
 
         addPort(port);
         LogUtils.logToFile(name, port.name + " : " + port.primaryAddress + " port added");
@@ -151,7 +122,7 @@ public class Device extends Entity {
     public void addPort(Port port) {
         ports.add(port);
 
-        if (ports.size() == 1) {
+        if (ports.children.size() == 1) {
             updateSnmpConfiguration(port.primaryAddress);
 
             LogUtils.logToFile(name, port.name + " is only and has sat SNMP defaults");
@@ -193,79 +164,34 @@ public class Device extends Entity {
     }
 
     @Override
-    public void setLocation(double x, double y) {
-        super.setLocation(x, y);
-        for (Port port : ports) {
-            port.updatePosition();
-        }
+    public void setPosition(double x, double y) {
+        super.setPosition(x, y);
     }
 
     public Port pickPort(Point2D point2D) {
-        for (Port port : ports) {
-            if (port.rectangle.contains(point2D.getX(), point2D.getY())) {
-                LogUtils.logToFile(name, "port picked " + port.name + " : " + port.primaryAddress);
-                return port;
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public Entity hit(Point2D point2D) {
-        if (rectangle.contains(point2D)) {
-            return this;
-        }
-
-        return null;
+        return (Port) ports.hit(point2D);
     }
 
     public List<Port> getPorts() {
+        List<Port> ports = new ArrayList<>();
+        for (Entity child : children) {
+            if (child instanceof Port)
+                ports.add((Port)child);
+        }
         return ports;
     }
 
     public Port addOrUpdatePort(Port port) {
-        for (Port existingPort : ports) {
-            if (port.index == existingPort.index ||
-                    existingPort.addType == Port.AddType.SNMP ||
-                    existingPort.addType == Port.AddType.AUTO) {
-                if (existingPort.mac.length() > 0 && existingPort.mac.equals(port.mac)) {
-                    updatePort(existingPort, port);
-                    LogUtils.logToFile(name, "port found and updated " + port.name + " : " + port.primaryAddress);
-                    return existingPort;
-                } else if (existingPort.primaryAddress.length() > 0 && port.primaryAddress.length() > 0) {
-                    SubnetUtils subnetUtils = new SubnetUtils(existingPort.primaryAddress + "/" + existingPort.mask);
-                    if (existingPort.primaryAddress.equals(port.primaryAddress) || subnetUtils.getInfo().isInRange(port.primaryAddress)) {
-                        updatePort(existingPort, port);
-                        LogUtils.logToFile(name, "port found and updated " + port.name + " : " + port.primaryAddress);
-                        return existingPort;
-                    }
-                }
-            }
-        }
-
-        port.position = ports.size();
-        addPort(port);
-        port.updatePosition();
-        LogUtils.logToFile(name, "port not found and added " + port.name + " : " + port.primaryAddress);
+        ports.addOrUpdatePort(port);
 
         return port;
-    }
-
-    private void updatePort(Port existingPort, Port port) {
-        existingPort.addType = Port.AddType.SNMP;
-        existingPort.name = port.name;
-        existingPort.primaryAddress = port.primaryAddress;
-        existingPort.mac = port.mac;
-
-        LogUtils.logToFile(name, existingPort + " port updated");
     }
 
     @Override
     public void destroy() {
         super.destroy();
-        for (Port port : ports) {
-            port.destroy();
-        }
+        ports.destroy();
+
         LogUtils.logToFile(name, this + " destroyed");
     }
 
@@ -350,38 +276,8 @@ public class Device extends Entity {
     }
 
     public Port findPort(String address) {
-        for (Port port : ports) {
-            for(String portAddress : port.addresses) {
-                if (portAddress.equals(address))
-                    return port;
-            }
-        }
-
-        return ports.get(0);
+        return ports.findPort(address);
     }
 
-    @Override
-    public String getSave() {
-        String saveString = "DEVICE " + super.getSave() +
-                " " + snmpAddress +
-                " " + snmpPort +
-                " " + snmpVersion +
-                " " + snmpTimeout +
-                " " + snmpName +
-                " " + snmpPassword +
-                " " + authProtocol +
-                " " + encryptionProtocol +
-                " " + snmpEncryptionPass +
-                " " + securityLevel +
-                " " + primaryIp;
-
-        StringBuilder stringBuilder = new StringBuilder();
-
-        for (Port port: ports) {
-            stringBuilder.append("\n").append(port.getSave());
-        }
-        saveString += stringBuilder.toString();
-
-        return saveString;
-    }
+    //TODO: MAKE IT JSON OR DATABASE SAVE
 }

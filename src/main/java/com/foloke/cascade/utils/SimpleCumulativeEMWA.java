@@ -48,7 +48,7 @@ public class SimpleCumulativeEMWA {
 
         System.out.println(St + " limit: " + sumLimit);
         if (St > sumLimit) {
-            System.out.println("LIMIT! by Cumul");
+            System.out.println("LIMIT! by CuSum");
         }
         St_1 = St;
         et_2 = et_1;

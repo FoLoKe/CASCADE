@@ -17,21 +17,6 @@ public class Group extends Entity {
         init();
     }
 
-    public Group(MapController mapController, String[] params) {
-        super(mapController, params);
-        rectangle.setWidth(Double.parseDouble(params[5]));
-        rectangle.setHeight(Double.parseDouble(params[6]));
-        rectangle.setX(Double.parseDouble(params[3]));
-        rectangle.setY(Double.parseDouble(params[4]));
-
-        if(params.length == 8) {
-            ids = params[7];
-        } else {
-            ids = "";
-        }
-        init();
-    }
-
     private void init() {
         entities = new ArrayList<>();
     }
@@ -42,8 +27,8 @@ public class Group extends Entity {
         gc.setLineWidth(1d);
         gc.setFill(Color.BLACK);
         gc.setFont(new Font("sans", 5));
-        gc.strokeRect(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
-        gc.fillText(name, rectangle.getX(), rectangle.getY() + 5);
+        gc.strokeRect(hitBox.getX(), hitBox.getY(), hitBox.getWidth(), hitBox.getHeight());
+        gc.fillText(name, hitBox.getX(), hitBox.getY() + 5);
     }
 
     @Override
@@ -56,7 +41,7 @@ public class Group extends Entity {
             }
         }
 
-        if (rectangle.contains(point2D)) {
+        if (hitBox.contains(point2D)) {
             return this;
         }
 
@@ -64,12 +49,12 @@ public class Group extends Entity {
     }
 
     @Override
-    public void setLocation(double x, double y) {
-        Point2D offset = new Point2D(x - rectangle.getX(), y - rectangle.getY());
+    public void setPosition(double x, double y) {
+        Point2D offset = new Point2D(x - hitBox.getX(), y - hitBox.getY());
         for(Entity entity : entities) {
-            entity.move(offset);
+            entity.moveBy(offset);
         }
-        super.setLocation(x, y);
+        super.setPosition(x, y);
     }
 
     public void addToGroup(Entity entity) {
@@ -102,22 +87,5 @@ public class Group extends Entity {
         }
 
         entities.clear();
-    }
-
-    @Override
-    public String getSave() {
-        String saveString = "GROUP " + super.getSave()
-                + " " + rectangle.getWidth()
-                + " " + rectangle.getHeight();
-
-        StringBuilder stringBuilder = new StringBuilder();
-
-        for (Entity entity: entities) {
-            stringBuilder.append(entity.getID()).append(".");
-        }
-        stringBuilder.replace(stringBuilder.lastIndexOf("."), stringBuilder.lastIndexOf("."), "");
-        saveString += " " + stringBuilder;
-
-        return saveString;
     }
 }

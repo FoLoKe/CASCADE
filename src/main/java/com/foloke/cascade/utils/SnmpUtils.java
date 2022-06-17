@@ -75,7 +75,7 @@ public class SnmpUtils {
             }
 
             for (Map.Entry<OID, String> entry : interfacesInfo.entrySet()) {
-                Port port = new Port(device, entry.getValue(), 0);
+                Port port = new Port(device, entry.getValue());
                 port.index = Integer.parseInt(entry.getValue());
                 port.addType = Port.AddType.SNMP;
 
@@ -118,7 +118,7 @@ public class SnmpUtils {
 
                             if (mac != null) {
                                 Device leadingDevice = new Device(device.mapController, "127.0.0.1");
-                                leadingPort = new Port(leadingDevice, address, 0);
+                                leadingPort = new Port(leadingDevice, address);
                                 leadingPort = leadingDevice.addOrUpdatePort(leadingPort);
                                 leadingPort.mac = mac;
                                 device.mapController.addEntity(leadingDevice);

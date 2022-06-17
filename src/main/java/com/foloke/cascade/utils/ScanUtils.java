@@ -383,7 +383,7 @@ public class ScanUtils {
                 String address = realInterfaces.get(0).getInterfaceAddresses().get(0).getAddress().getHostAddress();
                 entity = new Device(mapController, address);
                 for (int i = 1; i < realInterfaces.size(); i++) {
-                    entity.addPort(new Port(entity, realInterfaces.get(i), i));
+                    entity.addPort(new Port(entity, realInterfaces.get(i)));
                 }
             } else {
                 entity = new Device(mapController, "127.0.0.1");

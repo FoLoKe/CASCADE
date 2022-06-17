@@ -8,7 +8,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.shape.Rectangle;
 
 import java.util.ArrayList;
-
+import java.util.List;
 
 public abstract class Entity {
     public long ID;
@@ -20,28 +20,18 @@ public abstract class Entity {
 
     protected String name = "name";
 
-    protected  ArrayList<Timer> timers;
+    protected  ArrayList<Timer> timers = new ArrayList<>();;
 
-    protected Rectangle rectangle;
+    public Rectangle hitBox = new Rectangle(16, 16);
     public MapController mapController;
+
+    public Entity parent;
+    public List<Entity> children = new ArrayList<>();
 
     public Entity(MapController mapController) {
         ID = counter;
         name += counter++;
-
-        init(mapController);
-    }
-
-    public Entity(MapController mapController, String[] params) {
-        ID = Integer.parseInt(params[1]);
-        name = params[2];
-        init(mapController);
-    }
-
-    private void init(MapController mapController) {
-        this.timers = new ArrayList<>();
         this.mapController = mapController;
-        this.rectangle = new Rectangle(16, 16);
     }
 
     public abstract void render(GraphicsContext var1);
@@ -52,31 +42,64 @@ public abstract class Entity {
         }
     }
 
-    public void setLocation(double x, double y) {
-        rectangle.setX(x);
-        rectangle.setY(y);
+    private Point2D local = Point2D.ZERO;
+
+    public void setPosition(double x, double y) {
+        if (parent != null) {
+            System.out.println("child: " + (x + local.getX()) + " " + (y + local.getY()));
+            hitBox.setX(x + local.getX());
+            hitBox.setY(y + local.getY());
+        } else {
+            System.out.println("parent: " + x + " " + y);
+            hitBox.setX(x);
+            hitBox.setY(y);
+        }
+
+        for (Entity child : children) {
+            System.out.println("child turn");
+            child.setPosition(x, y);
+        }
     }
 
-    public void move(Point2D point2D) {
-        setLocation(rectangle.getX() + point2D.getX(),rectangle.getY() + point2D.getY());
+    public void setLocalPosition(double x, double y) {
+        if(parent != null) {
+            local = new Point2D(x, y);
+        }
+
+        setPosition(getX(), getY());
+    }
+
+    public void moveBy(Point2D point2D) {
+        setPosition(hitBox.getX() + point2D.getX(), hitBox.getY() + point2D.getY());
     }
 
     public double getX() {
-        return rectangle.getX();
+        return hitBox.getX();
     }
 
     public double getY() {
-        return rectangle.getY();
+        return hitBox.getY();
     }
 
-    public abstract Entity hit(Point2D point2D);
+    public Entity hit(Point2D hitPoint) {
+        if (hitBox.contains(hitPoint)) {
+            return this;
+        }
+        for (Entity child : children) {
+            Entity entity = child.hit(hitPoint);
+            if(entity != null) {
+                return entity;
+            }
+        }
+        return null;
+    }
 
     public void addTask(Timer timer) {
         timers.add(timer);
     }
 
     public Rectangle getHitBox() {
-        return rectangle;
+        return hitBox;
     }
 
     public void destroy() {
@@ -94,21 +117,17 @@ public abstract class Entity {
         this.name = name;
     }
 
-    public void setID(long ID) {
-        this.ID = ID;
-    }
-
     public long getID() {
         return ID;
     }
 
-    public void cleanup(){
+    public void cleanup() {
 
     }
 
-    public String getSave() {
-        return ID + " " + name
-                + " " + rectangle.getX()
-                + " " + rectangle.getY();
+    public void add(Entity child) {
+        children.add(child);
+        child.parent = this;
+        child.local.add(getX() - child.getX(), getY() - child.getY());
     }
 }

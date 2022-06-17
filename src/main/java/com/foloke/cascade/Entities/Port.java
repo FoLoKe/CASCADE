@@ -1,8 +1,7 @@
 package com.foloke.cascade.Entities;
 
-import com.foloke.cascade.utils.LogUtils;
-import com.foloke.cascade.utils.ScanUtils;
-import com.foloke.cascade.utils.Timer;
+import com.foloke.cascade.Application;
+import com.foloke.cascade.utils.*;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -10,7 +9,6 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import org.apache.commons.net.util.SubnetUtils;
 
-import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -19,12 +17,14 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Port extends Entity {
+    Sprite sprite;
+    Led led = new Led(this, Color.RED, 2.5, 1.25, 3, 0.75);
+
     public enum AddType {AUTO, MANUAL, SNMP}
     public enum State {UP, DOWN, TESTING, UNKNOWN, DORMANT, NOT_PRESENT, LOWER_LAYER_DOWN}
     public Device parent;
     public State state = State.DOWN;
     public boolean pinging;
-    int position;
 
     public int index;
     public String mac;
@@ -35,8 +35,14 @@ public class Port extends Entity {
     public ArrayList<Cable.Connector> connectors = new ArrayList<>();
     public AddType addType;
 
-    public Port(Device parent, NetworkInterface networkInterface, int position) {
+    private Port(Device parent) {
         super(parent.mapController);
+        this.sprite = Sprite.create(Application.spriteSheet, 16, 0, 8, 8, 1);
+        led.activate();
+    }
+
+    public Port(Device parent, NetworkInterface networkInterface) {
+        this(parent);
         try {
             byte[] bytes = networkInterface.getHardwareAddress();
             StringBuilder sb = new StringBuilder();
@@ -55,39 +61,24 @@ public class Port extends Entity {
         }
 
         this.name = "auto_added";
-        init(parent, position);
+        init(parent);
     }
 
-    public Port(Device parent, String address, int position) {
-        super(parent.mapController);
-        rectangle = new Rectangle(8, 8);
+    public Port(Device parent, String address) {
+        this(parent);
+        hitBox = new Rectangle(8, 8);
         this.mac = "none";
         this.primaryAddress = address;
         this.addresses.add(address);
         this.name = "auto_added";
-        init(parent, position);
+        init(parent);
     }
 
-    public Port(Device parent, String[] params) {
-        super(parent.mapController, params);
-        init(parent, position = Integer.parseInt(params[7]));
-        state = State.valueOf(params[5]);
-        pinging = Boolean.parseBoolean(params[6]);
-        mac = params[8];
-        String addressesLine = params[9];
-        String[] addressesArray = addressesLine.split("&");
-        addresses = List.of(addressesArray);
-        mask = Integer.parseInt(params[10]);
-        index = Integer.parseInt(params[11]);
-        addType = AddType.valueOf(params[12]);
-    }
-
-    private void init(Device parent, int position) {
-        this.position = position;
+    private void init(Device parent) {
         this.parent = parent;
         this.addType = AddType.AUTO;
 
-        this.rectangle = new Rectangle(8, 8);
+        this.hitBox = new Rectangle(8, 8);
         addTask(new Timer(1000000000) {
             @Override
             public void execute() {
@@ -96,62 +87,62 @@ public class Port extends Entity {
                 }
             }
         });
-
-        updatePosition();
     }
 
-    public void updatePosition() {
-        rectangle.setX(parent.getX() + position * rectangle.getWidth());
-        rectangle.setY(parent.getY() + parent.getHitBox().getHeight());
-    }
-
-    public void render(GraphicsContext graphicsContext) {
+    public void render(GraphicsContext gc) {
+        Color stateColor;
         switch (state) {
             case UP:
-                graphicsContext.setStroke(Color.GREEN);
-                break;
-            case DOWN:
-                graphicsContext.setStroke(Color.RED);
+                stateColor = Color.GREEN;
                 break;
             case TESTING:
-                graphicsContext.setStroke(Color.YELLOW);
+                stateColor = Color.YELLOW;
                 break;
             case UNKNOWN:
-                graphicsContext.setStroke(Color.BLACK);
+                stateColor = Color.BLACK;
                 break;
             case NOT_PRESENT:
-                graphicsContext.setStroke(Color.GRAY);
+                stateColor = Color.GRAY;
                 break;
             case DORMANT:
-                graphicsContext.setStroke(Color.CYAN);
+                stateColor = Color.CYAN;
                 break;
             case LOWER_LAYER_DOWN:
-                graphicsContext.setStroke(Color.BLUE);
+                stateColor = Color.BLUE;
                 break;
+            default:
+                stateColor = Color.RED;
         }
 
-        graphicsContext.setLineWidth(0.2f);
-        graphicsContext.strokeRect(rectangle.getX(),
-                rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
+        sprite.setPosition(hitBox.getX(), hitBox.getY());
+        sprite.render(gc);
 
+        led.setColor(stateColor);
+        led.render(gc);
 
         if (selected) {
-            graphicsContext.setStroke(Color.BLACK);
-            graphicsContext.setFont(new Font("sans", 2));
-            graphicsContext.strokeText(name, rectangle.getX(),
-                    rectangle.getY() + rectangle.getHeight() + 4);
-            graphicsContext.strokeText(mac, rectangle.getX(),
-                    rectangle.getY() + rectangle.getHeight() + 8);
+            double offsetX = hitBox.getX();
+            double offsetY = hitBox.getY() + hitBox.getHeight();
+            gc.setFill(Color.BLACK);
+            gc.setFont(new Font("sans", 3));
+            gc.fillText(name, offsetX,
+                    offsetY + 4);
+            gc.fillText(mac, offsetX,
+                    offsetY + 8);
+
+            gc.fillText(primaryAddress, offsetX,
+                    offsetY + 12);
+
             for (int i = 0; i < addresses.size(); i++) {
-                graphicsContext.strokeText(addresses.get(i), rectangle.getX(),
-                        rectangle.getY() + rectangle.getHeight() + 12 + 4 * i);
+                gc.fillText(addresses.get(i), offsetX,
+                        offsetY + 16 + 4 * i);
             }
         }
     }
 
     @Override
     public Entity hit(Point2D point2D) {
-        if (rectangle.contains(point2D)) {
+        if (hitBox.contains(point2D)) {
             if(connectors.size() > 0) {
                 if(connectors.get(0).getHitBox().contains(point2D)) {
                     return connectors.get(0);
@@ -197,7 +188,7 @@ public class Port extends Entity {
         Iterator<Cable.Connector> iterator = connectors.iterator();
         while (iterator.hasNext()) {
             Cable.Connector connector = iterator.next();
-            connector.connection = null;
+            connector.destroy();
             iterator.remove();
         }
     }
@@ -226,24 +217,6 @@ public class Port extends Entity {
     public void setState(int i) {
         State[] stateList = State.values();
         state = stateList[i - 1];
-    }
-
-    @Override
-    public String getSave() {
-        StringBuilder addressesSave = new StringBuilder();
-        addressesSave.append(addresses.get(0));
-        for (int i = 1; i < addresses.size(); i++) {
-            addressesSave.append("&").append(addresses.get(i));
-        }
-        return "PORT " + super.getSave()
-                + " " + state.toString()
-                + " " + pinging
-                + " " + position
-                + " " + mac
-                + " " + addressesSave
-                + " " + mask
-                + " " + index
-                + " " + addType;
     }
 }
 
