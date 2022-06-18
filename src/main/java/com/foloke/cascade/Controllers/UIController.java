@@ -82,7 +82,7 @@ public class UIController {
             this.canvas.setHeight(newValue.doubleValue());
         });
 
-        this.canvas.setOnMouseClicked(mouseEvent -> {
+        this.canvas.setOnMousePressed(mouseEvent -> {
             objectContextMenu.hide();
             //noneObjectContextMenu.hide();
             application.updater.mouseInput(mouseEvent);

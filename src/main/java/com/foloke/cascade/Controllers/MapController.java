@@ -1,13 +1,9 @@
 package com.foloke.cascade.Controllers;
 
-import com.foloke.cascade.Camera;
 import com.foloke.cascade.Entities.*;
-import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-
-import java.util.*;
 
 public class MapController {
     //private final Map<Integer, Device> devices = new HashMap<>();
@@ -291,10 +287,6 @@ public class MapController {
     public double getTouchPointY() {
         return touchPoint.prevY;
     }
-
-//    public List<Entity> getEntities() {
-//        return entityList;
-//    }
 
     public void deselect() {
         if(touchPoint.object != null) {

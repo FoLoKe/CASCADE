@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.utils.ImmutableArray;
 import com.foloke.cascade.Components.CollisionComponent;
 import com.foloke.cascade.Components.Tags.SelectedTag;
+import com.foloke.cascade.utils.QuadCollision;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -30,9 +31,9 @@ public class SelectionRendererSystem extends EntitySystem {
         gc.setLineWidth(1);
         entities.forEach((entity) -> {
             CollisionComponent collisionComponent = cm.get(entity);
-            Rectangle rectangle = collisionComponent.hitBox;
+            QuadCollision quad = collisionComponent.hitBox;
 
-            gc.strokeRect(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
+            gc.strokeRect(quad.getX(), quad.getY(), quad.getWidth(), quad.getHeight());
         });
     }
 }

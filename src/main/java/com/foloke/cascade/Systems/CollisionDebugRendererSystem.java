@@ -3,16 +3,16 @@ package com.foloke.cascade.Systems;
 import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.utils.ImmutableArray;
 import com.foloke.cascade.Components.CollisionComponent;
+import com.foloke.cascade.utils.QuadCollision;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 
 public class CollisionDebugRendererSystem extends EntitySystem {
     private ImmutableArray<Entity> entities;
 
     private final ComponentMapper<CollisionComponent> cc = ComponentMapper.getFor(CollisionComponent.class);
 
-    private GraphicsContext gc;
+    private final GraphicsContext gc;
 
     public CollisionDebugRendererSystem(GraphicsContext graphicsContext) {
         this.gc =graphicsContext;
@@ -30,8 +30,10 @@ public class CollisionDebugRendererSystem extends EntitySystem {
 
         for (Entity entity : entities) {
             CollisionComponent component = cc.get(entity);
-            Rectangle rectangle = component.hitBox;
-            gc.strokeRect(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
+            QuadCollision quad = component.hitBox;
+
+            System.out.println(quad.getX() + " " + quad.getY() + " " + quad.getWidth() + " " + quad.getHeight());
+            gc.strokeRect(quad.getX(), quad.getY(), quad.getWidth(), quad.getHeight());
         }
     }
 }

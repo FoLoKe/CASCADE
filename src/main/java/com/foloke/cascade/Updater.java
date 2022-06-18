@@ -5,6 +5,7 @@ import com.badlogic.ashley.core.Entity;
 import com.foloke.cascade.Components.CameraComponent;
 import com.foloke.cascade.Components.MouseInputComponent;
 import com.foloke.cascade.Components.Tags.MainCameraTag;
+import com.foloke.cascade.Entities.Camera;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Systems.*;
 import javafx.animation.AnimationTimer;
@@ -34,16 +35,15 @@ public class Updater extends AnimationTimer {
 
         //ECS
         engine = new Engine();
-        engine.addSystem(new CameraSystem(gc));
+        engine.addSystem(new CameraSystem());
         engine.addSystem(new SpriteRenderSystem(gc));
         engine.addSystem(new MouseInputSystem());
         engine.addSystem(new SelectionRendererSystem(gc));
         engine.addSystem(new CollisionDebugRendererSystem(gc));
 
-        Entity camera = new Entity();
-        camera.add(new CameraComponent(0, 0, 4));
-        camera.add(new MainCameraTag());
-        camera.add(mouseInputComponent);
+        engine.addSystem(new MovementSystem());
+
+        Entity camera = new Camera(gc, mouseInputComponent);
         engine.addEntity(camera);
 
         engine.addEntity(Device.instance());

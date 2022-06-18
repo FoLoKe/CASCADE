@@ -1,8 +1,8 @@
 package com.foloke.cascade.Components;
 
 import com.badlogic.ashley.core.Component;
-import javafx.scene.shape.Rectangle;
+import com.foloke.cascade.utils.QuadCollision;
 
 public class CollisionComponent implements Component {
-    public Rectangle hitBox = new Rectangle(16, 16);
+    public QuadCollision hitBox = new QuadCollision(16, 16);
 }
