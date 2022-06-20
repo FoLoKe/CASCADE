@@ -46,11 +46,9 @@ public abstract class Entity {
 
     public void setPosition(double x, double y) {
         if (parent != null) {
-            System.out.println("child: " + (x + local.getX()) + " " + (y + local.getY()));
             hitBox.setX(x + local.getX());
             hitBox.setY(y + local.getY());
         } else {
-            System.out.println("parent: " + x + " " + y);
             hitBox.setX(x);
             hitBox.setY(y);
         }

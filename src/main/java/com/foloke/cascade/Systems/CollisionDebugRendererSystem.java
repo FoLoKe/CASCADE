@@ -32,7 +32,6 @@ public class CollisionDebugRendererSystem extends EntitySystem {
             CollisionComponent component = cc.get(entity);
             QuadCollision quad = component.hitBox;
 
-            System.out.println(quad.getX() + " " + quad.getY() + " " + quad.getWidth() + " " + quad.getHeight());
             gc.strokeRect(quad.getX(), quad.getY(), quad.getWidth(), quad.getHeight());
         }
     }

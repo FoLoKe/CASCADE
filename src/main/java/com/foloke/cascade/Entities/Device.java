@@ -282,9 +282,9 @@ public class Device extends Entity {
 
     //TODO: MAKE IT JSON OR DATABASE SAVE
 
-    public static com.badlogic.ashley.core.Entity instance() {
+    public static com.badlogic.ashley.core.Entity instance(double x, double y) {
         com.badlogic.ashley.core.Entity device = new com.badlogic.ashley.core.Entity();
-        device.add(new PositionComponent());
+        device.add(new PositionComponent(x, y));
         device.add(new VelocityComponent());
         device.add(new SpriteComponent(Sprite.create(Application.spriteSheet, 0, 0, 16, 16, 1)));
         device.add(new CollisionComponent());

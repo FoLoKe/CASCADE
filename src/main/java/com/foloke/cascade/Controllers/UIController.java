@@ -4,7 +4,6 @@ import com.foloke.cascade.Application;
 import com.foloke.cascade.Entities.Cable;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Entity;
-import com.foloke.cascade.Entities.Port;
 import com.foloke.cascade.utils.FileUtils;
 import com.foloke.cascade.utils.LogUtils;
 import com.foloke.cascade.utils.SnmpUtils;
@@ -19,7 +18,6 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -60,7 +58,7 @@ public class UIController {
     private TableColumn<Property, String> valueColumn;
 
     private final Application application;
-    private ObjectContextMenu objectContextMenu;
+    //private s.ObjectContextMenu objectContextMenu;
     private NoneObjectContextMenu noneObjectContextMenu;
 
     public UIController(Application application) {
@@ -83,8 +81,6 @@ public class UIController {
         });
 
         this.canvas.setOnMousePressed(mouseEvent -> {
-            objectContextMenu.hide();
-            //noneObjectContextMenu.hide();
             application.updater.mouseInput(mouseEvent);
         });
 
@@ -101,107 +97,20 @@ public class UIController {
         propertyColumn.setCellValueFactory(new PropertyValueFactory<>("property"));
         valueColumn.setCellValueFactory(new PropertyValueFactory<>("value"));
 
-        objectContextMenu = new ObjectContextMenu();
+        //objectContextMenu = new s.ObjectContextMenu();
         //noneObjectContextMenu = new NoneObjectContextMenu(mapController);
 
-        canvas.setOnContextMenuRequested(event -> {
-            // TODO: callback from
+        //NOPE this isn't working well (any dx or dy)
+        //canvas.setOnContextMenuRequested(event -> {
+            //System.out.println("context");
 //            Entity entity = mapController.hit(event.getX(), event.getY());
 //            if (entity != null) {
-//                objectContextMenu.update(entity);
+                //objectContextMenu.update(entity);
 //                objectContextMenu.show(canvas, event.getScreenX(), event.getScreenY());
 //            } else {
 //                noneObjectContextMenu.show(canvas, event.getScreenX(), event.getScreenY());
 //            }
-        });
-    }
-
-    private class ObjectContextMenu extends ContextMenu {
-        Entity entity;
-
-        public ObjectContextMenu() {
-            setAutoHide(true);
-        }
-
-        public void update(Entity entity) {
-            this.entity = entity;
-            getItems().clear();
-
-            ParamDialogController paramDialogController = new ParamDialogController();
-            if (entity instanceof Port) {
-                CheckMenuItem checkMenuItem = new CheckMenuItem("Check status");
-                checkMenuItem.setSelected(((Port) entity).pinging);
-                checkMenuItem.setOnAction(event -> ((Port) entity).pinging = checkMenuItem.isSelected());
-                getItems().add(checkMenuItem);
-
-                MenuItem ipItem = new MenuItem("Change IP");
-                ipItem.setOnAction(event -> {
-                    paramDialogController.setName("IP address");
-                    paramDialogController.setValue(((Port)entity).primaryAddress);
-                    paramDialogController.setEvent(event1 -> {
-                        ((Port)entity).primaryAddress = paramDialogController.getValue();
-                        paramDialogController.close(event1);
-                    });
-                    UIController.openDialog(paramDialogController, Application.paramDialogURL);
-                });
-                getItems().add(ipItem);
-
-                MenuItem macItem = new MenuItem("Chang Mac");
-                macItem.setOnAction(event -> {
-                    paramDialogController.setName("Mac address");
-                    paramDialogController.setValue(((Port)entity).mac);
-                    paramDialogController.setEvent(event1 -> {
-                        ((Port)entity).mac = paramDialogController.getValue();
-                        paramDialogController.close(event1);
-                    });
-                    UIController.openDialog(paramDialogController, Application.paramDialogURL);
-                });
-                getItems().add(macItem);
-
-            } else if (entity instanceof Device) {
-                MenuItem snmpMenuItem = new MenuItem("SNMP settings");
-                snmpMenuItem.setOnAction(event -> UIController.openDialog(new SNMPSettingsDialogController((Device) entity), Application.snmpDialogURL));
-
-                MenuItem updateItem = new MenuItem("Update by SNMP");
-                updateItem.setOnAction(event -> UIController.this.getProps(entity));
-
-                MenuItem addPort = new MenuItem("Add new Port");
-                addPort.setOnAction(event -> {
-                    Port port = ((Device) entity).addPort("");
-                    port.addType = Port.AddType.MANUAL;
-                });
-
-                MenuItem openNetFlow = new MenuItem("NetFlow");
-                openNetFlow.setOnAction(event -> UIController.openDialog(new NetFlowDialogController((Device) entity), Application.netflowURL));
-
-                CheckMenuItem showNameItem = new CheckMenuItem("Show name");
-                showNameItem.setSelected(((Device)entity).showName);
-                showNameItem.setOnAction(event -> ((Device) entity).showName = showNameItem.isSelected());
-
-                getItems().addAll(showNameItem, snmpMenuItem, updateItem, addPort, openNetFlow);
-            }
-
-            MenuItem deleteItem = new MenuItem("Delete");
-            deleteItem.setOnAction(event -> {
-                entity.destroy();
-                //entity.mapController.pick(-1, -1);
-            });
-
-
-
-            MenuItem renameItem = new MenuItem("Rename");
-            renameItem.setOnAction(event -> {
-                paramDialogController.setName("Name");
-                paramDialogController.setValue(entity.getName());
-                paramDialogController.setEvent(event1 -> {
-                    entity.setName(paramDialogController.getValue());
-                    paramDialogController.close(event1);
-                });
-                UIController.openDialog(paramDialogController, Application.paramDialogURL);
-            });
-
-            getItems().addAll(renameItem, deleteItem);
-        }
+//        });
     }
 
     private static class NoneObjectContextMenu extends ContextMenu {
@@ -212,13 +121,13 @@ public class UIController {
             setAutoHide(true);
 
             MenuItem pingItem = new MenuItem("Ping scan");
-            pingItem.setOnAction(event -> UIController.openDialog(new PingDialogController(mapController), Application.pingDialogURL));
+            //pingItem.setOnAction(event -> UIController.openDialog(new PingDialogController(mapController), Application.pingDialogURL));
 
             MenuItem pingOneItem = new MenuItem("Ping and add one");
-            pingOneItem.setOnAction(event -> UIController.openDialog(new PingOneDialogController(mapController), Application.pingOneDialogURL));
+            //pingOneItem.setOnAction(event -> UIController.openDialog(new PingOneDialogController(mapController), Application.pingOneDialogURL));
 
             MenuItem traceItem = new MenuItem("Trace to");
-            traceItem.setOnAction(event -> UIController.openDialog(new TraceDialogController(mapController), Application.traceDialogURL));
+            //traceItem.setOnAction(event -> UIController.openDialog(new TraceDialogController(mapController), Application.traceDialogURL));
 
             MenuItem addCableItem = new MenuItem("Add Cable");
             addCableItem.setOnAction(event -> {
@@ -240,7 +149,9 @@ public class UIController {
         }
     }
 
-    public static void openDialog(Initializable controller, URL url)  {
+
+
+    public static void openDialog(Initializable controller, URL url) {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(url);
 
@@ -256,6 +167,7 @@ public class UIController {
             LogUtils.log(e.toString());
         }
     }
+
 
     public void getProps(Entity entity) {
 

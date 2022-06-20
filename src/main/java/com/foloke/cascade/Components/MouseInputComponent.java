@@ -11,5 +11,8 @@ public class MouseInputComponent implements Component {
     public List<MouseEvent> events = new ArrayList<>();
 
     public double scroll;
-    public Point2D lastEvent;
+    public Point2D lastDrag;
+    public Point2D lastPress;
+    public boolean dragInProgress;
+    public boolean clickInProgress;
 }

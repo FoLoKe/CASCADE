@@ -3,8 +3,10 @@ package com.foloke.cascade;
 import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
 import com.foloke.cascade.Components.CameraComponent;
+import com.foloke.cascade.Components.ContextMenuComponent;
 import com.foloke.cascade.Components.MouseInputComponent;
 import com.foloke.cascade.Components.Tags.MainCameraTag;
+import com.foloke.cascade.Components.Tags.UIControllerTag;
 import com.foloke.cascade.Entities.Camera;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Systems.*;
@@ -35,18 +37,31 @@ public class Updater extends AnimationTimer {
 
         //ECS
         engine = new Engine();
+
+        // input
+        engine.addSystem(new MouseInputSystem());
+
+        // positioning
+        engine.addSystem(new MovementSystem());
+        engine.addSystem(new CollisionSystem());
+
+        // rendering
         engine.addSystem(new CameraSystem());
         engine.addSystem(new SpriteRenderSystem(gc));
-        engine.addSystem(new MouseInputSystem());
         engine.addSystem(new SelectionRendererSystem(gc));
         engine.addSystem(new CollisionDebugRendererSystem(gc));
-
-        engine.addSystem(new MovementSystem());
 
         Entity camera = new Camera(gc, mouseInputComponent);
         engine.addEntity(camera);
 
-        engine.addEntity(Device.instance());
+        engine.addEntity(Device.instance(0, 0));
+        engine.addEntity(Device.instance(25, 25));
+        engine.addEntity(Device.instance(50, 25));
+
+        Entity uiDummy = new Entity();
+        uiDummy.add(new UIControllerTag());
+        uiDummy.add(new ContextMenuComponent());
+        engine.addEntity(uiDummy);
     }
 
     public void handle(long timestamp) {
