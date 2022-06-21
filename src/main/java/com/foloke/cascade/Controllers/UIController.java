@@ -57,14 +57,6 @@ public class UIController {
     @FXML
     private TableColumn<Property, String> valueColumn;
 
-    private final Application application;
-    //private s.ObjectContextMenu objectContextMenu;
-    private NoneObjectContextMenu noneObjectContextMenu;
-
-    public UIController(Application application) {
-        this.application = application;
-    }
-
     public Canvas getCanvas() {
         return this.canvas;
     }
@@ -81,75 +73,22 @@ public class UIController {
         });
 
         this.canvas.setOnMousePressed(mouseEvent -> {
-            application.updater.mouseInput(mouseEvent);
+            Application.updater.mouseInput(mouseEvent);
         });
 
         this.canvas.setOnMouseDragged(mouseEvent -> {
-            application.updater.mouseInput(mouseEvent);
+            Application.updater.mouseInput(mouseEvent);
         });
 
         this.canvas.setOnMouseReleased(mouseEvent -> {
-            application.updater.mouseInput(mouseEvent);
+            Application.updater.mouseInput(mouseEvent);
         });
 
-        this.canvas.setOnScroll(scrollEvent -> application.updater.mouseScroll(scrollEvent));
+        this.canvas.setOnScroll(scrollEvent -> Application.updater.mouseScroll(scrollEvent));
 
         propertyColumn.setCellValueFactory(new PropertyValueFactory<>("property"));
         valueColumn.setCellValueFactory(new PropertyValueFactory<>("value"));
-
-        //objectContextMenu = new s.ObjectContextMenu();
-        //noneObjectContextMenu = new NoneObjectContextMenu(mapController);
-
-        //NOPE this isn't working well (any dx or dy)
-        //canvas.setOnContextMenuRequested(event -> {
-            //System.out.println("context");
-//            Entity entity = mapController.hit(event.getX(), event.getY());
-//            if (entity != null) {
-                //objectContextMenu.update(entity);
-//                objectContextMenu.show(canvas, event.getScreenX(), event.getScreenY());
-//            } else {
-//                noneObjectContextMenu.show(canvas, event.getScreenX(), event.getScreenY());
-//            }
-//        });
     }
-
-    private static class NoneObjectContextMenu extends ContextMenu {
-        MapController mapController;
-
-        public NoneObjectContextMenu(MapController mapController) {
-            this.mapController = mapController;
-            setAutoHide(true);
-
-            MenuItem pingItem = new MenuItem("Ping scan");
-            //pingItem.setOnAction(event -> UIController.openDialog(new PingDialogController(mapController), Application.pingDialogURL));
-
-            MenuItem pingOneItem = new MenuItem("Ping and add one");
-            //pingOneItem.setOnAction(event -> UIController.openDialog(new PingOneDialogController(mapController), Application.pingOneDialogURL));
-
-            MenuItem traceItem = new MenuItem("Trace to");
-            //traceItem.setOnAction(event -> UIController.openDialog(new TraceDialogController(mapController), Application.traceDialogURL));
-
-            MenuItem addCableItem = new MenuItem("Add Cable");
-            addCableItem.setOnAction(event -> {
-                Cable cable = new Cable(mapController);
-                cable.connectorA.setPosition(mapController.getTouchPointX(), mapController.getTouchPointY());
-                cable.connectorB.setPosition(mapController.getTouchPointX() + 32, mapController.getTouchPointY());
-                //mapController.addEntity(cable);
-            });
-
-            MenuItem saveItem = new MenuItem("Save map");
-            saveItem.setOnAction(event -> FileUtils.save(mapController, "map"));
-
-            MenuItem loadItem = new MenuItem("Load map");
-            loadItem.setOnAction(event -> FileUtils.load(mapController, "map"));
-
-            getItems().addAll(pingItem, pingOneItem, traceItem, addCableItem, saveItem, loadItem);
-
-
-        }
-    }
-
-
 
     public static void openDialog(Initializable controller, URL url) {
         try {
@@ -170,7 +109,6 @@ public class UIController {
 
 
     public void getProps(Entity entity) {
-
         ObservableList<Property> properties = FXCollections.observableArrayList(
                 new Property("name", entity.getName())
         );
@@ -181,7 +119,6 @@ public class UIController {
         }
 
         Platform.runLater(() -> propTable.setItems(properties));
-
     }
 
     public static class Property {

@@ -1,4 +1,4 @@
-package com.foloke.cascade.Components;
+package com.foloke.cascade.Components.Network;
 
 import com.badlogic.ashley.core.Component;
 import org.snmp4j.Target;

@@ -9,11 +9,12 @@ public class MovementSystem extends EntitySystem {
 
     ComponentMapper<PositionComponent> pcm = ComponentMapper.getFor(PositionComponent.class);
     ComponentMapper<VelocityComponent> vcm = ComponentMapper.getFor(VelocityComponent.class);
-    ComponentMapper<CollisionComponent> ccm = ComponentMapper.getFor(CollisionComponent.class);
+    ComponentMapper<ChildrenComponent> ccm = ComponentMapper.getFor(ChildrenComponent.class);
+    //ComponentMapper<ParentComponent> parCm = ComponentMapper.getFor(ParentComponent.class);
 
     @Override
     public void addedToEngine(Engine engine) {
-        entities = engine.getEntitiesFor(Family.all(PositionComponent.class, VelocityComponent.class).exclude(ParentComponent.class).get());
+        entities = engine.getEntitiesFor(Family.all(PositionComponent.class, VelocityComponent.class).get());
     }
 
     @Override
@@ -27,6 +28,17 @@ public class MovementSystem extends EntitySystem {
             pc.consumed = false;
             pc.x += vc.dx;
             pc.y += vc.dy;
+
+            if (ccm.has(entity)) {
+                ChildrenComponent childrenComponent = ccm.get(entity);
+                for (Entity child : childrenComponent.children) {
+                    if (vcm.has(child)) {
+                        VelocityComponent cvc = vcm.get(child);
+                        cvc.dx += vc.dx;
+                        cvc.dy += vc.dy;
+                    }
+                }
+            }
 
             vc.dx = 0;
             vc.dy = 0;

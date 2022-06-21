@@ -2,6 +2,7 @@ package com.foloke.cascade.Entities;
 
 import com.foloke.cascade.Application;
 import com.foloke.cascade.Components.*;
+import com.foloke.cascade.Components.Tags.DeviceTag;
 import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.utils.Led;
 import com.foloke.cascade.utils.LogUtils;
@@ -9,9 +10,7 @@ import com.foloke.cascade.utils.PortGroup;
 import com.foloke.cascade.utils.Sprite;
 import jakarta.persistence.Column;
 import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
-import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -32,8 +31,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-@jakarta.persistence.Entity
-@Table(name = "device")
 public class Device extends Entity {
     public Led flowLed = new Led(this, Color.BLUE, 11, 7, 1, 1);
     public Led alarmLed = new Led(this, Color.RED, 12, 7, 1, 1);
@@ -164,15 +161,6 @@ public class Device extends Entity {
                 "Encryption pass " + snmpEncryptionPass);
     }
 
-    @Override
-    public void setPosition(double x, double y) {
-        super.setPosition(x, y);
-    }
-
-    public Port pickPort(Point2D point2D) {
-        return (Port) ports.hit(point2D);
-    }
-
     public List<Port> getPorts() {
         List<Port> ports = new ArrayList<>();
         for (Entity child : children) {
@@ -288,6 +276,8 @@ public class Device extends Entity {
         device.add(new VelocityComponent());
         device.add(new SpriteComponent(Sprite.create(Application.spriteSheet, 0, 0, 16, 16, 1)));
         device.add(new CollisionComponent());
+        device.add(new DeviceTag());
+        device.add(new ChildrenComponent());
 
         return device;
     }

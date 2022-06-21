@@ -15,4 +15,5 @@ public class MouseInputComponent implements Component {
     public Point2D lastPress;
     public boolean dragInProgress;
     public boolean clickInProgress;
+    public boolean overEntity;
 }

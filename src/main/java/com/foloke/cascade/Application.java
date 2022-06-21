@@ -35,7 +35,7 @@ public class Application extends javafx.application.Application {
     public static NetFlowController netFlowController;
     public static Session databaseSession;
 
-    public Updater updater;
+    public static Updater updater;
 
     public static void main(String[] args) {
         launch(args);
@@ -76,7 +76,7 @@ public class Application extends javafx.application.Application {
         icon = new Image("/images/icon.png");
 
         this.mapController = new MapController();
-        this.uiController = new UIController(this);
+        this.uiController = new UIController();
 
         mainURL = this.getClass().getResource("/static/main.fxml");
         pingDialogURL = this.getClass().getResource("/static/pingDialog.fxml");

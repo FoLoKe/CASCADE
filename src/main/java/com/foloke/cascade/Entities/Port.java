@@ -1,6 +1,11 @@
 package com.foloke.cascade.Entities;
 
 import com.foloke.cascade.Application;
+import com.foloke.cascade.Components.CollisionComponent;
+import com.foloke.cascade.Components.PositionComponent;
+import com.foloke.cascade.Components.SpriteComponent;
+import com.foloke.cascade.Components.Tags.PortTag;
+import com.foloke.cascade.Components.VelocityComponent;
 import com.foloke.cascade.utils.*;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
@@ -19,6 +24,16 @@ import java.util.List;
 public class Port extends Entity {
     Sprite sprite;
     Led led = new Led(this, Color.RED, 2.5, 1.25, 3, 0.75);
+
+    public static com.badlogic.ashley.core.Entity instance(double x, double y) {
+        com.badlogic.ashley.core.Entity port = new com.badlogic.ashley.core.Entity();
+        port.add(new PositionComponent(x, y));
+        port.add(new VelocityComponent());
+        port.add(new SpriteComponent(Sprite.create(Application.spriteSheet, 16, 0, 8, 8, 1)));
+        port.add(new CollisionComponent(8, 8));
+        port.add(new PortTag());
+        return port;
+    }
 
     public enum AddType {AUTO, MANUAL, SNMP}
     public enum State {UP, DOWN, TESTING, UNKNOWN, DORMANT, NOT_PRESENT, LOWER_LAYER_DOWN}

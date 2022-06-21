@@ -1,10 +1,10 @@
 package com.foloke.cascade;
 
+import com.badlogic.ashley.core.Component;
+import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
-import com.foloke.cascade.Components.CameraComponent;
-import com.foloke.cascade.Components.ContextMenuComponent;
-import com.foloke.cascade.Components.MouseInputComponent;
+import com.foloke.cascade.Components.*;
 import com.foloke.cascade.Components.Tags.MainCameraTag;
 import com.foloke.cascade.Components.Tags.UIControllerTag;
 import com.foloke.cascade.Entities.Camera;
@@ -29,6 +29,9 @@ public class Updater extends AnimationTimer {
     private final MouseInputComponent mouseInputComponent = new MouseInputComponent();
     private final GraphicsContext gc;
 
+    private final ComponentMapper<ChildrenComponent> ccm;
+    private final ComponentMapper<ParentComponent> pcm;
+
     public Updater(Canvas canvas) {
         //GRAPHICS
         gc = canvas.getGraphicsContext2D();
@@ -40,6 +43,9 @@ public class Updater extends AnimationTimer {
 
         // input
         engine.addSystem(new MouseInputSystem());
+
+        // ui
+        engine.addSystem(new ContextMenuSystem());
 
         // positioning
         engine.addSystem(new MovementSystem());
@@ -60,8 +66,11 @@ public class Updater extends AnimationTimer {
 
         Entity uiDummy = new Entity();
         uiDummy.add(new UIControllerTag());
-        uiDummy.add(new ContextMenuComponent());
+        uiDummy.add(new ContextMenuComponent(canvas));
         engine.addEntity(uiDummy);
+
+        ccm = ComponentMapper.getFor(ChildrenComponent.class);
+        pcm = ComponentMapper.getFor(ParentComponent.class);
     }
 
     public void handle(long timestamp) {
@@ -94,7 +103,37 @@ public class Updater extends AnimationTimer {
         runOnECS(() -> mouseInputComponent.scroll = scrollEvent.getDeltaY() > 0 ? 0.25 : -0.25);
     }
 
-    public void spawnEntity(Entity entity) {
+    public void spawnEntityLater(Entity entity) {
         runOnECS(() -> engine.addEntity(entity));
+    }
+
+    public void addComponentLater(Entity entity, Component component) {
+        runOnECS(() -> entity.add(component));
+    }
+
+    public void assignChildLater(Entity entity, Entity child) {
+        runOnECS(() -> {
+            if (!ccm.has(entity)) {
+                entity.add(new ChildrenComponent());
+            }
+
+            ChildrenComponent cm = ccm.get(entity);
+            cm.children.add(child);
+
+            if (pcm.has(child)) {
+                ParentComponent pc = pcm.get(child);
+                pc.parent = entity;
+            } else {
+                ParentComponent pc = new ParentComponent();
+                pc.parent = entity;
+                child.add(pc);
+            }
+        });
+    }
+
+    public void printComponents(Entity entity) {
+        runOnECS(() -> {
+            entity.getComponents().forEach(System.out::println);
+        });
     }
 }

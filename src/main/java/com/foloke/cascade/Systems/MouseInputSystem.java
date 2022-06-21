@@ -6,8 +6,6 @@ import com.foloke.cascade.Components.*;
 import com.foloke.cascade.Components.Tags.MainCameraTag;
 import com.foloke.cascade.Components.Tags.SelectedTag;
 import com.foloke.cascade.Components.Tags.UIControllerTag;
-import com.foloke.cascade.UI.ContextMenuHelper;
-import javafx.application.Platform;
 import javafx.event.EventType;
 import javafx.geometry.Point2D;
 import javafx.scene.input.MouseButton;
@@ -75,7 +73,6 @@ public class MouseInputSystem extends EntitySystem {
             onCloseContext();
         } else if (eventType == MouseEvent.MOUSE_RELEASED) {
             if (ic.clickInProgress) {
-                System.out.println("click");
                 Entity picked = pickEntity(worldPoint);
                 if (!mouseEvent.isShiftDown()) {
                     selected.forEach((entity -> entity.remove(SelectedTag.class)));
@@ -83,6 +80,7 @@ public class MouseInputSystem extends EntitySystem {
 
                 if (picked != null) {
                     if (mouseEvent.getButton() == MouseButton.PRIMARY) {
+                        picked.getComponents().forEach(System.out::println);
                         if (scm.has(picked)) {
                             picked.remove(SelectedTag.class);
                         } else {
@@ -92,17 +90,21 @@ public class MouseInputSystem extends EntitySystem {
                         if (!scm.has(picked)) {
                             picked.add(new SelectedTag());
                         }
-                        onOpenContext(selected, mouseEvent.getX(), mouseEvent.getY());
+
+                        System.out.println("context");
+                        onOpenContext(mouseEvent.getScreenX(), mouseEvent.getScreenY());
                     }
                 } else {
-                    if (mouseEvent.getButton() == MouseButton.PRIMARY) {
-                        onOpenContext(null, mouseEvent.getX(), mouseEvent.getY());
+                    if (mouseEvent.getButton() == MouseButton.SECONDARY) {
+                        System.out.println("no context");
+                        onOpenContext(mouseEvent.getScreenX(), mouseEvent.getScreenY());
                     }
                 }
             }
 
             ic.dragInProgress = false;
             ic.clickInProgress = false;
+            ic.overEntity = false;
 
         } else if (eventType == MouseEvent.MOUSE_DRAGGED) {
             if (!ic.dragInProgress && ic.clickInProgress
@@ -113,6 +115,10 @@ public class MouseInputSystem extends EntitySystem {
 
             ic.clickInProgress = false;
             if (!ic.dragInProgress) {
+                Entity picked = pickEntity(worldPoint);
+                if(picked != null && scm.has(picked))
+                   ic.overEntity = true;
+
                 ic.dragInProgress = true;
             }
 
@@ -130,7 +136,7 @@ public class MouseInputSystem extends EntitySystem {
                     //TODO: group selection
                 }
             } else if (mouseEvent.getButton() == MouseButton.SECONDARY) {
-                if (selected.size() > 0) {
+                if (selected.size() > 0 && ic.overEntity) {
                     selected.forEach(entity -> {
                         VelocityComponent vc = vcm.get(entity);
                         vc.dx += dx / cc.scale;
@@ -149,14 +155,16 @@ public class MouseInputSystem extends EntitySystem {
     private void onCloseContext() {
         uiControllers.forEach(entity -> {
             ContextMenuComponent cmc = cmCm.get(entity);
-            Platform.runLater(() -> cmc.contextMenu.hide());
+            cmc.close = true;
         });
     }
 
-    private void onOpenContext(ImmutableArray<Entity> selected, double x, double y) {
+    private void onOpenContext(double x, double y) {
         uiControllers.forEach(entity -> {
             ContextMenuComponent cmc = cmCm.get(entity);
-            ContextMenuHelper.init(selected, cmc.contextMenu, x, y);
+            cmc.open = true;
+            cmc.x = x;
+            cmc.y = y;
         });
     }
 
