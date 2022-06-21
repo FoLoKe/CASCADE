@@ -1,7 +1,11 @@
 package com.foloke.cascade.utils;
 
+import com.badlogic.ashley.core.Entity;
+import com.foloke.cascade.Components.ChildrenComponent;
+import com.foloke.cascade.Components.CollisionComponent;
+import com.foloke.cascade.Components.Network.AddressComponent;
+import com.foloke.cascade.Components.Network.PingComponent;
 import com.foloke.cascade.Controllers.MapController;
-import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Port;
 import org.apache.commons.net.util.SubnetUtils;
 import org.pcap4j.core.*;
@@ -30,15 +34,15 @@ public class ScanUtils {
     private static final String regexIPv4 = "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$";
     private static final Pattern pattern = Pattern.compile(regexIPv4);
 
-    public static void scanByPing(MapController mapController, String network, String mask) {
+    public static void pingScan(MapController mapController, String network, String mask) {
         try {
             SubnetUtils utils = new SubnetUtils( network + "/" + mask);
 
             for(String address : utils.getInfo().getAllAddresses()) {
 
-                Ping ping = new Ping(mapController, address);
-                Thread thread = new Thread(ping);
-                thread.start();
+                //Ping ping = new Ping(mapController, address);
+                //Thread thread = new Thread(ping);
+                //thread.start();
             }
 
         } catch (Exception e) {
@@ -46,12 +50,49 @@ public class ScanUtils {
         }
     }
 
-    public static void ping(Port port) {
-        if(port.primaryAddress.length() > 0) {
-            Ping ping = new Ping(port);
-            Thread thread = new Thread(ping);
-            thread.start();
+    public static void ping(PingComponent pingComponent, AddressComponent addressComponent) {
+        pingComponent.status = 0;
+        pingComponent.pinging = true;
+        final InetAddress inetAddress = addressComponent.address;
+
+        Thread thread = new Thread(() -> {
+            try {
+                boolean reachable = inetAddress.isReachable(pingComponent.delay);
+                pingComponent.status = reachable ? 1 : -1;
+
+                LogUtils.log(inetAddress.getHostAddress() + " reachable: " + reachable);
+            } catch (IOException e) {
+                e.printStackTrace();
+                pingComponent.status = -1;
+            }
+
+            pingComponent.pinging = false;
+        });
+
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    public static List<NetworkInterface> getLocalPorts() {
+        List<NetworkInterface> realInterfaces = new ArrayList<>();
+
+        try {
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            Iterator<NetworkInterface> iterator = interfaces.asIterator();
+            while (iterator.hasNext()) {
+                NetworkInterface networkInterface = iterator.next();
+                if (!networkInterface.isLoopback()
+                        && !networkInterface.isVirtual()
+                        && networkInterface.getHardwareAddress() != null) {
+                    realInterfaces.add(networkInterface);
+                }
+            }
+        } catch (SocketException e) {
+            LogUtils.log(e.toString());
+            e.printStackTrace();
         }
+
+        return realInterfaces;
     }
 
     public static void traceRoute(MapController mapController, String destination, int timeout, int maxHops) {
@@ -288,56 +329,6 @@ public class ScanUtils {
         }
     }
 
-    private static class Ping implements Runnable {
-        MapController mapController;
-        InetAddress inetAddress;
-        Port port;
-
-        public Ping(MapController mapController, String address) {
-            this.mapController = mapController;
-            try {
-                this.inetAddress = InetAddress.getByName(address);
-            } catch (Exception e) {
-                LogUtils.log(e.toString());
-            }
-        }
-
-        public Ping(Port port) {
-            this.port = port;
-            try {
-                this.inetAddress = InetAddress.getByName(port.primaryAddress);
-            } catch (Exception e) {
-                LogUtils.log(e.toString());
-            }
-        }
-
-        @Override
-        public void run() {
-            try {
-                boolean reachable = inetAddress.isReachable(1000);
-
-                if(reachable) {
-                    if(port == null) {
-                        //Device device = mapController.addOrUpdate(inetAddress.getHostAddress());
-                        //port = device.findPort(inetAddress.getHostAddress());
-                    }
-                }
-
-                LogUtils.log(inetAddress.getHostAddress() + " reachable: " + reachable);
-                if(port != null) {
-                    if(reachable) {
-                        port.setState(Port.State.UP);
-                    } else {
-                        port.setState(Port.State.DOWN);
-                    }
-                    LogUtils.logToFile(port.parent.getName(), "port with address: " + port.primaryAddress + "is reachable ?: " + reachable);
-                }
-            } catch (Exception e) {
-                LogUtils.log(e.toString());
-            }
-        }
-    }
-
     public static class PCapTask implements Runnable {
 
         private final PcapHandle handle;
@@ -363,39 +354,39 @@ public class ScanUtils {
         }
     }
 
-    public static Device initLocal(MapController mapController) {
-        List<NetworkInterface> realInterfaces = new ArrayList<>();
-
-        try {
-            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-            Iterator<NetworkInterface> iterator = interfaces.asIterator();
-            while (iterator.hasNext()) {
-                NetworkInterface networkInterface = iterator.next();
-                if (!networkInterface.isLoopback()
-                        && !networkInterface.isVirtual()
-                        && networkInterface.getHardwareAddress() != null) {
-                    realInterfaces.add(networkInterface);
-                }
-            }
-
-            Device entity;
-            if (realInterfaces.size() > 0) {
-                String address = realInterfaces.get(0).getInterfaceAddresses().get(0).getAddress().getHostAddress();
-                entity = new Device(mapController, address);
-                for (int i = 1; i < realInterfaces.size(); i++) {
-                    entity.addPort(new Port(entity, realInterfaces.get(i)));
-                }
-            } else {
-                entity = new Device(mapController, "127.0.0.1");
-            }
-
-            return entity;
-
-        } catch (SocketException e) {
-            LogUtils.log(e.toString());
-            e.printStackTrace();
-        }
-
-        return null;
-    }
+//    public static Device initLocal(MapController mapController) {
+//        List<NetworkInterface> realInterfaces = new ArrayList<>();
+//
+//        try {
+//            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+//            Iterator<NetworkInterface> iterator = interfaces.asIterator();
+//            while (iterator.hasNext()) {
+//                NetworkInterface networkInterface = iterator.next();
+//                if (!networkInterface.isLoopback()
+//                        && !networkInterface.isVirtual()
+//                        && networkInterface.getHardwareAddress() != null) {
+//                    realInterfaces.add(networkInterface);
+//                }
+//            }
+//
+//            Device entity;
+//            if (realInterfaces.size() > 0) {
+//                String address = realInterfaces.get(0).getInterfaceAddresses().get(0).getAddress().getHostAddress();
+//                entity = new Device(mapController, address);
+//                for (int i = 1; i < realInterfaces.size(); i++) {
+//                    entity.addPort(new Port(entity, realInterfaces.get(i)));
+//                }
+//            } else {
+//                entity = new Device(mapController, "127.0.0.1");
+//            }
+//
+//            return entity;
+//
+//        } catch (SocketException e) {
+//            LogUtils.log(e.toString());
+//            e.printStackTrace();
+//        }
+//
+//        return null;
+//    }
 }

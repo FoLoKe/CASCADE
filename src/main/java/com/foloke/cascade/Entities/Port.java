@@ -25,6 +25,7 @@ public class Port extends Entity {
     Sprite sprite;
     Led led = new Led(this, Color.RED, 2.5, 1.25, 3, 0.75);
 
+    public static double baseSize = 8;
     public static com.badlogic.ashley.core.Entity instance(double x, double y) {
         com.badlogic.ashley.core.Entity port = new com.badlogic.ashley.core.Entity();
         port.add(new PositionComponent(x, y));
@@ -98,7 +99,7 @@ public class Port extends Entity {
             @Override
             public void execute() {
                 if(pinging) {
-                    ScanUtils.ping(Port.this);
+                    //ScanUtils.ping(Port.this);
                 }
             }
         });

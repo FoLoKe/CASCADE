@@ -5,11 +5,13 @@ import com.badlogic.ashley.utils.ImmutableArray;
 import com.foloke.cascade.Application;
 import com.foloke.cascade.Components.CollisionComponent;
 import com.foloke.cascade.Components.ContextMenuComponent;
+import com.foloke.cascade.Components.Network.PingComponent;
 import com.foloke.cascade.Components.PositionComponent;
 import com.foloke.cascade.Components.Tags.DeviceTag;
 import com.foloke.cascade.Components.Tags.PortTag;
 import com.foloke.cascade.Components.Tags.SelectedTag;
 import com.foloke.cascade.Entities.Port;
+import com.foloke.cascade.utils.EcsHelper;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.control.CheckMenuItem;
@@ -23,12 +25,6 @@ public class ContextMenuSystem extends EntitySystem {
     private ImmutableArray<Entity> selected;
     private ImmutableArray<Entity> uiControllers;
 
-    private final ComponentMapper<ContextMenuComponent> cmCm = ComponentMapper.getFor(ContextMenuComponent.class);
-    private final ComponentMapper<DeviceTag> dcm = ComponentMapper.getFor(DeviceTag.class);
-    private final ComponentMapper<PortTag> pcm = ComponentMapper.getFor(PortTag.class);
-    private final ComponentMapper<PositionComponent> posCm = ComponentMapper.getFor(PositionComponent.class);
-    private final ComponentMapper<CollisionComponent> ccm = ComponentMapper.getFor(CollisionComponent.class);
-
     @Override
     public void addedToEngine(Engine engine) {
         selected = engine.getEntitiesFor(Family.all(SelectedTag.class).get());
@@ -38,7 +34,7 @@ public class ContextMenuSystem extends EntitySystem {
     @Override
     public void update(float deltaTime) {
         uiControllers.forEach((entity) -> {
-            ContextMenuComponent component = cmCm.get(entity);
+            ContextMenuComponent component = EcsHelper.cmCm.get(entity);
             final ContextMenu contextMenu = component.contextMenu;
             if (component.close) {
                 Platform.runLater(() -> {
@@ -67,7 +63,7 @@ public class ContextMenuSystem extends EntitySystem {
             for(Entity entity : selected) {
 
                 //ParamDialogController paramDialogController = new ParamDialogController();
-                if (dcm.has(entity)) {
+                if (EcsHelper.dtCm.has(entity)) {
                     MenuItem snmpMenuItem = new MenuItem("SNMP settings");
                     //snmpMenuItem.setOnAction(event -> com.foloke.cascade.Controllers.UIController.openDialog(new SNMPSettingsDialogController((Device) entity), Application.snmpDialogURL));
 
@@ -79,14 +75,14 @@ public class ContextMenuSystem extends EntitySystem {
                         double childX = 0;
                         double childY = 0;
 
-                        if (posCm.has(entity)) {
-                            PositionComponent positionComponent = posCm.get(entity);
+                        if (EcsHelper.posCm.has(entity)) {
+                            PositionComponent positionComponent = EcsHelper.posCm.get(entity);
                             childX = positionComponent.x;
                             childY = positionComponent.y;
                         }
 
-                        if (ccm.has(entity)) {
-                            CollisionComponent collisionComponent = ccm.get(entity);
+                        if (EcsHelper.colCm.has(entity)) {
+                            CollisionComponent collisionComponent = EcsHelper.colCm.get(entity);
                             childX += collisionComponent.hitBox.getWidth();
                             childY += collisionComponent.hitBox.getHeight();
                         }
@@ -95,11 +91,6 @@ public class ContextMenuSystem extends EntitySystem {
                         Application.updater.spawnEntityLater(child);
                         Application.updater.assignChildLater(entity, child);
                     });
-
-//                    addPort.setOnAction(event -> {
-//                        Port port = ((Device) entity).addPort("");
-//                        port.addType = Port.AddType.MANUAL;
-//                    });
 
                     MenuItem openNetFlow = new MenuItem("NetFlow");
                     //openNetFlow.setOnAction(event -> com.foloke.cascade.Controllers.UIController.openDialog(new NetFlowDialogController((Device) entity), Application.netflowURL));
@@ -113,12 +104,26 @@ public class ContextMenuSystem extends EntitySystem {
                     menuItems.add(updateItem);
                     menuItems.add(addPort);
                     menuItems.add(openNetFlow);
-                } if (pcm.has(entity)) {
+                }
+
+                if (EcsHelper.aCm.has(entity)){
                     CheckMenuItem checkMenuItem = new CheckMenuItem("Check status");
-                    //checkMenuItem.setSelected(((Port) entity).pinging);
-                    //checkMenuItem.setOnAction(event -> ((Port) entity).pinging = checkMenuItem.isSelected());
+                    checkMenuItem.setSelected(EcsHelper.pingCm.has(entity));
+
+                    checkMenuItem.setOnAction(event -> Application.updater.runOnECS(() -> {
+                        boolean alreadyPinging = EcsHelper.pingCm.has(entity);
+                        if(alreadyPinging) {
+                            entity.remove(PingComponent.class);
+                        } else {
+                            entity.add(new PingComponent());
+                        }
+                    }));
 
                     MenuItem ipItem = new MenuItem("Change IP");
+
+                    menuItems.add(checkMenuItem);
+                    menuItems.add(ipItem);
+                }
 //                    ipItem.setOnAction(event -> {
 //                        paramDialogController.setName("IP address");
 //                        paramDialogController.setValue(((Port) entity).primaryAddress);
@@ -141,11 +146,9 @@ public class ContextMenuSystem extends EntitySystem {
 //                        com.foloke.cascade.Controllers.UIController.openDialog(paramDialogController, Application.paramDialogURL);
 //                    });
 
-                    menuItems.add(checkMenuItem);
-                    menuItems.add(ipItem);
                     menuItems.add(macItem);
 
-                }
+
 
                 MenuItem deleteItem = new MenuItem("Delete");
 //                deleteItem.setOnAction(event -> {

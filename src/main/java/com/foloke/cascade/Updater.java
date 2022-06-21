@@ -1,15 +1,18 @@
 package com.foloke.cascade;
 
 import com.badlogic.ashley.core.Component;
-import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
 import com.foloke.cascade.Components.*;
-import com.foloke.cascade.Components.Tags.MainCameraTag;
+import com.foloke.cascade.Components.Network.AddressComponent;
 import com.foloke.cascade.Components.Tags.UIControllerTag;
 import com.foloke.cascade.Entities.Camera;
 import com.foloke.cascade.Entities.Device;
+import com.foloke.cascade.Entities.Port;
 import com.foloke.cascade.Systems.*;
+import com.foloke.cascade.utils.EcsHelper;
+import com.foloke.cascade.utils.QuadCollision;
+import com.foloke.cascade.utils.ScanUtils;
 import javafx.animation.AnimationTimer;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -17,6 +20,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.paint.Color;
 
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,8 +34,7 @@ public class Updater extends AnimationTimer {
     private final MouseInputComponent mouseInputComponent = new MouseInputComponent();
     private final GraphicsContext gc;
 
-    private final ComponentMapper<ChildrenComponent> ccm;
-    private final ComponentMapper<ParentComponent> pcm;
+    private long previousTimestamp;
 
     public Updater(Canvas canvas) {
         //GRAPHICS
@@ -51,6 +55,9 @@ public class Updater extends AnimationTimer {
         engine.addSystem(new MovementSystem());
         engine.addSystem(new CollisionSystem());
 
+        // network
+        engine.addSystem(new PingSystem());
+
         // rendering
         engine.addSystem(new CameraSystem());
         engine.addSystem(new SpriteRenderSystem(gc));
@@ -60,7 +67,8 @@ public class Updater extends AnimationTimer {
         Entity camera = new Camera(gc, mouseInputComponent);
         engine.addEntity(camera);
 
-        engine.addEntity(Device.instance(0, 0));
+        Entity local = Device.instance(50, 50);
+        engine.addEntity(local);
         engine.addEntity(Device.instance(25, 25));
         engine.addEntity(Device.instance(50, 25));
 
@@ -69,8 +77,25 @@ public class Updater extends AnimationTimer {
         uiDummy.add(new ContextMenuComponent(canvas));
         engine.addEntity(uiDummy);
 
-        ccm = ComponentMapper.getFor(ChildrenComponent.class);
-        pcm = ComponentMapper.getFor(ParentComponent.class);
+        ChildrenComponent localChildren = EcsHelper.ccm.get(local);
+        PositionComponent positionComponent = EcsHelper.posCm.get(local);
+        CollisionComponent localCollision = EcsHelper.colCm.get(local);
+        QuadCollision localQuad = localCollision.hitBox;
+
+        List<NetworkInterface> localInterfaces = ScanUtils.getLocalPorts();
+        double offsetX = positionComponent.x + localQuad.getWidth() / 2f - localInterfaces.size() * Port.baseSize / 2f;
+        double offsetY = positionComponent.y + localQuad.getHeight();
+
+        for (int i = 0; i < localInterfaces.size(); i++) {
+            NetworkInterface networkInterface = localInterfaces.get(i);
+            List<InterfaceAddress> addresses = networkInterface.getInterfaceAddresses();
+
+            Entity port = Port.instance(offsetX + i * Port.baseSize, offsetY);
+            port.add(new AddressComponent(addresses));
+            engine.addEntity(port);
+
+            localChildren.children.add(port);
+        }
     }
 
     public void handle(long timestamp) {
@@ -85,7 +110,8 @@ public class Updater extends AnimationTimer {
             tasks.clear();
         }
 
-        engine.update(timestamp);
+        engine.update((timestamp - previousTimestamp) / 1000000f);
+        previousTimestamp = timestamp;
         gc.restore();
     }
 
@@ -113,15 +139,15 @@ public class Updater extends AnimationTimer {
 
     public void assignChildLater(Entity entity, Entity child) {
         runOnECS(() -> {
-            if (!ccm.has(entity)) {
+            if (!EcsHelper.ccm.has(entity)) {
                 entity.add(new ChildrenComponent());
             }
 
-            ChildrenComponent cm = ccm.get(entity);
+            ChildrenComponent cm = EcsHelper.ccm.get(entity);
             cm.children.add(child);
 
-            if (pcm.has(child)) {
-                ParentComponent pc = pcm.get(child);
+            if (EcsHelper.pcm.has(child)) {
+                ParentComponent pc = EcsHelper.pcm.get(child);
                 pc.parent = entity;
             } else {
                 ParentComponent pc = new ParentComponent();
@@ -131,9 +157,9 @@ public class Updater extends AnimationTimer {
         });
     }
 
-    public void printComponents(Entity entity) {
+    public void removeComponentLater(Entity entity, Class<? extends Component> componentClass) {
         runOnECS(() -> {
-            entity.getComponents().forEach(System.out::println);
+            entity.remove(componentClass);
         });
     }
 }

@@ -36,7 +36,7 @@ public class PingDialogController implements Initializable {
         cancelButton.setOnMousePressed(PingDialogController.this::closeStage);
 
         okButton.setOnMousePressed(event -> {
-            ScanUtils.scanByPing(mapController, addressTextField.getText(), maskTextField.getText());
+            ScanUtils.pingScan(mapController, addressTextField.getText(), maskTextField.getText());
             PingDialogController.this.closeStage(event);
         });
     }
