@@ -1,10 +1,7 @@
 package com.foloke.cascade.utils;
 
-import com.foloke.cascade.Controllers.MapController;
-import com.foloke.cascade.Entities.*;
 
 import java.io.*;
-import java.util.ArrayList;
 
 public class FileUtils {
     public static void writeToFile(BufferedWriter bufferedWriter, String string) {
@@ -36,7 +33,7 @@ public class FileUtils {
         }
     }
 
-    public static void save(MapController mapController, String saveName) {
+    public static void save(String saveName) {
         try {
             File mapDir = new File("maps");
             mapDir.mkdir();
@@ -63,7 +60,7 @@ public class FileUtils {
         }
     }
 
-    public static void load(MapController mapController, String saveName) {
+    public static void load(String saveName) {
 //        for(Entity entity : mapController.getEntities()) {
 //            entity.destroy();
 //        }

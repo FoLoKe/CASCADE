@@ -1,6 +1,5 @@
 package com.foloke.cascade.Entities;
 
-import com.foloke.cascade.Controllers.MapController;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -12,8 +11,8 @@ public class Group extends Entity {
     ArrayList<Entity> entities;
     public String ids;
 
-    public Group(MapController mapController) {
-        super(mapController);
+    public Group() {
+        super();
         init();
     }
 

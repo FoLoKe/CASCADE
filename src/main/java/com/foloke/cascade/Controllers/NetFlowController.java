@@ -37,10 +37,8 @@ public class NetFlowController {
 
     private final ScheduledExecutorService scheduledExecutorService;
 
-    MapController mapController;
 
-    public NetFlowController(MapController mapController) {
-        this.mapController = mapController;
+    public NetFlowController() {
         scheduledExecutorService = new ScheduledThreadPoolExecutor(100);
         NetFlowSession session = new NetFlowSession(source -> {
             try {

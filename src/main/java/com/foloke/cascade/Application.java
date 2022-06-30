@@ -1,6 +1,5 @@
 package com.foloke.cascade;
 
-import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.Controllers.NetFlowController;
 import com.foloke.cascade.Controllers.UIController;
 import com.foloke.cascade.utils.HibernateUtil;
@@ -19,7 +18,6 @@ import org.snmp4j.smi.OctetString;
 import java.net.URL;
 
 public class Application extends javafx.application.Application {
-    public MapController mapController;
     public UIController uiController;
     public static Image spriteSheet;
     public static Image icon;
@@ -65,7 +63,7 @@ public class Application extends javafx.application.Application {
         updater = new Updater(uiController.getCanvas());
         updater.start();
 
-        netFlowController = new NetFlowController(mapController);
+        netFlowController = new NetFlowController();
     }
 
     @Override
@@ -75,7 +73,6 @@ public class Application extends javafx.application.Application {
         spriteSheet = new Image("/images/spritesheet.png", 0, 0, false, false);
         icon = new Image("/images/icon.png");
 
-        this.mapController = new MapController();
         this.uiController = new UIController();
 
         mainURL = this.getClass().getResource("/static/main.fxml");

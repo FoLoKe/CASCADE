@@ -52,7 +52,7 @@ public class Port extends Entity {
     public AddType addType;
 
     private Port(Device parent) {
-        super(parent.mapController);
+        super();
         this.sprite = Sprite.create(Application.spriteSheet, 16, 0, 8, 8, 1);
         led.activate();
     }

@@ -1,6 +1,5 @@
 package com.foloke.cascade.utils;
 
-import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Entity;
 import com.foloke.cascade.Entities.Port;
@@ -10,8 +9,8 @@ import org.apache.commons.net.util.SubnetUtils;
 public class PortGroup extends Entity {
     public Device parent;
 
-    public PortGroup(MapController mapController, Device device) {
-        super(mapController);
+    public PortGroup(Device device) {
+        super();
         this.parent = device;
     }
 

@@ -1,7 +1,6 @@
 package com.foloke.cascade.Entities;
 
 import com.foloke.cascade.Application;
-import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.utils.LogUtils;
 import com.foloke.cascade.utils.Sprite;
 import javafx.geometry.Point2D;
@@ -14,8 +13,8 @@ public class Cable extends Entity {
     public Connector connectorA;
     public Connector connectorB;
 
-    public Cable(MapController mapController) {
-        super(mapController);
+    public Cable() {
+        super();
         connectorA = new Connector(this);
         connectorB = new Connector(this);
     }
@@ -72,7 +71,7 @@ public class Cable extends Entity {
         private Sprite sprite;
 
         public Connector(Cable parent) {
-            super(parent.mapController);
+            super();
             this.sprite = Sprite.create(Application.spriteSheet, 24, 0, 8, 8, 1);
             init(parent);
         }

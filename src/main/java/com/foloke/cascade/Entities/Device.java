@@ -3,7 +3,6 @@ package com.foloke.cascade.Entities;
 import com.foloke.cascade.Application;
 import com.foloke.cascade.Components.*;
 import com.foloke.cascade.Components.Tags.DeviceTag;
-import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.utils.Led;
 import com.foloke.cascade.utils.LogUtils;
 import com.foloke.cascade.utils.PortGroup;
@@ -38,7 +37,7 @@ public class Device extends Entity {
     @Transient
     Sprite sprite;
 
-    PortGroup ports = new PortGroup(mapController, this);
+    PortGroup ports = new PortGroup(this);
 
     @Id
     @Column(name = "primaryIp")
@@ -66,12 +65,8 @@ public class Device extends Entity {
     String snmpEncryptionPass = "12345678";
     int securityLevel = SecurityLevel.NOAUTH_NOPRIV;
 
-    public Device(MapController mapController) {
-        super(mapController);
-    }
-
-    public Device(MapController mapController, String defaultIp) {
-        super(mapController);
+    public Device(String defaultIp) {
+        super();
         sprite = Sprite.create(Application.spriteSheet, 0, 0, 16, 16, 1);
         children.add(ports);
         ports.setLocalPosition(0, 16);

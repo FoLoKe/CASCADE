@@ -1,6 +1,5 @@
 package com.foloke.cascade.Entities;
 
-import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.utils.LogUtils;
 import com.foloke.cascade.utils.Timer;
 import javafx.geometry.Point2D;
@@ -23,15 +22,13 @@ public abstract class Entity {
     protected  ArrayList<Timer> timers = new ArrayList<>();;
 
     public Rectangle hitBox = new Rectangle(16, 16);
-    public MapController mapController;
 
     public Entity parent;
     public List<Entity> children = new ArrayList<>();
 
-    public Entity(MapController mapController) {
+    public Entity() {
         ID = counter;
         name += counter++;
-        this.mapController = mapController;
     }
 
     public abstract void render(GraphicsContext var1);

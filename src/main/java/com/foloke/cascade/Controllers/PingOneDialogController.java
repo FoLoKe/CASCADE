@@ -25,12 +25,6 @@ public class PingOneDialogController implements Initializable {
     @FXML
     private Button okButton;
 
-    private final MapController mapController;
-
-    public PingOneDialogController(MapController mapController) {
-        this.mapController = mapController;
-    }
-
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         cancelButton.setOnMousePressed(PingOneDialogController.this::closeStage);

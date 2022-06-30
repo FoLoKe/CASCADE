@@ -3,7 +3,6 @@ package com.foloke.cascade.utils;
 import com.foloke.cascade.Application;
 import com.foloke.cascade.Components.Network.AddressComponent;
 import com.foloke.cascade.Components.Network.PingComponent;
-import com.foloke.cascade.Controllers.MapController;
 import com.foloke.cascade.Entities.Port;
 import org.apache.commons.net.util.SubnetUtils;
 import org.pcap4j.core.*;
@@ -101,8 +100,8 @@ public class ScanUtils {
         return realInterfaces;
     }
 
-    public static void traceRoute(MapController mapController, String destination, int timeout, int maxHops) {
-        Trace trace = new Trace(mapController, destination, timeout, maxHops);
+    public static void traceRoute(String destination, int timeout, int maxHops) {
+        Trace trace = new Trace(destination, timeout, maxHops);
         Thread thread = new Thread(trace);
         thread.start();
     }
@@ -192,13 +191,11 @@ public class ScanUtils {
     }
 
     private static class Trace implements Runnable {
-        MapController mapController;
         String address;
         int timeout;
         int maxHops;
 
-        public Trace(MapController mapController, String address, int timeout, int maxHops) {
-            this.mapController = mapController;
+        public Trace(String address, int timeout, int maxHops) {
             this.address = address;
             this.timeout = timeout;
             this.maxHops = maxHops;

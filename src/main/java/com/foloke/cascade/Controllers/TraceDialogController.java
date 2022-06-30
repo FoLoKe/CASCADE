@@ -28,10 +28,8 @@ public class TraceDialogController implements Initializable {
     @FXML
     private Button okButton;
 
-    private final MapController mapController;
+    public TraceDialogController() {
 
-    public TraceDialogController(MapController mapController) {
-        this.mapController = mapController;
     }
 
     @Override
@@ -41,7 +39,7 @@ public class TraceDialogController implements Initializable {
         cancelButton.setOnMousePressed(TraceDialogController.this::closeStage);
 
         okButton.setOnMousePressed(event -> {
-            ScanUtils.traceRoute(mapController, addressTextField.getText(),
+            ScanUtils.traceRoute(addressTextField.getText(),
                     Integer.parseInt(timeoutTextField.getText()),
                     Integer.parseInt(maxHopsTextField.getText()));
 
