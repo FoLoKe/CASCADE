@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.ComponentMapper;
 import com.foloke.cascade.Components.*;
 import com.foloke.cascade.Components.Network.AddressComponent;
 import com.foloke.cascade.Components.Network.PingComponent;
+import com.foloke.cascade.Components.Network.SnmpComponent;
 import com.foloke.cascade.Components.Tags.DeviceTag;
 import com.foloke.cascade.Components.Tags.PortTag;
 
@@ -24,4 +25,5 @@ public class EcsHelper {
     // network
     public static final ComponentMapper<PingComponent> pingCm = ComponentMapper.getFor(PingComponent.class);
     public static final ComponentMapper<AddressComponent> aCm = ComponentMapper.getFor(AddressComponent.class);
+    public static final ComponentMapper<SnmpComponent> snmpCm = ComponentMapper.getFor(SnmpComponent.class);
 }

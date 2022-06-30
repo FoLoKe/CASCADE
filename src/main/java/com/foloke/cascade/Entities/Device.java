@@ -2,6 +2,7 @@ package com.foloke.cascade.Entities;
 
 import com.foloke.cascade.Application;
 import com.foloke.cascade.Components.*;
+import com.foloke.cascade.Components.Network.SnmpComponent;
 import com.foloke.cascade.Components.Tags.DeviceTag;
 import com.foloke.cascade.utils.Led;
 import com.foloke.cascade.utils.LogUtils;
@@ -64,6 +65,10 @@ public class Device extends Entity {
     OID encryptionProtocol = PrivDES.ID;
     String snmpEncryptionPass = "12345678";
     int securityLevel = SecurityLevel.NOAUTH_NOPRIV;
+
+    public Device() {
+        super();
+    }
 
     public Device(String defaultIp) {
         super();
@@ -156,15 +161,6 @@ public class Device extends Entity {
                 "Encryption pass " + snmpEncryptionPass);
     }
 
-    public List<Port> getPorts() {
-        List<Port> ports = new ArrayList<>();
-        for (Entity child : children) {
-            if (child instanceof Port)
-                ports.add((Port)child);
-        }
-        return ports;
-    }
-
     public Port addOrUpdatePort(Port port) {
         ports.addOrUpdatePort(port);
 
@@ -179,90 +175,6 @@ public class Device extends Entity {
         LogUtils.logToFile(name, this + " destroyed");
     }
 
-    public OID getAuthProtocol() {
-        return authProtocol;
-    }
-
-    public int getSecurityLevel() {
-        return securityLevel;
-    }
-
-    public void setSecurityLevel(int securityLevel) {
-        this.securityLevel = securityLevel;
-    }
-
-    public void setAuthProtocol(OID authProtocol) {
-        this.authProtocol = authProtocol;
-    }
-
-    public OID getEncryptionProtocol() {
-        return encryptionProtocol;
-    }
-
-    public void setEncryptionProtocol(OID encryptionProtocol) {
-        this.encryptionProtocol = encryptionProtocol;
-    }
-
-    public String getSnmpEncryptionPass() {
-        return snmpEncryptionPass;
-    }
-
-    public void setSnmpEncryptionPass(String snmpEncryptionPass) {
-        this.snmpEncryptionPass = snmpEncryptionPass;
-    }
-
-    public String getSnmpPassword() {
-        return snmpPassword;
-    }
-
-    public void setSnmpPassword(String snmpPassword) {
-        this.snmpPassword = snmpPassword;
-    }
-
-    public String getSnmpAddress() {
-        return snmpAddress;
-    }
-
-    public void setSnmpAddress(String snmpAddress) {
-        this.snmpAddress = snmpAddress;
-    }
-
-    public String getSnmpPort() {
-        return snmpPort;
-    }
-
-    public void setSnmpPort(String snmpPort) {
-        this.snmpPort = snmpPort;
-    }
-
-    public int getSnmpVersion() {
-        return snmpVersion;
-    }
-
-    public void setSnmpVersion(int snmpVersion) {
-        this.snmpVersion = snmpVersion;
-    }
-
-    public int getSnmpTimeout() {
-        return snmpTimeout;
-    }
-
-    public void setSnmpTimeout(int snmpTimeout) {
-        this.snmpTimeout = snmpTimeout;
-    }
-
-    public String getSnmpCommunity() {
-        return snmpName;
-    }
-
-    public void setSnmpCommunity(String snmpCommunity) {
-        this.snmpName = snmpCommunity;
-    }
-
-    public Port findPort(String address) {
-        return ports.findPort(address);
-    }
-
     //TODO: MAKE IT JSON OR DATABASE SAVE
 
     public static com.badlogic.ashley.core.Entity instance(double x, double y) {
@@ -273,6 +185,7 @@ public class Device extends Entity {
         device.add(new CollisionComponent());
         device.add(new DeviceTag());
         device.add(new ChildrenComponent());
+        device.add(new SnmpComponent());
 
         return device;
     }

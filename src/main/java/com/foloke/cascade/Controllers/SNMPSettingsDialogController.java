@@ -1,7 +1,7 @@
 package com.foloke.cascade.Controllers;
 
-import com.foloke.cascade.Entities.Device;
-import com.foloke.cascade.Entities.Port;
+import com.foloke.cascade.Application;
+import com.foloke.cascade.Components.Network.SnmpComponent;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -12,10 +12,18 @@ import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
+import org.snmp4j.CommunityTarget;
+import org.snmp4j.Target;
+import org.snmp4j.UserTarget;
 import org.snmp4j.mp.SnmpConstants;
 import org.snmp4j.security.*;
+import org.snmp4j.smi.OID;
+import org.snmp4j.smi.OctetString;
+import org.snmp4j.smi.UdpAddress;
 
+import java.net.InetAddress;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ResourceBundle;
 
 public class SNMPSettingsDialogController implements Initializable {
@@ -47,7 +55,7 @@ public class SNMPSettingsDialogController implements Initializable {
     private Spinner<String> encryptionSpinner;
 
     @FXML
-    private Spinner<Port> interfaceSpinner;
+    private Spinner<String> interfaceSpinner;
 
     @FXML
     private javafx.scene.control.Button cancelButton;
@@ -55,10 +63,10 @@ public class SNMPSettingsDialogController implements Initializable {
     @FXML
     private javafx.scene.control.Button okButton;
 
-    Device device;
+    private final SnmpComponent snmpComponent;
 
-    public SNMPSettingsDialogController(Device device) {
-        this.device = device;
+    public SNMPSettingsDialogController(SnmpComponent snmpComponent) {
+        this.snmpComponent = snmpComponent;
     }
 
     @Override
@@ -68,7 +76,27 @@ public class SNMPSettingsDialogController implements Initializable {
         SpinnerValueFactory<String> versionsSpinnerValueFactory
                 = new SpinnerValueFactory.ListSpinnerValueFactory<>(versions);
 
-        switch (device.getSnmpVersion()) {
+        Target<UdpAddress> target = snmpComponent.target;
+        UsmUser user = snmpComponent.user;
+
+        if (snmpComponent.target == null) {
+            target = new CommunityTarget<>();
+            ((CommunityTarget<UdpAddress>)target).setCommunity(new OctetString("public"));
+            target.setSecurityLevel(SecurityLevel.NOAUTH_NOPRIV);
+
+            target.setVersion(SnmpConstants.version2c);
+            target.setTimeout(5000);
+            target.setAddress(new UdpAddress("127.0.0.1/161"));
+            target.setSecurityName(new OctetString("public"));
+        }
+
+        if (user == null) {
+            user = new UsmUser(new OctetString("username"),
+                    AuthMD5.ID, new OctetString("password"),
+                    PrivDES.ID, new OctetString("encryption password"));
+        }
+
+        switch (target.getVersion()) {
             case SnmpConstants.version1:
                 versionsSpinnerValueFactory.setValue("version 1");
                 break;
@@ -82,15 +110,17 @@ public class SNMPSettingsDialogController implements Initializable {
                 break;
 
         }
+
         versionSpinner.setValueFactory(versionsSpinnerValueFactory);
 
-        ObservableList<Port> portsNames = FXCollections.observableArrayList(device.getPorts());
-        SpinnerValueFactory<Port> interfacesSpinnerValueFactory = new SpinnerValueFactory.ListSpinnerValueFactory<>(portsNames);
-        interfacesSpinnerValueFactory.setValue(device.findPort(device.getSnmpAddress()));
+        //TODO: REPLACE WITH textInput and optional spinner
+        ObservableList<String> portsNames = FXCollections.observableArrayList(target.getAddress().getInetAddress().getHostAddress());//device.getPorts());
+        SpinnerValueFactory<String> interfacesSpinnerValueFactory = new SpinnerValueFactory.ListSpinnerValueFactory<>(portsNames);
+        interfacesSpinnerValueFactory.setValue(target.getAddress().getInetAddress().getHostName());
 
         ObservableList<String> encryptionList = FXCollections.observableArrayList("DES", "AES");
         SpinnerValueFactory<String> encryptionSpinnerValueFactory = new SpinnerValueFactory.ListSpinnerValueFactory<>(encryptionList);
-        if(device.getEncryptionProtocol() == PrivDES.ID) {
+        if(user.getPrivacyProtocol().equals(PrivDES.ID)) {
             encryptionSpinnerValueFactory.setValue("DES");
         } else {
             encryptionSpinnerValueFactory.setValue("AES");
@@ -99,7 +129,7 @@ public class SNMPSettingsDialogController implements Initializable {
 
         ObservableList<String> authList = FXCollections.observableArrayList("SHA1", "MD5");
         SpinnerValueFactory<String> authSpinnerValueFactory = new SpinnerValueFactory.ListSpinnerValueFactory<>(authList);
-        if(device.getAuthProtocol() == AuthMD5.ID) {
+        if(user.getAuthenticationProtocol().equals(AuthMD5.ID)) {
             authSpinnerValueFactory.setValue("MD5");
         } else {
             authSpinnerValueFactory.setValue("SHA1");
@@ -108,9 +138,9 @@ public class SNMPSettingsDialogController implements Initializable {
 
         ObservableList<String> securityList = FXCollections.observableArrayList("none", "auth", "private auth");
         SpinnerValueFactory<String> securitySpinnerValueFactory = new SpinnerValueFactory.ListSpinnerValueFactory<>(securityList);
-        if(device.getSecurityLevel() == SecurityLevel.NOAUTH_NOPRIV) {
+        if(target.getSecurityLevel() == SecurityLevel.NOAUTH_NOPRIV) {
             securitySpinnerValueFactory.setValue("none");
-        } else if (device.getSecurityLevel() == SecurityLevel.AUTH_NOPRIV) {
+        } else if (target.getSecurityLevel() == SecurityLevel.AUTH_NOPRIV) {
             securitySpinnerValueFactory.setValue("auth");
         } else {
             securitySpinnerValueFactory.setValue("private auth");
@@ -119,55 +149,70 @@ public class SNMPSettingsDialogController implements Initializable {
 
         interfaceSpinner.setValueFactory(interfacesSpinnerValueFactory);
 
-        communityTextField.setText(device.getSnmpCommunity());
-        timeoutTextField.setText(Integer.toString(device.getSnmpTimeout()));
-        portTextField.setText(device.getSnmpPort());
+        communityTextField.setText(target.getSecurityName().toString());
+        timeoutTextField.setText(Long.toString(target.getTimeout()));
+        portTextField.setText(Integer.toString(target.getAddress().getPort()));
 
-        passwordTextField.setText(device.getSnmpPassword());
-        encryptionTextField.setText(device.getSnmpEncryptionPass());
+        passwordTextField.setText(user.getAuthenticationPassphrase().toString());
+        encryptionTextField.setText(user.getPrivacyPassphrase().toString());
 
         cancelButton.setOnMousePressed(SNMPSettingsDialogController.this::closeStage);
 
-        okButton.setOnMousePressed(event -> {
-            device.setSnmpCommunity(communityTextField.getText());
-            device.setSnmpPassword(passwordTextField.getText());
-            device.setSnmpPort(portTextField.getText());
-            device.setSnmpTimeout(Integer.parseInt(timeoutTextField.getText()));
-            device.setSnmpEncryptionPass(encryptionTextField.getText());
+        okButton.setOnMouseClicked(event -> {
+            String community = communityTextField.getText();
+            String password = passwordTextField.getText();
+            int port = Integer.parseInt(portTextField.getText());
+            int timeout = Integer.parseInt(timeoutTextField.getText());
 
-            String version = versionSpinner.getValue();
-            if(version.equals("version 1")) {
-                device.setSnmpVersion(SnmpConstants.version1);
-            } else if (version.equals("version 2c")) {
-                device.setSnmpVersion(SnmpConstants.version2c);
-            } else {
-                device.setSnmpVersion(SnmpConstants.version3);
+            int version = versionSpinner.getValue().equals("version 3") ? SnmpConstants.version3 :
+                    versionSpinner.getValue().equals("version 2c") ? SnmpConstants.version2c : SnmpConstants.version1;
+
+            OID encryption = encryptionSpinner.getValue().equals("DES") ? PrivDES.ID : PrivAES128.ID;
+            String encryptionPassword = encryptionTextField.getText();
+
+            OID authProtocol = authSpinner.getValue().equals("MD5") ? AuthMD5.ID : AuthSHA.ID;
+            int level = securityLevelSpinner.getValue().equals("none") ? SecurityLevel.NOAUTH_NOPRIV :
+                    securityLevelSpinner.getValue().equals("auth") ? SecurityLevel.AUTH_NOPRIV : SecurityLevel.AUTH_PRIV;
+
+            InetAddress address;
+
+            try {
+                address = InetAddress.getByName(interfaceSpinner.getValue());
+            } catch (Exception e) {
+                e.printStackTrace();
+                try {
+                    address = InetAddress.getByName("127.0.0.1");
+                } catch (UnknownHostException ex) {
+                    ex.printStackTrace();
+                    return;
+                }
             }
 
-            String encryption = encryptionSpinner.getValue();
-            if(encryption.equals("DES")) {
-                device.setEncryptionProtocol(PrivDES.ID);
-            } else {
-                device.setEncryptionProtocol(PrivAES128.ID);
+            Target<UdpAddress> newTarget;
+            UsmUser newUser;
+
+            if(version != SnmpConstants.version3) {
+                newTarget = new CommunityTarget<>();
+                ((CommunityTarget<UdpAddress>) newTarget).setCommunity(new OctetString(community));
+                newTarget.setSecurityLevel(SecurityLevel.NOAUTH_NOPRIV);
+            } else  {
+                newTarget = new UserTarget<>();
+                newTarget.setSecurityLevel(level);
             }
 
-            String auth = authSpinner.getValue();
-            if(auth.equals("MD5")) {
-                device.setAuthProtocol(AuthMD5.ID);
-            } else {
-                device.setAuthProtocol(AuthSHA.ID);
-            }
+            newUser = new UsmUser(new OctetString(community),
+                    authProtocol, new OctetString(password),
+                    encryption, new OctetString(encryptionPassword));
 
-            String level = securityLevelSpinner.getValue();
-            if(level.equals("none")) {
-                device.setSecurityLevel(SecurityLevel.NOAUTH_NOPRIV);
-            } else if (level.equals("auth")){
-                device.setSecurityLevel(SecurityLevel.AUTH_NOPRIV);
-            } else {
-                device.setSecurityLevel(SecurityLevel.AUTH_PRIV);
-            }
+            newTarget.setVersion(version);
+            newTarget.setTimeout(timeout);
+            newTarget.setAddress(new UdpAddress(address, port));
+            newTarget.setSecurityName(new OctetString(community));
 
-            device.updateSnmpConfiguration(interfaceSpinner.getValue().primaryAddress);
+            Application.updater.runOnECS(() -> {
+                snmpComponent.target = newTarget;
+                snmpComponent.user = newUser;
+            });
 
             SNMPSettingsDialogController.this.closeStage(event);
         });

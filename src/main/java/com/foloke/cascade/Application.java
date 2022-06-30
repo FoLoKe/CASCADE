@@ -4,6 +4,7 @@ import com.foloke.cascade.Controllers.NetFlowController;
 import com.foloke.cascade.Controllers.UIController;
 import com.foloke.cascade.utils.HibernateUtil;
 import com.foloke.cascade.utils.LogUtils;
+import com.foloke.cascade.utils.ScanUtils;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
@@ -55,10 +56,7 @@ public class Application extends javafx.application.Application {
 
         //databaseSession = HibernateUtil.getSessionFactory().openSession();
 
-        //Device device = ScanUtils.initLocal(mapController);
-        //mapController.addEntity(device);
         stage.show();
-
 
         updater = new Updater(uiController.getCanvas());
         updater.start();
@@ -90,13 +88,13 @@ public class Application extends javafx.application.Application {
         SecurityProtocols.getInstance().addPrivacyProtocol(new PrivDES());
         SecurityProtocols.getInstance().addAuthenticationProtocol(new AuthSHA());
         SecurityProtocols.getInstance().addPrivacyProtocol(new PrivAES128());
-
     }
 
     @Override
     public void stop() throws Exception {
         super.stop();
         netFlowController.close();
+        ScanUtils.close();
         HibernateUtil.shutdown();
     }
 }

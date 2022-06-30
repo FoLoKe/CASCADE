@@ -6,9 +6,11 @@ import com.foloke.cascade.Application;
 import com.foloke.cascade.Components.CollisionComponent;
 import com.foloke.cascade.Components.ContextMenuComponent;
 import com.foloke.cascade.Components.Network.PingComponent;
+import com.foloke.cascade.Components.Network.SnmpComponent;
 import com.foloke.cascade.Components.PositionComponent;
 import com.foloke.cascade.Components.Tags.SelectedTag;
 import com.foloke.cascade.Controllers.PingDialogController;
+import com.foloke.cascade.Controllers.SNMPSettingsDialogController;
 import com.foloke.cascade.Controllers.UIController;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Port;
@@ -65,12 +67,19 @@ public class ContextMenuSystem extends EntitySystem {
             for(Entity entity : selected) {
 
                 //ParamDialogController paramDialogController = new ParamDialogController();
-                if (EcsHelper.dtCm.has(entity)) {
+                if (EcsHelper.snmpCm.has(entity)) {
                     MenuItem snmpMenuItem = new MenuItem("SNMP settings");
-                    //snmpMenuItem.setOnAction(event -> com.foloke.cascade.Controllers.UIController.openDialog(new SNMPSettingsDialogController((Device) entity), Application.snmpDialogURL));
+                    SnmpComponent snmpComponent = EcsHelper.snmpCm.get(entity);
+                    snmpMenuItem.setOnAction(event -> UIController.openDialog(new SNMPSettingsDialogController(snmpComponent), Application.snmpDialogURL));
 
                     MenuItem updateItem = new MenuItem("Update by SNMP");
+
+                    menuItems.add(snmpMenuItem);
+                    menuItems.add(updateItem);
                     //updateItem.setOnAction(event -> UIController.getProps(entity));
+                }
+
+                if (EcsHelper.dtCm.has(entity)) {
 
                     MenuItem addPort = new MenuItem("Add new Port");
                     addPort.setOnAction(event -> {
@@ -102,8 +111,6 @@ public class ContextMenuSystem extends EntitySystem {
                     //showNameItem.setOnAction(event -> ((Device) entity).showName = showNameItem.isSelected());
 
                     menuItems.add(showNameItem);
-                    menuItems.add(snmpMenuItem);
-                    menuItems.add(updateItem);
                     menuItems.add(addPort);
                     menuItems.add(openNetFlow);
                 }

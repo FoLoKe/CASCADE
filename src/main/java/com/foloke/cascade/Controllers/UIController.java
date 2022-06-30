@@ -1,10 +1,8 @@
 package com.foloke.cascade.Controllers;
 
 import com.foloke.cascade.Application;
-import com.foloke.cascade.Entities.Cable;
 import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Entity;
-import com.foloke.cascade.utils.FileUtils;
 import com.foloke.cascade.utils.LogUtils;
 import com.foloke.cascade.utils.SnmpUtils;
 import javafx.application.Platform;
@@ -64,25 +62,15 @@ public class UIController {
     public void initialize() {
         LogUtils.init(logTextArea);
 
-        this.anchorPane.widthProperty().addListener((ov, oldValue, newValue) -> {
-            this.canvas.setWidth(newValue.doubleValue());
-        });
+        this.anchorPane.widthProperty().addListener((ov, oldValue, newValue) -> this.canvas.setWidth(newValue.doubleValue()));
 
-        this.anchorPane.heightProperty().addListener((ov, oldValue, newValue) -> {
-            this.canvas.setHeight(newValue.doubleValue());
-        });
+        this.anchorPane.heightProperty().addListener((ov, oldValue, newValue) -> this.canvas.setHeight(newValue.doubleValue()));
 
-        this.canvas.setOnMousePressed(mouseEvent -> {
-            Application.updater.mouseInput(mouseEvent);
-        });
+        this.canvas.setOnMousePressed(mouseEvent -> Application.updater.mouseInput(mouseEvent));
 
-        this.canvas.setOnMouseDragged(mouseEvent -> {
-            Application.updater.mouseInput(mouseEvent);
-        });
+        this.canvas.setOnMouseDragged(mouseEvent -> Application.updater.mouseInput(mouseEvent));
 
-        this.canvas.setOnMouseReleased(mouseEvent -> {
-            Application.updater.mouseInput(mouseEvent);
-        });
+        this.canvas.setOnMouseReleased(mouseEvent -> Application.updater.mouseInput(mouseEvent));
 
         this.canvas.setOnScroll(scrollEvent -> Application.updater.mouseScroll(scrollEvent));
 
@@ -107,18 +95,19 @@ public class UIController {
         }
     }
 
+    //TODO: LOAD MIB NAMES AND DESCRIPTION
 
     public void getProps(Entity entity) {
         ObservableList<Property> properties = FXCollections.observableArrayList(
-                new Property("name", entity.getName())
+                //new Property("name", entity.getName())
         );
 
         if(entity instanceof Device) {
-            SnmpUtils.walkRequest(((Device)entity).target, ((Device)entity).user, new OID(".1.3.6"), properties);
-            SnmpUtils.initDevice(((Device)entity));
+            //SnmpUtils.walkRequest(((Device)entity).target, ((Device)entity).user, new OID(".1.3.6"), properties);
+            //SnmpUtils.initDevice(((Device)entity));
         }
 
-        Platform.runLater(() -> propTable.setItems(properties));
+        //Platform.runLater(() -> propTable.setItems(properties));
     }
 
     public static class Property {

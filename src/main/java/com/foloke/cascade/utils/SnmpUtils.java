@@ -42,9 +42,9 @@ public class SnmpUtils {
     }
 
     public static void walkRequest(Target<UdpAddress> target, UsmUser user, OID tableOid, List<UIController.Property> props) {
-//        SnmpWalk snmpWalk = new SnmpWalk(target, user, tableOid, props);
-//        Thread thread = new Thread(snmpWalk);
-//        thread.start();
+        SnmpWalk snmpWalk = new SnmpWalk(target, user, tableOid, props);
+        Thread thread = new Thread(snmpWalk);
+        thread.start();
     }
 
     public static void initDevice(Device device) {
@@ -199,6 +199,7 @@ public class SnmpUtils {
         Target<UdpAddress> target;
         List<UIController.Property> propsList;
         UsmUser user;
+        SnmpTree snmpTree = new SnmpTree();
 
         public SnmpWalk(Target<UdpAddress> communityTarget, UsmUser user, OID oid, List<UIController.Property> propsList) {
             this.user = user;
@@ -217,6 +218,7 @@ public class SnmpUtils {
                         if (event == null) {
                             continue;
                         }
+
                         if (event.isError()) {
                             LogUtils.log(" Error: table OID [" + oid + "] " + event.getErrorMessage());
                             continue;
@@ -230,6 +232,8 @@ public class SnmpUtils {
                             if (varBinding == null) {
                                 continue;
                             }
+
+                            snmpTree.put(varBinding);
                             propsList.add(new UIController.Property(varBinding.getOid().toString(), varBinding.getVariable().toString()));
                         }
 
