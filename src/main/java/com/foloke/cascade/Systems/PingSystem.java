@@ -21,7 +21,7 @@ public class PingSystem extends EntitySystem {
     public void update(float deltaTime) {
         pinging.forEach(entity -> {
             PingComponent pc = pcm.get(entity);
-            if (pc.pinging)
+            if (pc.pinging.get())
                 return;
 
             pc.timestamp += deltaTime;

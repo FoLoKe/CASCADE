@@ -52,7 +52,7 @@ public class ScanUtils {
 
     public static void ping(PingComponent pingComponent, AddressComponent addressComponent) {
         pingComponent.status = 0;
-        pingComponent.pinging = true;
+        pingComponent.pinging.set(true);
         final InetAddress inetAddress = addressComponent.address;
 
         Thread thread = new Thread(() -> {
@@ -66,7 +66,7 @@ public class ScanUtils {
                 pingComponent.status = -1;
             }
 
-            pingComponent.pinging = false;
+            pingComponent.pinging.set(true);
         });
 
         thread.setDaemon(true);
