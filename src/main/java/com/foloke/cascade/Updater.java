@@ -5,6 +5,7 @@ import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
 import com.foloke.cascade.Components.*;
 import com.foloke.cascade.Components.Network.AddressComponent;
+import com.foloke.cascade.Components.Tags.PortTag;
 import com.foloke.cascade.Components.Tags.UIControllerTag;
 import com.foloke.cascade.Entities.Camera;
 import com.foloke.cascade.Entities.Device;
@@ -68,7 +69,7 @@ public class Updater extends AnimationTimer {
         engine.addSystem(new SelectionRendererSystem(gc));
         engine.addSystem(new CollisionDebugRendererSystem(gc));
 
-        Entity camera = new Camera(gc, mouseInputComponent);
+        Entity camera = Camera.instance(gc, mouseInputComponent);
         engine.addEntity(camera);
 
         Entity local = Device.instance(50, 50);
@@ -87,14 +88,14 @@ public class Updater extends AnimationTimer {
         QuadCollision localQuad = localCollision.hitBox;
 
         List<NetworkInterface> localInterfaces = ScanUtils.getLocalPorts();
-        double offsetX = positionComponent.x + localQuad.getWidth() / 2f - localInterfaces.size() * Port.baseSize / 2f;
+        double offsetX = positionComponent.x + localQuad.getWidth() / 2f - localInterfaces.size() * PortTag.baseSize / 2f;
         double offsetY = positionComponent.y + localQuad.getHeight();
 
         for (int i = 0; i < localInterfaces.size(); i++) {
             NetworkInterface networkInterface = localInterfaces.get(i);
             List<InterfaceAddress> addresses = networkInterface.getInterfaceAddresses();
 
-            Entity port = Port.instance(offsetX + i * Port.baseSize, offsetY);
+            Entity port = Port.instance(offsetX + i * PortTag.baseSize, offsetY);
             port.add(new AddressComponent(addresses));
             engine.addEntity(port);
 

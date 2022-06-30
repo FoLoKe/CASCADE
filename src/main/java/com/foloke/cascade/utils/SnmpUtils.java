@@ -74,38 +74,38 @@ public class SnmpUtils {
                 }
             }
 
-            for (Map.Entry<OID, String> entry : interfacesInfo.entrySet()) {
-                Port port = new Port(device, entry.getValue());
-                port.index = Integer.parseInt(entry.getValue());
-                port.addType = Port.AddType.SNMP;
-
-                VariableBinding macBinding = getFirst(new OID(interfacesMAC + "." + entry.getValue() + ".0"), device);
-                if (macBinding != null) {
-                    port.mac = macBinding.getVariable().toString();
-                }
-
-                VariableBinding nameBinding = getFirst(new OID(interfacesDescription + "." + entry.getValue() + ".0"), device);
-                if (nameBinding != null) {
-                    port.setName(nameBinding.getVariable().toString());
-                }
-
-                VariableBinding stateBinding = getFirst(new OID(interfacesState + "." + entry.getValue() + ".0"), device);
-                if (stateBinding != null) {
-                    port.setState(stateBinding.getVariable().toInt());
-                }
-
-                port.primaryAddress = addressesMap.get(Integer.toString(port.index));
-                if (port.primaryAddress == null) {
-                    port.primaryAddress = "";
-                }
-
-                port = device.addOrUpdatePort(port);
-
-                if (port.primaryAddress.length() > 0) {
-                    List<OID> routingInfo = walkToOIDList(new OID(routingIDS + "." + entry.getValue()), device);
-
-                    for (OID routeOID : routingInfo) {
-                        String address = routeOID.getSuffix(new OID(routingIDS + "." + entry.getValue())).toString();
+//            for (Map.Entry<OID, String> entry : interfacesInfo.entrySet()) {
+//                Port port = new Port(device, entry.getValue());
+//                port.index = Integer.parseInt(entry.getValue());
+//                port.addType = Port.AddType.SNMP;
+//
+//                VariableBinding macBinding = getFirst(new OID(interfacesMAC + "." + entry.getValue() + ".0"), device);
+//                if (macBinding != null) {
+//                    port.mac = macBinding.getVariable().toString();
+//                }
+//
+//                VariableBinding nameBinding = getFirst(new OID(interfacesDescription + "." + entry.getValue() + ".0"), device);
+//                if (nameBinding != null) {
+//                    port.setName(nameBinding.getVariable().toString());
+//                }
+//
+//                VariableBinding stateBinding = getFirst(new OID(interfacesState + "." + entry.getValue() + ".0"), device);
+//                if (stateBinding != null) {
+//                    port.setState(stateBinding.getVariable().toInt());
+//                }
+//
+//                port.primaryAddress = addressesMap.get(Integer.toString(port.index));
+//                if (port.primaryAddress == null) {
+//                    port.primaryAddress = "";
+//                }
+//
+//                port = device.addOrUpdatePort(port);
+//
+//                if (port.primaryAddress.length() > 0) {
+//                    List<OID> routingInfo = walkToOIDList(new OID(routingIDS + "." + entry.getValue()), device);
+//
+//                    for (OID routeOID : routingInfo) {
+//                        String address = routeOID.getSuffix(new OID(routingIDS + "." + entry.getValue())).toString();
 //                        Port leadingPort = device.mapController.findPort(address);
 //
 //                        if (leadingPort == null) {
@@ -125,10 +125,10 @@ public class SnmpUtils {
 //                            }
 //                        }
 //                        device.mapController.establishConnection(port, leadingPort);
-                    }
-
-                }
-            }
+//                    }
+//
+//                }
+//            }
         }
     }
 
@@ -137,59 +137,59 @@ public class SnmpUtils {
         pdu.add(new VariableBinding(oid));
         pdu.setType(PDU.GET);
 
-        List<? extends VariableBinding> info = get(pdu, device.target, device.user);
-        if (info != null) {
-            for (VariableBinding varBinding : info) {
-                if (varBinding == null) {
-                    continue;
-                }
-                return varBinding;
-            }
-        }
+//        List<? extends VariableBinding> info = get(pdu, device.target, device.user);
+//        if (info != null) {
+//            for (VariableBinding varBinding : info) {
+//                if (varBinding == null) {
+//                    continue;
+//                }
+//                return varBinding;
+//            }
+//        }
 
         return null;
     }
 
     private static List<OID> walkToOIDList(OID oid, Device device) {
-        List<TreeEvent> events = walk(oid, device.target, device.user);
+//        List<TreeEvent> events = walk(oid, device.target, device.user);
         List<OID> info = new ArrayList<>();
-
-        if (events != null) {
-            for (TreeEvent event : events) {
-                if (valid(event)) {
-                    VariableBinding[] varBindings = event.getVariableBindings();
-                    for (VariableBinding varBinding : varBindings) {
-                        if (varBinding == null) {
-                            continue;
-                        }
-                        info.add(varBinding.getOid());
-                    }
-                }
-            }
-        }
-
+//
+//        if (events != null) {
+//            for (TreeEvent event : events) {
+//                if (valid(event)) {
+//                    VariableBinding[] varBindings = event.getVariableBindings();
+//                    for (VariableBinding varBinding : varBindings) {
+//                        if (varBinding == null) {
+//                            continue;
+//                        }
+//                        info.add(varBinding.getOid());
+//                    }
+//                }
+//            }
+//        }
+//
         return info;
     }
 
     private static TreeMap<OID, String> walkToOIDStringMap(OID oid, Device device) {
         TreeMap<OID, String> treeMap = new TreeMap<>();
 
-        List<TreeEvent> events = walk(oid, device.target, device.user);
+//        List<TreeEvent> events = walk(oid, device.target, device.user);
 
-        if (events != null) {
-            for (TreeEvent event : events) {
-                if (valid(event)) {
-                    VariableBinding[] varBindings = event.getVariableBindings();
-                    for (VariableBinding varBinding : varBindings) {
-                        if (varBinding == null) {
-                            continue;
-                        }
-                        treeMap.put(varBinding.getOid(), varBinding.getVariable().toString());
-                    }
-                }
-            }
-
-        }
+//        if (events != null) {
+//            for (TreeEvent event : events) {
+//                if (valid(event)) {
+//                    VariableBinding[] varBindings = event.getVariableBindings();
+//                    for (VariableBinding varBinding : varBindings) {
+//                        if (varBinding == null) {
+//                            continue;
+//                        }
+//                        treeMap.put(varBinding.getOid(), varBinding.getVariable().toString());
+//                    }
+//                }
+//            }
+//
+//        }
 
         return treeMap;
     }

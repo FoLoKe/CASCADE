@@ -188,8 +188,10 @@ public class NetFlowController {
     }
 
     public void bind(NetFlowDialogController netFlowDialogController) {
-        Sampler sampler = getSampler(netFlowDialogController.device.primaryIp, netFlowDialogController.device); // TODO: should be device
-        sampler.bind(netFlowDialogController);
+        //TODO:
+        //Sampler sampler = getSampler(netFlowDialogController.device.primaryIp, netFlowDialogController.device); // TODO: should be device
+        //sampler.bind(netFlowDialogController);
+
         //netFlowDialogController.activeChartData.clear();
         //netFlowDialogController.endedChartData.clear();
         //netFlowDialogController.trafficChart.getData().clear();
@@ -264,7 +266,8 @@ public class NetFlowController {
                 }
                 boolean alarm = simpleCumulativeEMWA.put(created);
                 if (alarm) {
-                    device.alarmLed.activate(3);
+                    // TODO
+                    //device.alarmLed.activate(3);
                 }
                 stampedAlarms.put(timestamp, alarm);
                 stampedCounts.put(timestamp, latestFlows.size());

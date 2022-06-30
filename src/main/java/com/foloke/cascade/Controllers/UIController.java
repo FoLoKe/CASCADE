@@ -2,10 +2,7 @@ package com.foloke.cascade.Controllers;
 
 import com.foloke.cascade.Application;
 import com.foloke.cascade.Entities.Device;
-import com.foloke.cascade.Entities.Entity;
 import com.foloke.cascade.utils.LogUtils;
-import com.foloke.cascade.utils.SnmpUtils;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -20,7 +17,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.snmp4j.smi.OID;
 
 import java.net.URL;
 
@@ -97,18 +93,18 @@ public class UIController {
 
     //TODO: LOAD MIB NAMES AND DESCRIPTION
 
-    public void getProps(Entity entity) {
-        ObservableList<Property> properties = FXCollections.observableArrayList(
-                //new Property("name", entity.getName())
-        );
-
-        if(entity instanceof Device) {
-            //SnmpUtils.walkRequest(((Device)entity).target, ((Device)entity).user, new OID(".1.3.6"), properties);
-            //SnmpUtils.initDevice(((Device)entity));
-        }
-
-        //Platform.runLater(() -> propTable.setItems(properties));
-    }
+//    public void getProps(Entity entity) {
+//        ObservableList<Property> properties = FXCollections.observableArrayList(
+//                //new Property("name", entity.getName())
+//        );
+//
+//        if(entity instanceof Device) {
+//            //SnmpUtils.walkRequest(((Device)entity).target, ((Device)entity).user, new OID(".1.3.6"), properties);
+//            //SnmpUtils.initDevice(((Device)entity));
+//        }
+//
+//        //Platform.runLater(() -> propTable.setItems(properties));
+//    }
 
     public static class Property {
         private String property;

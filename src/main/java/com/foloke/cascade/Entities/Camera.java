@@ -8,13 +8,19 @@ import com.foloke.cascade.Components.Tags.MainCameraTag;
 import com.foloke.cascade.Components.VelocityComponent;
 import javafx.scene.canvas.GraphicsContext;
 
-public class Camera extends Entity {
+public class Camera {
 
-    public Camera (GraphicsContext graphicsContext, MouseInputComponent mouseInputComponent) {
-        add(new CameraComponent(graphicsContext, 4));
-        add(new MainCameraTag());
-        add(new VelocityComponent());
-        add(new PositionComponent());
-        add(mouseInputComponent);
+    private Camera() {}
+
+    public static Entity instance(GraphicsContext graphicsContext, MouseInputComponent mouseInputComponent) {
+        Entity entity = new Entity();
+
+        entity.add(new CameraComponent(graphicsContext, 4));
+        entity.add(new MainCameraTag());
+        entity.add(new VelocityComponent());
+        entity.add(new PositionComponent());
+        entity.add(mouseInputComponent);
+
+        return entity;
     }
 }

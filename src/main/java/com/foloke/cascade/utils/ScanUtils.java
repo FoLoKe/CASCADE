@@ -106,89 +106,89 @@ public class ScanUtils {
         thread.start();
     }
 
-    public static void requestMac(Port port) {
-        PcapNetworkInterface nif;
-        InetAddress senderIp;
-        MacAddress senderMac;
-        try {
-            nif = new NifSelector().selectNetworkInterface();
-            if (nif == null)
-                return;
-            senderIp = nif.getAddresses().get(0).getAddress();
-            senderMac = MacAddress.getByAddress(nif.getLinkLayerAddresses().get(0).getAddress());
-            System.out.println(senderIp);
-            System.out.println(senderMac);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        PcapHandle handle;
-        PcapHandle sendHandle;
-
-        try {
-            handle = nif.openLive(65536, PcapNetworkInterface.PromiscuousMode.PROMISCUOUS, 10);
-            sendHandle = nif.openLive(65536, PcapNetworkInterface.PromiscuousMode.PROMISCUOUS, 10);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return;
-        }
-        try {
-            handle.setFilter(
-                    "arp and src host "
-                            + port.primaryAddress
-                            + " and dst host "
-                            + senderIp.getHostAddress()
-                            + " and ether dst "
-                            + Pcaps.toBpfString(senderMac),
-                    BpfProgram.BpfCompileMode.OPTIMIZE);
-
-            PacketListener listener =
-                    new PacketListener() {
-                        @Override
-                        public void gotPacket(Packet packet) {
-                            if (packet.contains(ArpPacket.class)) {
-                                ArpPacket arp = packet.get(ArpPacket.class);
-                                if (arp.getHeader().getOperation().equals(ArpOperation.REPLY)) {
-                                    System.out.println(arp.getHeader().getSrcHardwareAddr());
-                                }
-                            }
-                            System.out.println(packet);
-                        }
-                    };
-
-            ArpPacket.Builder arpBuilder = new ArpPacket.Builder();
-            arpBuilder
-                    .hardwareType(ArpHardwareType.ETHERNET)
-                    .protocolType(EtherType.IPV4)
-                    .hardwareAddrLength((byte) MacAddress.SIZE_IN_BYTES)
-                    .protocolAddrLength((byte) ByteArrays.INET4_ADDRESS_SIZE_IN_BYTES)
-                    .operation(ArpOperation.REQUEST)
-                    .srcHardwareAddr(senderMac)
-                    .srcProtocolAddr(senderIp)
-                    .dstHardwareAddr(MacAddress.ETHER_BROADCAST_ADDRESS)
-                    .dstProtocolAddr(InetAddress.getByName(port.primaryAddress));
-
-            EthernetPacket.Builder etherBuilder = new EthernetPacket.Builder();
-            etherBuilder
-                    .dstAddr(MacAddress.ETHER_BROADCAST_ADDRESS)
-                    .srcAddr(senderMac)
-                    .type(EtherType.ARP)
-                    .payloadBuilder(arpBuilder)
-                    .paddingAtBuild(true);
-            Packet p = etherBuilder.build();
-
-            PCapTask t = new PCapTask(handle, listener);
-            Thread pcapThread = new Thread(t);
-            pcapThread.setDaemon(true);
-            pcapThread.start();
-            sendHandle.sendPacket(p);
-            sendHandle.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    public static void requestMac(Port port) {
+//        PcapNetworkInterface nif;
+//        InetAddress senderIp;
+//        MacAddress senderMac;
+//        try {
+//            nif = new NifSelector().selectNetworkInterface();
+//            if (nif == null)
+//                return;
+//            senderIp = nif.getAddresses().get(0).getAddress();
+//            senderMac = MacAddress.getByAddress(nif.getLinkLayerAddresses().get(0).getAddress());
+//            System.out.println(senderIp);
+//            System.out.println(senderMac);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            return;
+//        }
+//
+//        PcapHandle handle;
+//        PcapHandle sendHandle;
+//
+//        try {
+//            handle = nif.openLive(65536, PcapNetworkInterface.PromiscuousMode.PROMISCUOUS, 10);
+//            sendHandle = nif.openLive(65536, PcapNetworkInterface.PromiscuousMode.PROMISCUOUS, 10);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return;
+//        }
+//        try {
+//            handle.setFilter(
+//                    "arp and src host "
+//                            + port.primaryAddress
+//                            + " and dst host "
+//                            + senderIp.getHostAddress()
+//                            + " and ether dst "
+//                            + Pcaps.toBpfString(senderMac),
+//                    BpfProgram.BpfCompileMode.OPTIMIZE);
+//
+//            PacketListener listener =
+//                    new PacketListener() {
+//                        @Override
+//                        public void gotPacket(Packet packet) {
+//                            if (packet.contains(ArpPacket.class)) {
+//                                ArpPacket arp = packet.get(ArpPacket.class);
+//                                if (arp.getHeader().getOperation().equals(ArpOperation.REPLY)) {
+//                                    System.out.println(arp.getHeader().getSrcHardwareAddr());
+//                                }
+//                            }
+//                            System.out.println(packet);
+//                        }
+//                    };
+//
+//            ArpPacket.Builder arpBuilder = new ArpPacket.Builder();
+//            arpBuilder
+//                    .hardwareType(ArpHardwareType.ETHERNET)
+//                    .protocolType(EtherType.IPV4)
+//                    .hardwareAddrLength((byte) MacAddress.SIZE_IN_BYTES)
+//                    .protocolAddrLength((byte) ByteArrays.INET4_ADDRESS_SIZE_IN_BYTES)
+//                    .operation(ArpOperation.REQUEST)
+//                    .srcHardwareAddr(senderMac)
+//                    .srcProtocolAddr(senderIp)
+//                    .dstHardwareAddr(MacAddress.ETHER_BROADCAST_ADDRESS)
+//                    .dstProtocolAddr(InetAddress.getByName(port.primaryAddress));
+//
+//            EthernetPacket.Builder etherBuilder = new EthernetPacket.Builder();
+//            etherBuilder
+//                    .dstAddr(MacAddress.ETHER_BROADCAST_ADDRESS)
+//                    .srcAddr(senderMac)
+//                    .type(EtherType.ARP)
+//                    .payloadBuilder(arpBuilder)
+//                    .paddingAtBuild(true);
+//            Packet p = etherBuilder.build();
+//
+//            PCapTask t = new PCapTask(handle, listener);
+//            Thread pcapThread = new Thread(t);
+//            pcapThread.setDaemon(true);
+//            pcapThread.start();
+//            sendHandle.sendPacket(p);
+//            sendHandle.close();
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     private static class Trace implements Runnable {
         String address;
