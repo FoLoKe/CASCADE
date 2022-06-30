@@ -6,6 +6,7 @@ import com.foloke.cascade.Components.*;
 import com.foloke.cascade.Components.Tags.MainCameraTag;
 import com.foloke.cascade.Components.Tags.SelectedTag;
 import com.foloke.cascade.Components.Tags.UIControllerTag;
+import com.foloke.cascade.utils.EcsHelper;
 import javafx.event.EventType;
 import javafx.geometry.Point2D;
 import javafx.scene.input.MouseButton;
@@ -170,11 +171,29 @@ public class MouseInputSystem extends EntitySystem {
 
     private Entity pickEntity(Point2D hitPoint) {
         for (Entity entity : entities) {
-            CollisionComponent collisionComponent = colCm.get(entity);
-            //TODO: PARENTING
-            if (collisionComponent.hitBox.contains(hitPoint)) {
-                return entity;
+            Entity picked = pick(entity, hitPoint);
+            if (picked != null)
+                return picked;
+        }
+
+        return null;
+    }
+
+    private static Entity pick(Entity entity, Point2D hitPoint) {
+        if(EcsHelper.ccm.has(entity)) {
+            ChildrenComponent childrenComponent = EcsHelper.ccm.get(entity);
+            for (Entity child : childrenComponent.children) {
+                Entity picked = pick(child, hitPoint);
+                if (picked != null) {
+                     return picked;
+                }
             }
+        }
+
+        CollisionComponent collisionComponent = EcsHelper.colCm.get(entity);
+
+        if (collisionComponent.hitBox.contains(hitPoint)) {
+            return entity;
         }
 
         return null;
