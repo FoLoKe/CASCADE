@@ -7,15 +7,17 @@ import com.foloke.cascade.Components.CollisionComponent;
 import com.foloke.cascade.Components.ContextMenuComponent;
 import com.foloke.cascade.Components.Network.PingComponent;
 import com.foloke.cascade.Components.PositionComponent;
-import com.foloke.cascade.Components.Tags.DeviceTag;
-import com.foloke.cascade.Components.Tags.PortTag;
 import com.foloke.cascade.Components.Tags.SelectedTag;
+import com.foloke.cascade.Controllers.PingDialogController;
+import com.foloke.cascade.Controllers.UIController;
+import com.foloke.cascade.Entities.Device;
 import com.foloke.cascade.Entities.Port;
 import com.foloke.cascade.utils.EcsHelper;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 
 import java.util.ArrayList;
@@ -175,8 +177,8 @@ public class ContextMenuSystem extends EntitySystem {
             }
         } else {
 
-            MenuItem pingItem = new MenuItem("Ping scan");
-            //pingItem.setOnAction(event -> UIController.openDialog(new PingDialogController(mapController), Application.pingDialogURL));
+            MenuItem pingScanItem = new MenuItem("Ping scan");
+            pingScanItem.setOnAction(event -> UIController.openDialog(new PingDialogController(), Application.pingDialogURL));
 
             MenuItem pingOneItem = new MenuItem("Ping and add one");
             //pingOneItem.setOnAction(event -> UIController.openDialog(new PingOneDialogController(mapController), Application.pingOneDialogURL));
@@ -184,7 +186,16 @@ public class ContextMenuSystem extends EntitySystem {
             MenuItem traceItem = new MenuItem("Trace to");
             //traceItem.setOnAction(event -> UIController.openDialog(new TraceDialogController(mapController), Application.traceDialogURL));
 
-            MenuItem addCableItem = new MenuItem("Add Cable");
+            Menu subContext = new Menu("Add new");
+
+            MenuItem addDeviceItem = new MenuItem("Device");
+            addDeviceItem.setOnAction((event) -> {
+                Application.updater.spawnEntityLater(Device.instance(x, y));
+            });
+
+            MenuItem addDCableItem = new MenuItem("Cable");
+
+            subContext.getItems().addAll(addDeviceItem, addDCableItem);
 //            addCableItem.setOnAction(event -> {
 //                Cable cable = new Cable(mapController);
 //                cable.connectorA.setPosition(mapController.getTouchPointX(), mapController.getTouchPointY());
@@ -198,10 +209,10 @@ public class ContextMenuSystem extends EntitySystem {
             MenuItem loadItem = new MenuItem("Load map");
             //loadItem.setOnAction(event -> FileUtils.load(mapController, "map"));
 
-            menuItems.add(pingItem);
+            menuItems.add(pingScanItem);
             menuItems.add(pingOneItem);
             menuItems.add(traceItem);
-            menuItems.add(addCableItem);
+            menuItems.add(subContext);
             menuItems.add(saveItem);
             menuItems.add(loadItem);
         }

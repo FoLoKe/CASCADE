@@ -20,10 +20,14 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.paint.Color;
 
+import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 public class Updater extends AnimationTimer {
     private final Engine engine;
@@ -137,29 +141,65 @@ public class Updater extends AnimationTimer {
         runOnECS(() -> entity.add(component));
     }
 
-    public void assignChildLater(Entity entity, Entity child) {
-        runOnECS(() -> {
-            if (!EcsHelper.ccm.has(entity)) {
-                entity.add(new ChildrenComponent());
-            }
+    public void assignChildLater(Entity parent, Entity child) {
+        runOnECS(() -> assignChild(parent, child));
+    }
 
-            ChildrenComponent cm = EcsHelper.ccm.get(entity);
-            cm.children.add(child);
+    private void assignChild(Entity parent, Entity child) {
+        if (!EcsHelper.ccm.has(parent)) {
+            parent.add(new ChildrenComponent());
+        }
 
-            if (EcsHelper.pcm.has(child)) {
-                ParentComponent pc = EcsHelper.pcm.get(child);
-                pc.parent = entity;
-            } else {
-                ParentComponent pc = new ParentComponent();
-                pc.parent = entity;
-                child.add(pc);
-            }
-        });
+        ChildrenComponent cm = EcsHelper.ccm.get(parent);
+        cm.children.add(child);
+
+        if (EcsHelper.pcm.has(child)) {
+            ParentComponent pc = EcsHelper.pcm.get(child);
+            pc.parent = parent;
+        } else {
+            ParentComponent pc = new ParentComponent();
+            pc.parent = parent;
+            child.add(pc);
+        }
     }
 
     public void removeComponentLater(Entity entity, Class<? extends Component> componentClass) {
         runOnECS(() -> {
             entity.remove(componentClass);
         });
+    }
+
+    public void addOrUpdate(InetAddress inetAddress) {
+        runOnECS(() -> {
+            Object[] entities = engine.getEntities().toArray();
+                Stream<Object> stream = Arrays.stream(entities).parallel();
+                Optional<Object> found = stream.filter((obj) -> {
+                    Entity entity = (Entity) obj;
+                    if(!EcsHelper.pcm.has(entity) || !EcsHelper.aCm.has(entity)) {
+                        return false;
+                    }
+
+                    AddressComponent addressComponent = EcsHelper.aCm.get(entity);
+                    return addressComponent.address.equals(inetAddress);
+                }).findFirst();
+
+                if (found.isPresent()) {
+                    Entity entity = (Entity) found.get();
+                    System.out.println("found");
+                    // TODO: set led state
+                } else {
+                    Entity device = Device.instance(0, 0);
+                    engine.addEntity(device);
+                    Entity port = Port.instance(0, 0);
+                    engine.addEntity(port);
+                    assignChild(device, port);
+
+                    System.out.println("new");
+                }
+        });
+    }
+
+    public void close() {
+        ScanUtils.close();
     }
 }

@@ -25,18 +25,18 @@ public class PingDialogController implements Initializable {
     @FXML
     private Button okButton;
 
-    private final MapController mapController;
+    public PingDialogController() {
 
-    public PingDialogController(MapController mapController) {
-        this.mapController = mapController;
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         cancelButton.setOnMousePressed(PingDialogController.this::closeStage);
+        maskTextField.setText("24");
+        addressTextField.setText("192.168.88.0"); //TODO: local address
 
         okButton.setOnMousePressed(event -> {
-            ScanUtils.pingScan(mapController, addressTextField.getText(), maskTextField.getText());
+            ScanUtils.pingScan(addressTextField.getText(), maskTextField.getText());
             PingDialogController.this.closeStage(event);
         });
     }

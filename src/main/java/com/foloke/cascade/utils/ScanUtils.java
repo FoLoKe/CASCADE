@@ -1,8 +1,6 @@
 package com.foloke.cascade.utils;
 
-import com.badlogic.ashley.core.Entity;
-import com.foloke.cascade.Components.ChildrenComponent;
-import com.foloke.cascade.Components.CollisionComponent;
+import com.foloke.cascade.Application;
 import com.foloke.cascade.Components.Network.AddressComponent;
 import com.foloke.cascade.Components.Network.PingComponent;
 import com.foloke.cascade.Controllers.MapController;
@@ -26,6 +24,9 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class ScanUtils {
@@ -34,20 +35,28 @@ public class ScanUtils {
     private static final String regexIPv4 = "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$";
     private static final Pattern pattern = Pattern.compile(regexIPv4);
 
-    public static void pingScan(MapController mapController, String network, String mask) {
-        try {
-            SubnetUtils utils = new SubnetUtils( network + "/" + mask);
+    private static final ExecutorService pool = Executors.newFixedThreadPool(25);
 
-            for(String address : utils.getInfo().getAllAddresses()) {
+    public static void pingScan(String network, String mask) {
+        SubnetUtils utils = new SubnetUtils(network + "/" + mask);
+        // TODO: Progress bar
 
-                //Ping ping = new Ping(mapController, address);
-                //Thread thread = new Thread(ping);
-                //thread.start();
+        // Win10 throws 11050 error for full parallel pinging, so multithreaded instead...
+        Arrays.stream(utils.getInfo().getAllAddresses()).forEach((address) -> pool.submit(() -> {
+            try {
+                InetAddress inetAddress = InetAddress.getByName(address);
+                if (inetAddress.isReachable(5000)) {
+                    Application.updater.addOrUpdate(inetAddress);
+                    LogUtils.log(address + " is reachable");
+                } else {
+                    LogUtils.log(address + " is unreachable");
+                }
+            } catch (Exception e) {
+                System.out.println(address);
+                e.printStackTrace();
             }
-
-        } catch (Exception e) {
-            LogUtils.log(e.toString());
-        }
+        }));
+        //});
     }
 
     public static void ping(PingComponent pingComponent, AddressComponent addressComponent) {
@@ -55,7 +64,7 @@ public class ScanUtils {
         pingComponent.pinging.set(true);
         final InetAddress inetAddress = addressComponent.address;
 
-        Thread thread = new Thread(() -> {
+        pool.submit(() -> {
             try {
                 boolean reachable = inetAddress.isReachable(pingComponent.delay);
                 pingComponent.status = reachable ? 1 : -1;
@@ -66,11 +75,8 @@ public class ScanUtils {
                 pingComponent.status = -1;
             }
 
-            pingComponent.pinging.set(true);
+            pingComponent.pinging.set(false);
         });
-
-        thread.setDaemon(true);
-        thread.start();
     }
 
     public static List<NetworkInterface> getLocalPorts() {
@@ -344,13 +350,20 @@ public class ScanUtils {
             try {
                 handle.loop(1, listener);
                 handle.close();
-            } catch (PcapNativeException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (NotOpenException e) {
+            } catch (PcapNativeException | InterruptedException | NotOpenException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    public static void close() {
+        pool.shutdown();
+        try {
+            if (!pool.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+                pool.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            pool.shutdownNow();
         }
     }
 
